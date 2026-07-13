@@ -19,6 +19,7 @@ class Model {
       const result = await connection.execute(sql, data, execOptions);
       return (result?.rowsAffected ?? 0) > 0;
     } catch (err) {
+      console.error("ModelInsert.insertdb Error:", err);
       res
         .status(403)
         .json({ success: false, message: err?.message ?? String(err) });

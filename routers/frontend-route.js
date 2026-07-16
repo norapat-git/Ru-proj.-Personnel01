@@ -36,4 +36,13 @@ router.delete("/personnel/delete/:id", personnelControl.deletePersonnel);
 // get faculties list for dropdown
 router.get("/personnel/faculties", personnelControl.getFaculties);
 
+// get prenames list for dropdown
+router.get("/personnel/prenames", personnelControl.getPrenames);
+
+// get person types list for dropdown
+router.get("/personnel/persontypes", personnelControl.getPersonTypes);
+
+// get fund types list for dropdown
+router.get("/personnel/fundtypes", personnelControl.getFundTypes);
+
 module.exports = router;

@@ -1,0 +1,63 @@
+<div class="search-bar-container">
+  <!-- ดรอปดาวน์ย่อย: เปลี่ยนเงื่อนไขตามสัญชาติที่เลือกอัตโนมัติ -->
+  <div class="form-group-search">
+    <label class="search-label">เงื่อนไขการตรวจสอบ</label>
+    <select [(ngModel)]="filterType" class="search-select">
+      @if (nationality() === 'thai') {
+        <option value="idCard">💳 เลขบัตรประชาชน (National ID)</option>
+        <option value="nameTh">📝 ชื่อจริง - นามสกุล (ภาษาไทย)</option>
+      } @else {
+        <option value="passport">🛂 เลขพาสปอร์ต (Passport ID)</option>
+        <option value="ssoId">🛡️ เลขประกันสังคม (Social Security ID)</option>
+        <option value="nameEn">🔤 ชื่อจริง - นามสกุล (English Name)</option>
+      }
+    </select>
+  </div>
+
+  <!-- ช่องกรอกคำค้นหาย่อย แตกช่องอัตโนมัติตามประเภทเงื่อนไข -->
+  @if (filterType === 'nameTh' || filterType === 'nameEn') {
+    <div class="form-group-search-flex">
+      <label class="search-label">ชื่อจริง (First Name)</label>
+      <input
+        type="text"
+        [(ngModel)]="firstNameKeyword"
+        placeholder="ระบุชื่อจริง..."
+        class="search-input"
+      />
+    </div>
+    @if (filterType === 'nameEn') {
+      <div class="form-group-search-flex">
+        <label class="search-label">ชื่อกลาง - Middle Name <span style="font-size:0.78em;opacity:0.6;">(optional)</span></label>
+        <input
+          type="text"
+          [(ngModel)]="middleNameKeyword"
+          placeholder="ชื่อกลาง (ถ้ามี)..."
+          class="search-input"
+        />
+      </div>
+    }
+    <div class="form-group-search-flex">
+      <label class="search-label">นามสกุล (Surname)</label>
+      <input
+        type="text"
+        [(ngModel)]="lastNameKeyword"
+        placeholder="ระบุนามสกุล..."
+        class="search-input"
+      />
+    </div>
+  } @else {
+    <div class="form-group-search-flex">
+      <label class="search-label">
+        {{ filterType === 'idCard' ? 'ระบุเลขบัตรประชาชน 13 หลัก' : (filterType === 'passport' ? 'ระบุเลขพาสปอร์ต' : 'ระบุเลขประกันสังคม') }}
+      </label>
+      <input
+        type="text"
+        [(ngModel)]="singleKeyword"
+        placeholder="กรอกข้อมูลเพื่อตรวจสอบ..."
+        class="search-input"
+      />
+    </div>
+  }
+
+  <button (click)="onSearchSubmit()" class="btn-search">ค้นหาข้อมูล</button>
+</div>

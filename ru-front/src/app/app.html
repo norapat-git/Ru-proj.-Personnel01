@@ -1,0 +1,43 @@
+<div class="container">
+  <!-- Global notification toast/banner -->
+  @if (notification()) {
+    <div [class]="notification()?.type === 'success' ? 'global-banner success' : 'global-banner error'">
+      {{ notification()?.message }}
+    </div>
+  }
+
+  <!-- Header Section -->
+  <div class="app-header">
+    <h1 class="title-text">บุคลากรรับฝาก (สถาบันภาษา)</h1>
+    
+    <!-- Action buttons -->
+    <div class="header-actions">
+      @if (currentMode() === 'result') {
+        <button class="btn-fill" (click)="switchMode('form')">➕ เพิ่มข้อมูลบุคลากร (Add Staff)</button>
+      } @else {
+        <button class="btn-cancel" (click)="switchMode('result')">⬅️ กลับหน้าค้นหา (Back to Search)</button>
+      }
+    </div>
+  </div>
+
+  <!-- Global Nationality Selector -->
+  <app-nationality-toggle></app-nationality-toggle>
+
+  <!-- Main Content Area -->
+  <div class="content-area">
+    @if (currentMode() === 'result') {
+      <div class="search-section">
+        <app-personnel-search></app-personnel-search>
+      </div>
+      @if (hasSearched()) {
+        <div class="result-section">
+          <app-personnel-result></app-personnel-result>
+        </div>
+      }
+    } @else {
+      <div class="form-section">
+        <app-personnel-form (onCancel)="switchMode('result')"></app-personnel-form>
+      </div>
+    }
+  </div>
+</div>

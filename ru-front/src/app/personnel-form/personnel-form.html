@@ -1,0 +1,243 @@
+<div class="form-box">
+  <h4>ระบบบันทึกข้อมูลบุคลากรมหาวิทยาลัย (ครบถ้วนทุกคอลัมน์)</h4>
+
+  <!-- แถบแจ้งผลลัพธ์หลัง save (แทน alert popup) -->
+  @if (formMessage) {
+    <div [class]="formMessage.type === 'success' ? 'form-banner form-banner-success' : 'form-banner form-banner-error'">
+      {{ formMessage.text }}
+    </div>
+  }
+
+  <!-- block 1 ข้อมูลส่วนบุคคลพื้นฐาน -->
+  <fieldset class="form-fieldset-identity">
+    <legend class="form-fieldset-legend">
+      1. ข้อมูลส่วนบุคคลพื้นฐาน - ประเภท:
+      {{ nationality() === 'thai' ? 'บุคลากรชาวไทย' : 'บุคลากรต่างชาติ' }}
+    </legend>
+    <div class="form-grid-33">
+      <!-- ส่วนรับข้อมูลสำหรับบุคลากรชาวไทย -->
+      @if (nationality() === 'thai') {
+        <div>
+          <label class="field-label">หมายเลขประกันสังคม</label>
+          <input type="text" [ngModel]="personnelData.perSsoId" (input)="onNumberInput($event, 'perSsoId', 20)" class="field-input" placeholder="เลขประกันสังคม 20 หลัก (ไม่บังคับ)" maxlength="20" />
+        </div>
+        <div>
+          <label class="field-label">เลขประจำตัวประชาชน <span class="required">*</span></label>
+          <input type="text" [ngModel]="personnelData.perCitizenId" (input)="onNumberInput($event, 'perCitizenId', 13)" [class.is-invalid]="invalidFields['perCitizenId']" class="field-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" />
+          @if (invalidFields['perCitizenId']) {
+            <small class="field-error">กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก</small>
+          }
+        </div>
+        <div>
+          <label class="field-label">รหัสคำนำหน้านาม <span class="required">*</span></label>
+          <select [ngModel]="personnelData.preCode" (ngModelChange)="onPreCodeSelect($event)" [class.is-invalid]="invalidFields['preCode']" class="field-select">
+            <option [value]="null">-- เลือกคำนำหน้าชื่อ --</option>
+            <option [value]="1">นาย</option>
+            <option [value]="2">นางสาว</option>
+            <option [value]="3">นาง</option>
+            <option [value]="4">ดร.</option>
+            <option [value]="5">ผศ.</option>
+            <option [value]="6">ผศ.ดร.</option>
+            <option [value]="7">รศ.</option>
+            <option [value]="8">รศ.ดร.</option>
+            <option [value]="9">ศ.</option>
+            <option [value]="10">ศ.ดร.</option>
+          </select>
+          @if (invalidFields['preCode']) {
+            <small class="field-error">กรุณาเลือกคำนำหน้าชื่อ</small>
+          }
+        </div>
+        <div>
+          <label class="field-label">ชื่อ - นามสกุลภาษาไทย <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="personnelData.perNameTh" [class.is-invalid]="invalidFields['perNameTh']" class="field-input" placeholder="ชื่อ-นามสกุล ภาษาไทย" maxlength="100" />
+          @if (invalidFields['perNameTh']) {
+            <small class="field-error">กรุณากรอกชื่อ-นามสกุลภาษาไทย</small>
+          }
+        </div>
+      } @else {
+        <!-- ส่วนรับข้อมูลสำหรับบุคลากรต่างชาติ -->
+        <div>
+          <label class="field-label">Social Security Number</label>
+          <input type="text" [ngModel]="personnelData.perSsoId" (input)="onNumberInput($event, 'perSsoId', 20)" class="field-input" placeholder="เลขประกันสังคม 20 หลัก (ถ้ามี)" maxlength="20" />
+        </div>
+        <div>
+          <label class="field-label">Passport ID <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="personnelData.perPassportNo" [class.is-invalid]="invalidFields['perPassportNo']" class="field-input" placeholder="Passport Number" maxlength="15" />
+          @if (invalidFields['perPassportNo']) {
+            <small class="field-error">Please enter Passport Number</small>
+          }
+        </div>
+        <div>
+          <label class="field-label">First Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="personnelData.perFirstNameEn" [class.is-invalid]="invalidFields['perFirstNameEn']" class="field-input" placeholder="First Name" maxlength="100" />
+          @if (invalidFields['perFirstNameEn']) {
+            <small class="field-error">Please enter First Name</small>
+          }
+        </div>
+        <div>
+          <label class="field-label">Middle Name <span class="optional-hint">(optional)</span></label>
+          <input type="text" [(ngModel)]="personnelData.perMiddleNameEn" class="field-input" placeholder="Middle Name (if any)" maxlength="100" />
+        </div>
+        <div>
+          <label class="field-label">Last Name <span class="required">*</span></label>
+          <input type="text" [(ngModel)]="personnelData.perLastNameEn" [class.is-invalid]="invalidFields['perLastNameEn']" class="field-input" placeholder="Last Name" maxlength="100" />
+          @if (invalidFields['perLastNameEn']) {
+            <small class="field-error">Please enter Last Name</small>
+          }
+        </div>
+        <div>
+          <label class="field-label">Date of application (Passport)</label>
+          <input type="date" [(ngModel)]="personnelData.perPassportStartD" class="field-input" />
+        </div>
+        <div>
+          <label class="field-label">Date of expiration (Passport)</label>
+          <input type="date" [(ngModel)]="personnelData.perPassportExpireD" class="field-input" />
+        </div>
+      }
+
+      <!-- เลขประจำตัวผู้เสียภาษี 2 nation-->
+      <div>
+        <label class="field-label">
+          @if (nationality() === 'thai') {
+            เลขประจำตัวผู้เสียภาษีอากร
+          } @else {
+            Tax ID
+          }
+        </label>
+        <input type="text" [ngModel]="personnelData.perTaxId" (input)="onNumberInput($event, 'perTaxId', 20)" class="field-input" [placeholder]="nationality() === 'thai' ? 'เลขประจำตัวผู้เสียภาษีอากร (สูงสุด 20 หลัก)' : 'Tax ID (max 20 digits)'" maxlength="20" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ข้อมูลตำแหน่งและสังกัดหน่วยงาน -->
+  <fieldset class="form-fieldset-identity">
+    <legend class="form-fieldset-legend">
+      2. ข้อมูลตำแหน่งและสังกัดหน่วยงาน (Position &amp; Affiliation)
+    </legend>
+    <div class="form-grid-33">
+      <div>
+        <label class="field-label">รหัสประเภทบุคลากร <span class="required">*</span></label>
+        <input type="text" [ngModel]="personnelData.typeCode" (input)="onNumberInput($event, 'typeCode', 2)" [class.is-invalid]="invalidFields['typeCode']" class="field-input" placeholder="รหัสประเภท เช่น 1, 2" maxlength="2" />
+        @if (invalidFields['typeCode']) {
+          <small class="field-error">กรุณากรอกรหัสประเภทบุคลากร</small>
+        }
+      </div>
+      <div>
+        <label class="field-label">ประเภทบุคลากร <span class="required">*</span></label>
+        <input type="text" [(ngModel)]="personnelData.typeName" [class.is-invalid]="invalidFields['typeName']" class="field-input" placeholder="ข้าราชการ / พนักงานมหาวิทยาลัย" maxlength="100" />
+        @if (invalidFields['typeName']) {
+          <small class="field-error">กรุณากรอกประเภทบุคลากร</small>
+        }
+      </div>
+      <div>
+        <label class="field-label">หมายเลข Slip เงินเดือน</label>
+        <input type="text" [(ngModel)]="personnelData.perSlipId" class="field-input" placeholder="เลขสลิปเงินเดือน 6 หลัก" maxlength="6" />
+      </div>
+      <div>
+        <label class="field-label">ตำแหน่งงาน</label>
+        <select [(ngModel)]="personnelData.poscName" class="field-select">
+          <option value="">-- เลือกตำแหน่งงาน --</option>
+          @for (pos of positionOptions; track pos.value) {
+            <option [value]="pos.value">{{ pos.label }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="field-label">เลขที่ตำแหน่ง</label>
+        <input type="text" [ngModel]="personnelData.perPosId" (input)="onNumberInput($event, 'perPosId', 5)" class="field-input" placeholder="รหัสเลขที่ตำแหน่ง 5 หลัก" maxlength="5" />
+      </div>
+      <div>
+        <label class="field-label">คณะสังกัดหน่วยงาน</label>
+        <select [ngModel]="personnelData.facName" (ngModelChange)="onFacultySelect($event)" class="field-select">
+          <option value="">-- เลือกคณะ / หน่วยงาน --</option>
+          @for (fac of facultyOptions; track fac.facCode) {
+            <option [value]="fac.facName">{{ fac.facName }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="field-label">รหัสหน่วยงาน</label>
+        <input type="text" [ngModel]="personnelData.perFacC" class="field-input" placeholder="ออโต้เมื่อเลือกคณะ" readonly />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ข้อมูลอัตราค่าจ้างและการเงิน -->
+  <fieldset class="form-fieldset-identity">
+    <legend class="form-fieldset-legend">
+      3. ข้อมูลอัตราค่าจ้างและการเงิน (Salary &amp; Finance)
+    </legend>
+    <div class="form-grid-33">
+      <div>
+        <label class="field-label">เงินเดือน <span class="required">*</span></label>
+        <input type="text" [ngModel]="personnelData.perSalary" (input)="onDecimalInput($event, 'perSalary', 10)" [class.is-invalid]="invalidFields['perSalary']" class="field-input" placeholder="อัตราเงินเดือนปกติ" />
+        @if (invalidFields['perSalary']) {
+          <small class="field-error">กรุณากรอกอัตราเงินเดือน (ต้องเป็นจำนวนบวก)</small>
+        }
+      </div>
+      <div>
+        <label class="field-label">เงินเดือนถือจ่าย</label>
+        <input type="text" [ngModel]="personnelData.perHoldSalary" (input)="onDecimalInput($event, 'perHoldSalary', 10)" class="field-input" placeholder="ยอดเงินเดือนที่ถูกอายัด (ถ้ามี)" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!--ข้อมูลกองทุนและสวัสดิการสถาบัน -->
+  <fieldset class="form-fieldset-identity">
+    <legend class="form-fieldset-legend">
+      4. ข้อมูลกองทุนและสวัสดิการสถาบัน (Welfare &amp; Provident Fund)
+    </legend>
+    <div class="form-grid-33">
+      <div>
+        <label class="field-label">สมัครกองทุน PVD</label>
+        <select [(ngModel)]="personnelData.perPvdfApp" class="field-select">
+          <option [value]="null">-- เลือกสถานะ --</option>
+          <option value="Y">Yes (สะสม)</option>
+          <option value="N">No (ไม่สะสม)</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">วันทีสมัครกองทุน PVD</label>
+        <input type="date" [(ngModel)]="personnelData.perPvdfAppD" class="field-input" />
+      </div>
+      <div>
+        <label class="field-label">ออกจากกองทุน PVD</label>
+        <select [(ngModel)]="personnelData.perPvdfQuit" class="field-select">
+          <option [value]="null">-- เลือกสถานะ --</option>
+          <option value="Y">Yes (ลาออกแล้ว)</option>
+          <option value="N">No (ยังไม่ลาออก)</option>
+        </select>
+      </div>
+      <div>
+        <label class="field-label">วันทีออกจากกองทุน PVD</label>
+        <input type="date" [(ngModel)]="personnelData.perPvdfQuitD" class="field-input" />
+      </div>
+      <div>
+        <label class="field-label">ประเภทการออมเงิน</label>
+        <input type="text" [ngModel]="personnelData.perFundType" (input)="onNumberInput($event, 'perFundType', 1)" class="field-input" placeholder="รหัสประเภทกองทุน 1 หลัก" maxlength="1" />
+      </div>
+      <div>
+        <label class="field-label">อัตราการเพิ่มการออมเงิน (ร้อยละ)</label>
+        <input type="text" [ngModel]="personnelData.perSaveRate" (input)="onNumberInput($event, 'perSaveRate', 2)" class="field-input" placeholder="เช่น 3, 5, 10 เปอร์เซ็นต์" maxlength="2" />
+      </div>
+      <div>
+        <label class="field-label">การชำระเงินประกันสังคม</label>
+        <input type="text" [ngModel]="personnelData.perSsoPayment" (input)="onNumberInput($event, 'perSsoPayment', 1)" class="field-input" placeholder="ยอดเงินประกันสังคม 1 หลัก" maxlength="1" />
+      </div>
+      <div>
+        <label class="field-label">สมาชิก ชพค.</label>
+        <input type="text" [ngModel]="personnelData.perFundTeacher" (input)="onNumberInput($event, 'perFundTeacher', 1)" class="field-input" placeholder="เงินสมทบกองทุนครูใหญ่ 1 หลัก" maxlength="1" />
+      </div>
+      <div>
+        <label class="field-label">สมาชิก ชพส.</label>
+        <input type="text" [ngModel]="personnelData.perFundAssteacher" (input)="onNumberInput($event, 'perFundAssteacher', 1)" class="field-input" placeholder="เงินสมทบกองทุนผู้ช่วย 1 หลัก" maxlength="1" />
+      </div>
+    </div>
+  </fieldset>
+
+  <!-- ปุ่มล่างฟอร์ม -->
+  <div class="form-actions">
+    <button type="button" (click)="cancelForm()" class="btn-cancel">ยกเลิก</button>
+    <button type="button" (click)="saveData()" class="btn-save">บันทึกข้อมูลเข้าระบบ</button>
+  </div>
+</div>

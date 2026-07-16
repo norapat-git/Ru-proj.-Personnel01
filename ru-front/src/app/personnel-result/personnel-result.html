@@ -1,0 +1,232 @@
+<div class="result-container">
+  
+  @if (personnelList().length > 0) {
+    <!-- Desktop View: Table Layout -->
+    <div class="desktop-only-table">
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <!-- สลับหัวตารางสรุปตามสัญชาติหลัก -->
+              @if (nationality() === 'thai') {
+                <th>เลขบัตรประชาชน</th>
+                <th>ชื่อ - นามสกุลภาษาไทย</th>
+              } @else {
+                <th>เลขประกันสังคม</th>
+                <th>English Name</th>
+              }
+              <th>คณะสังกัดหน่วยงาน</th>
+              <th>ประเภทบุคลากร</th>
+              <th>เงินเดือน</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (person of personnelList(); track person.PER_CITIZEN_ID) {
+              <tr>
+                <!-- แสดงผลแถวข้อมูลสรุปตามประเภทสัญชาติ -->
+                @if (nationality() === 'thai') {
+                  <td class="id-badge">{{ person.PER_CITIZEN_ID }}</td>
+                  <td class="table-name-cell">
+                    {{ person['FULL_NAME_TH'] || person.PRE_NAME + ' ' + person.PER_NAME_TH }}
+                  </td>
+                } @else {
+                  <td class="id-badge" style="background-color: #2b6cb0">{{ person.PER_SSO_ID || '-' }}</td>
+                  <td class="table-name-cell" style="color: #2b6cb0">{{ person.PER_NAME_EN }}</td>
+                }
+                <td>
+                  <span class="position-tag">{{ person.FAC_NAME || '-' }}</span>
+                </td>
+                <td>{{ person.TYPE_NAME || '-' }}</td>
+                <td class="table-salary-cell">{{ person.PER_SALARY | number: '1.2-2' }} บาท</td>
+              </tr>
+
+              <!-- แผงขยาย Card รายละเอียด -->
+              <tr class="profile-card-row">
+                <td colspan="5" class="profile-card-cell">
+                  <div class="profile-card-grid">
+                    <!-- บล็อกข้อมูลประจำตัวบุคคล -->
+                    <div class="profile-block-item">
+                      <strong class="profile-block-title">[ข้อมูลประจำตัวบุคคล]</strong>
+                      @if (nationality() === 'thai') {
+                        <div><b>เลขประจำตัวประชาชน</b> {{ person.PER_CITIZEN_ID }}</div>
+                        <div><b>เลขประจำตัวผู้เสียภาษีอากร</b> {{ person.PER_TAX_ID || '-' }}</div>
+                        <div><b>หมายเลขประกันสังคม</b> {{ person.PER_SSO_ID || '-' }}</div>
+                      } @else {
+                        <div><b>Social Security Number</b> {{ person.PER_SSO_ID || '-' }}</div>
+                        <div><b>Passport ID</b> {{ person.PER_PASSPORT_NO || '-' }}</div>
+                        <div><b>English Name</b> {{ person.PER_NAME_EN }}</div>
+                        <div><b>Date of application</b> {{ person.PER_PASSPORT_START_D || '-' }}</div>
+                        <div><b>Date of expiration</b> {{ person.PER_PASSPORT_EXPIRE_D || '-' }}</div>
+                        <div><b>Tax ID</b> {{ person.PER_TAX_ID || '-' }}</div>
+                      }
+                    </div>
+
+                    <!-- บล็อกโครงสร้างตำแหน่ง -->
+                    <div class="profile-block-item">
+                      <strong class="profile-block-title">[ข้อมูลโครงสร้างตำแหน่ง]</strong>
+                      <div><b>รหัสประเภทบุคลากร</b> {{ person.TYPE_CODE }}</div>
+                      <div><b>รหัสคำนำหน้านาม</b> {{ person.PRE_CODE }}</div>
+                      <div><b>หมายเลข Slip เงินเดือน</b> {{ person.PER_SLIP_ID || '-' }}</div>
+                      <div><b>เลขที่ตำแหน่ง</b> {{ person.PER_POS_ID }}</div>
+                      <div><b>ตำแหน่งงาน</b> {{ person.POSC_NAME || '-' }}</div>
+                    </div>
+
+                    <!-- บล็อกสังกัดและการเงิน -->
+                    <div class="profile-block-item">
+                      <strong class="profile-block-title">[ข้อมูลสังกัดและการเงิน]</strong>
+                      <div><b>รหัสหน่วยงาน</b> {{ person.PER_FAC_C }}</div>
+                      <div><b>เงินเดือนถือจ่าย</b> {{ person.PER_HOLD_SALARY | number: '1.2-2' }}</div>
+                      <div><b>ประเภทกองทุน</b> {{ person.FUND_NAME || '-' }}</div>
+                    </div>
+
+                    <!-- บล็อกข้อมูลสวัสดิการและกองทุน -->
+                    <div class="profile-block-welfare">
+                      <strong class="profile-block-welfare-title">[ข้อมูลสวัสดิการและกองทุน]</strong>
+                      <div><b>สมัครกองทุน PVD</b> {{ person.PER_PVDF_APP || '-' }}</div>
+                      <div><b>วันทีสมัครกองทุน PVD</b> {{ person.PER_PVDF_APP_D || '-' }}</div>
+                      <div><b>ออกจากกองทุน PVD</b> {{ person.PER_PVDF_QUIT || '-' }}</div>
+                      <div><b>วันทีออกจากกองทุน PVD</b> {{ person.PER_PVDF_QUIT_D || '-' }}</div>
+                      <div><b>ประเภทการออมเงิน</b> {{ person.PER_FUND_TYPE }}</div>
+                      <div><b>อัตราการเพิ่มการออมเงิน (ร้อยละ)</b> {{ person.PER_SAVE_RATE }} %</div>
+                      <div><b>การชำระเงินประกันสังคม</b> {{ person.PER_SSO_PAYMENT }}</div>
+                      <div><b>สมาชิก ชพค.</b> {{ person.PER_FUND_TEACHER }}</div>
+                      <div><b>สมาชิก ชพส.</b> {{ person.PER_FUND_ASSTEACHER }}</div>
+                    </div>
+
+                    <!-- บล็อกข้อมูลระบบ -->
+                    <div class="profile-block-system">
+                      <strong class="profile-block-system-title">[ข้อมูลบันทึกระบบ]</strong>
+                      <div><b>วันที่สร้าง</b> {{ person.CREATED_DATE || '-' }}</div>
+                      <div><b>ผู้สร้าง</b> {{ person.CREATED_BY || '-' }}</div>
+                      <div><b>วันที่แก้ไข</b> {{ person.UPDATED_DATE || '-' }}</div>
+                      <div><b>ผู้แก้ไข</b> {{ person.UPDATED_BY || '-' }}</div>
+                    </div>
+                  </div>
+
+                  <!-- แถบขอบปุ่มการปฏิบัติการด้านล่างสุดของ Card -->
+                  <div class="profile-card-actions">
+                    <button type="button" (click)="triggerEditMode(person)" class="btn-update-info">
+                      Update Information (แก้ไขประวัติ)
+                    </button>
+                    <button
+                      type="button"
+                      (click)="triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)"
+                      class="btn-delete-record"
+                    >
+                      Delete Record (ลบข้อมูลบุคลากร)
+                    </button>
+                  </div>
+              </td>
+            </tr>
+          }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Mobile View: Card List Layout -->
+    <div class="mobile-only-cards">
+      @for (person of personnelList(); track person.PER_CITIZEN_ID) {
+        <div class="mobile-person-card">
+          <!-- ส่วนหัวการ์ด -->
+          <div class="mobile-card-header">
+            @if (nationality() === 'thai') {
+              <span class="card-id">💳 {{ person.PER_CITIZEN_ID }}</span>
+              <span class="card-name">{{ person['FULL_NAME_TH'] || person.PRE_NAME + ' ' + person.PER_NAME_TH }}</span>
+            } @else {
+              <span class="card-id" style="background-color: #ebf8ff; color: #2b6cb0;">🛡️ SSO: {{ person.PER_SSO_ID || '-' }}</span>
+              <span class="card-name" style="color: #2b6cb0;">{{ person.PER_NAME_EN }}</span>
+            }
+          </div>
+          
+          <!-- ข้อมูลย่อ -->
+          <div class="mobile-card-body">
+            <div class="body-row">
+              <span class="body-label">คณะสังกัด:</span>
+              <span class="body-value position-tag">{{ person.FAC_NAME || '-' }}</span>
+            </div>
+            <div class="body-row">
+              <span class="body-label">ประเภทบุคลากร:</span>
+              <span class="body-value">{{ person.TYPE_NAME || '-' }}</span>
+            </div>
+            <div class="body-row">
+              <span class="body-label">เงินเดือน:</span>
+              <span class="body-value salary-val">{{ person.PER_SALARY | number: '1.2-2' }} บาท</span>
+            </div>
+            
+            <!-- เมนูขยายข้อมูลโดยละเอียด -->
+            <details class="mobile-details-disclosure">
+              <summary class="disclosure-summary">🔍 ดูรายละเอียดเพิ่มเติม</summary>
+              <div class="disclosure-content">
+                <div class="disclosure-block">
+                  <strong>[ข้อมูลประจำตัว]</strong>
+                  @if (nationality() === 'thai') {
+                    <div><b>เลขบัตรประชาชน:</b> {{ person.PER_CITIZEN_ID }}</div>
+                    <div><b>เลขผู้เสียภาษี:</b> {{ person.PER_TAX_ID || '-' }}</div>
+                    <div><b>ประกันสังคม:</b> {{ person.PER_SSO_ID || '-' }}</div>
+                  } @else {
+                    <div><b>ประกันสังคม (SSO ID):</b> {{ person.PER_SSO_ID || '-' }}</div>
+                    <div><b>Passport No:</b> {{ person.PER_PASSPORT_NO || '-' }}</div>
+                    <div><b>English Name:</b> {{ person.PER_NAME_EN }}</div>
+                    <div><b>Passport Start:</b> {{ person.PER_PASSPORT_START_D || '-' }}</div>
+                    <div><b>Passport Expire:</b> {{ person.PER_PASSPORT_EXPIRE_D || '-' }}</div>
+                    <div><b>เลขผู้เสียภาษี:</b> {{ person.PER_TAX_ID || '-' }}</div>
+                  }
+                </div>
+                
+                <div class="disclosure-block">
+                  <strong>[ตำแหน่งและสังกัด]</strong>
+                  <div><b>Type Code:</b> {{ person.TYPE_CODE }}</div>
+                  <div><b>Pre Code:</b> {{ person.PRE_CODE }}</div>
+                  <div><b>Slip ID:</b> {{ person.PER_SLIP_ID || '-' }}</div>
+                  <div><b>Position ID:</b> {{ person.PER_POS_ID }}</div>
+                  <div><b>Position Name:</b> {{ person.POSC_NAME || '-' }}</div>
+                  <div><b>Faculty Code:</b> {{ person.PER_FAC_C }}</div>
+                </div>
+                
+                <div class="disclosure-block">
+                  <strong>[สวัสดิการและการเงิน]</strong>
+                  <div><b>Hold Salary:</b> {{ person.PER_HOLD_SALARY | number: '1.2-2' }}</div>
+                  <div><b>Fund Name:</b> {{ person.FUND_NAME || '-' }}</div>
+                  <div><b>PVDF Status:</b> {{ person.PER_PVDF_APP || '-' }}</div>
+                  <div><b>PVDF Apply Date:</b> {{ person.PER_PVDF_APP_D || '-' }}</div>
+                  <div><b>PVDF Quit:</b> {{ person.PER_PVDF_QUIT || '-' }}</div>
+                  <div><b>PVDF Quit Date:</b> {{ person.PER_PVDF_QUIT_D || '-' }}</div>
+                  <div><b>Fund Type:</b> {{ person.PER_FUND_TYPE }}</div>
+                  <div><b>Saving Rate:</b> {{ person.PER_SAVE_RATE }}%</div>
+                  <div><b>SSO Payment:</b> {{ person.PER_SSO_PAYMENT }}</div>
+                  <div><b>Teacher Fund:</b> {{ person.PER_FUND_TEACHER }}</div>
+                  <div><b>Assistant Fund:</b> {{ person.PER_FUND_ASSTEACHER }}</div>
+                </div>
+
+                <div class="disclosure-block">
+                  <strong>[ข้อมูลบันทึกระบบ]</strong>
+                  <div><b>Created Date:</b> {{ person.CREATED_DATE || '-' }}</div>
+                  <div><b>Created By:</b> {{ person.CREATED_BY || '-' }}</div>
+                  <div><b>Updated Date:</b> {{ person.UPDATED_DATE || '-' }}</div>
+                  <div><b>Updated By:</b> {{ person.UPDATED_BY || '-' }}</div>
+                </div>
+              </div>
+            </details>
+          </div>
+          
+          <!-- ปุ่มดำเนินการสำหรับโมบายล์การ์ด -->
+          <div class="mobile-card-actions">
+            <button type="button" (click)="triggerEditMode(person)" class="btn-update-info">
+              แก้ไขประวัติ
+            </button>
+            <button type="button" (click)="triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-delete-record">
+              ลบข้อมูล
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <!-- ไม่พบข้อมูล -->
+    <div class="empty-search-state" style="color: #e53e3e; border-color: #feb2b2; background-color: #fff5f5;">
+      ❌ ไม่พบข้อมูล
+    </div>
+  }
+
+</div>

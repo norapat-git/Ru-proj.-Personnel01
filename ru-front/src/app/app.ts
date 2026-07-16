@@ -3,7 +3,7 @@ import { PersonnelSearch } from './personnel-search/personnel-search';
 import { PersonnelForm } from './personnel-form/personnel-form';
 import { PersonnelResult } from './personnel-result/personnel-result';
 import { NationalityToggle } from './nationality-toggle/nationality-toggle';
-import { PersonnelService } from './services/personnel';
+import { PersonnelService } from './services/services';
 
 @Component({
   selector: 'app-root',

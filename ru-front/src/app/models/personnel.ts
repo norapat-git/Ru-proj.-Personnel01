@@ -34,6 +34,7 @@ export interface PersonnelDataResult {
   UPDATED_BY: string;
   FULL_NAME_TH?: string;
   FUND_NAME?: string;
+  FAC_NAME2?: string;
 }
 
 export interface PersonnelInsertInput {
@@ -68,4 +69,33 @@ export interface PersonnelInsertInput {
   facName: string;
   perSalary: number | null;
   perHoldSalary: number | null;
+}
+
+//ตัวเลือกคำนำหน้าชื่อ 
+export interface PrenameOption {
+  preCode: number;
+  preName: string;
+  preName2?: string;
+  preNameEn?: string;
+  preNameIdcard?: string;
+}
+
+//ตัวเลือกคณะ/หน่วยงาน
+export interface FacultyOption {
+  facCode: number;
+  facName: string;
+  facName2?: string;
+}
+
+//ตัวเลือกประเภทบุคลากร 
+export interface PersonTypeOption {
+  typeCode: number;
+  typeName: string;
+  typeName2?: string;
+}
+
+//ตัวเลือกประเภทกองทุน
+export interface FundTypeOption {
+  fundCode: number;
+  fundName: string;
 }

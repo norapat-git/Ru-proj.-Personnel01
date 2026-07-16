@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { PersonnelService } from '../services/personnel';
+import { PersonnelService } from '../services/services';
 
 @Component({
   selector: 'app-nationality-toggle',

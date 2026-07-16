@@ -1,4 +1,4 @@
-/* ช่อง readonly (auto-fill) แสดงสีพื้นหลังต่าง เพื่อบอกผู้ใช้ว่าไม่ต้องกรอกเอง */
+/* ช่อง auto-fill แสดงสีพื้นหลังต่างไม่ต้องกรอกเอง */
 .field-input[readonly] {
   background-color: #f0f4f8;
   color: #555;

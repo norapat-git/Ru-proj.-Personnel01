@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
-import { PersonnelService } from '../services/personnel';
+import { PersonnelService } from '../services/services';
 
 @Component({
   selector: 'app-personnel-result',
@@ -15,6 +15,9 @@ export class PersonnelResult {
 
   // สัญญาณแชร์สัญชาติ
   nationality = this.personnelService.staffNationalitySignal;
+
+  // สำหรับการเปิด Modal ยืนยันการลบ
+  deleteTargetId: string | null = null;
 
   // ฟังก์ชันรองรับการกดปุ่มดึงข้อมูลไปแก้ไขจากในตาราง
   triggerEditMode(rawSelection: any): void {
@@ -68,33 +71,43 @@ export class PersonnelResult {
 
   // ฟังก์ชันกดลบข้อมูลจากขอบด้านล่างของแผงรายละเอียด Card
   triggerDelete(targetCitizenId: string): void {
-    if (confirm(`คุณต้องการลบข้อมูลบุคลากรรหัสบัตรประชาชน: ${targetCitizenId} ใช่หรือไม่`)) {
-      // ส่งคำสั่งลบผ่านสายสัญญาณบริการไปยังหลังบ้าน
-      this.personnelService.deletePersonnel(targetCitizenId).subscribe({
-        next: (res: any) => {
-          if (res && res.success) {
-            this.personnelService.notificationSignal.set({ 
-              type: 'success', 
-              message: res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว' 
-            });
-            setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
+    this.deleteTargetId = targetCitizenId;
+  }
 
-            // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันทีโดยไม่ต้องยิงคิวรีใหม่ให้หน่วงระบบ
-            const currentList = this.personnelService.personnelListSignal();
-            this.personnelService.personnelListSignal.set(
-              currentList.filter((item) => item.PER_CITIZEN_ID !== targetCitizenId),
-            );
-          }
-        },
-        error: (err: any) => {
-          console.error('Delete Error:', err);
+  cancelDelete(): void {
+    this.deleteTargetId = null;
+  }
+
+  confirmDelete(): void {
+    const targetId = this.deleteTargetId;
+    if (!targetId) return;
+
+    this.personnelService.deletePersonnel(targetId).subscribe({
+      next: (res: any) => {
+        if (res && res.success) {
           this.personnelService.notificationSignal.set({ 
-            type: 'error', 
-            message: 'ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง' 
+            type: 'success', 
+            message: res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว' 
           });
           setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
-        },
-      });
-    }
+
+          // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันทีโดยไม่ต้องยิงคิวรีใหม่ให้หน่วงระบบ
+          const currentList = this.personnelService.personnelListSignal();
+          this.personnelService.personnelListSignal.set(
+            currentList.filter((item) => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetId),
+          );
+        }
+        this.deleteTargetId = null;
+      },
+      error: (err: any) => {
+        console.error('Delete Error:', err);
+        this.personnelService.notificationSignal.set({ 
+          type: 'error', 
+          message: 'ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง' 
+        });
+        setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
+        this.deleteTargetId = null;
+      },
+    });
   }
 }

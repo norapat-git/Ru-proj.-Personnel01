@@ -1,6 +1,7 @@
-import { Component, inject, effect } from '@angular/core';
+import { Component, inject, effect, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PersonnelService } from '../services/personnel';
+import { ActivatedRoute, Router } from '@angular/router';
+import { PersonnelService } from '../services/services';
 
 @Component({
   selector: 'app-personnel-search',
@@ -8,8 +9,10 @@ import { PersonnelService } from '../services/personnel';
   imports: [FormsModule],
   templateUrl: './personnel-search.html',
 })
-export class PersonnelSearch {
+export class PersonnelSearch implements OnInit {
   private personnelService = inject(PersonnelService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   nationality = this.personnelService.staffNationalitySignal; // ดึงสัญญาณสัญชาติจากคลังกลาง
   filterType: string = 'idCard';
@@ -30,6 +33,30 @@ export class PersonnelSearch {
     });
   }
 
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      const searchKeyword = params[' ']; 
+      const searchType = params[' '];       
+      const firstName = params[' '];         
+      const lastName = params[' '];           
+      const facName = params['FAC_NAME'];             
+
+      if (searchKeyword) {
+        this.singleKeyword = searchKeyword;
+        if (searchType) this.filterType = searchType;
+        this.onSearchSubmit();
+      } else if (firstName || lastName) {
+        this.firstNameKeyword = firstName || '';
+        this.lastNameKeyword = lastName || '';
+        this.filterType = 'nameTh';
+        this.onSearchSubmit();
+      } else if (facName) {
+        console.log('FAC_NAME from URL:', facName);
+      }
+    });
+  }
+
+
   onSearchSubmit(): void {
     // finalKeyword เก็บค่าที่ค้นหา
     let finalKeyword = '';
@@ -44,6 +71,15 @@ export class PersonnelSearch {
     } else {
       finalKeyword = this.singleKeyword.trim();
     }
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        search_keyword: finalKeyword,
+        search_type: this.filterType
+      },
+      queryParamsHandling: 'merge'
+    });
 
     this.personnelService.searchPersonnel(this.filterType, finalKeyword).subscribe({
       next: (response: any) => {

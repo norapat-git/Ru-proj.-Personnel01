@@ -7,5 +7,7 @@
 			"path": "ru-front"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "ru-front"
+	}
 }

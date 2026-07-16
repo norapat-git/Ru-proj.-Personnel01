@@ -1,7 +1,7 @@
 import { Component, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { PersonnelService } from '../services/personnel';
-import { PersonnelInsertInput } from '../models/personnel';
+import { PersonnelService } from '../services/services';
+import { PersonnelInsertInput, PrenameOption, FacultyOption, PersonTypeOption, FundTypeOption } from '../models/personnel';
 
 @Component({
   selector: 'app-personnel-form',
@@ -34,8 +34,17 @@ export class PersonnelForm implements OnInit, OnDestroy {
     { value: 'ตำแหน่งงานที่ 6', label: 'ตำแหน่งงานที่ 6' },
   ];
 
-  // ตัวเลือกคณะ / หน่วยงาน (โหลดจาก API)
-  facultyOptions: { facCode: number; facName: string }[] = [];
+  // ตัวเลือกคณะ / หน่วยงาน (โหลดจาก API: FACULTY_CODE)
+  facultyOptions: FacultyOption[] = [];
+
+  // ตัวเลือกคำนำหน้าชื่อ (โหลดจาก API: NORAPAT.PRENAME_CODE)
+  prenameOptions: PrenameOption[] = [];
+
+  // ตัวเลือกประเภทบุคลากร (โหลดจาก API: NORAPAT.PERSONTYPE)
+  personTypeOptions: PersonTypeOption[] = [];
+
+  // ตัวเลือกประเภทกองทุน (โหลดจาก API: NORAPAT.FUND_TYPE)
+  fundTypeOptions: FundTypeOption[] = [];
 
   personnelData: PersonnelInsertInput = {
     perCitizenId: '',
@@ -83,10 +92,54 @@ export class PersonnelForm implements OnInit, OnDestroy {
           this.facultyOptions = res.data.map((row: any) => ({
             facCode: row.FAC_CODE,
             facName: row.FAC_NAME,
+            facName2: row.FAC_NAME2,
           }));
         }
       },
       error: (err) => console.error('Load faculties failed:', err),
+    });
+
+    // โหลดรายชื่อคำนำหน้าชื่อจาก API เพื่อเติม dropdown
+    this.personnelService.getPrenames().subscribe({
+      next: (res: any) => {
+        if (res?.success && res.data) {
+          this.prenameOptions = res.data.map((row: any) => ({
+            preCode: row.PRE_CODE,
+            preName: row.PRE_NAME,
+            preName2: row.PRE_NAME2,
+            preNameEn: row.PRE_NAME_EN,
+            preNameIdcard: row.PRE_NAME_IDCARD,
+          }));
+        }
+      },
+      error: (err) => console.error('Load prenames failed:', err),
+    });
+
+    // โหลดประเภทบุคลากรจาก API เพื่อเติม dropdown
+    this.personnelService.getPersonTypes().subscribe({
+      next: (res: any) => {
+        if (res?.success && res.data) {
+          this.personTypeOptions = res.data.map((row: any) => ({
+            typeCode: row.TYPE_CODE,
+            typeName: row.TYPE_NAME,
+            typeName2: row.TYPE_NAME2,
+          }));
+        }
+      },
+      error: (err) => console.error('Load personTypes failed:', err),
+    });
+
+    // โหลดประเภทกองทุนจาก API เพื่อเติม dropdown
+    this.personnelService.getFundTypes().subscribe({
+      next: (res: any) => {
+        if (res?.success && res.data) {
+          this.fundTypeOptions = res.data.map((row: any) => ({
+            fundCode: row.FUND_CODE,
+            fundName: row.FUND_NAME,
+          }));
+        }
+      },
+      error: (err) => console.error('Load fundTypes failed:', err),
     });
 
     const editPayload = this.personnelService.editingPersonnel();
@@ -122,27 +175,37 @@ export class PersonnelForm implements OnInit, OnDestroy {
     this.personnelData.perFacC = found ? found.facCode : null;
   }
 
-  // ผู้ใช้เลือกคำนำหน้าชื่อจากกล่อง
+  // drop down(PRENAME_CODE)
   onPreCodeSelect(code: number | null) {
-    const mapping: { [key: number]: string } = {
-      1: 'นาย',
-      2: 'นางสาว',
-      3: 'นาง',
-      4: 'ดร.',
-      5: 'ผศ.',
-      6: 'ผศ.ดร.',
-      7: 'รศ.',
-      8: 'รศ.ดร.',
-      9: 'ศ.',
-      10: 'ศ.ดร.',
-    };
-    if (code) {
-      this.personnelData.preCode = code;
-      this.personnelData.preName = mapping[code] || '';
+    const numCode = code !== null && code !== undefined ? Number(code) : null;
+    if (numCode) {
+      this.personnelData.preCode = numCode;
+      const found = this.prenameOptions.find(p => p.preCode === numCode);
+      this.personnelData.preName = found ? found.preName : '';
     } else {
       this.personnelData.preCode = null;
       this.personnelData.preName = '';
     }
+  }
+
+  // dropdown PERSONTYPE — เมื่อเลือก typeName แล้ว typeCode จะเปลี่ยนอัตโนมัติ
+  onPersonTypeSelect(typeName: string) {
+    const found = this.personTypeOptions.find(t => t.typeName === typeName);
+    this.personnelData.typeName = typeName;
+    this.personnelData.typeCode = found ? found.typeCode : null;
+  }
+
+  // dropdown FUND_TYPE — เมื่อเลือก fundName แล้ว perFundType จะเปลี่ยนอัตโนมัติ
+  onFundTypeSelect(fundName: string) {
+    const found = this.fundTypeOptions.find(f => f.fundName === fundName);
+    this.personnelData.perFundType = found ? found.fundCode : null;
+  }
+
+  // helper: แปลง fundCode → fundName สำหรับ [ngModel] ของ dropdown
+  getFundNameByCode(code: number | null): string {
+    if (!code) return '';
+    const found = this.fundTypeOptions.find(f => f.fundCode === code);
+    return found ? found.fundName : '';
   }
 
   // บังคับกรอกเฉพาะตัวเลข

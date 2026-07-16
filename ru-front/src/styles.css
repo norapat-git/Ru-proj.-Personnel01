@@ -504,7 +504,7 @@ body {
   margin-left: 3px;
 }
 
-/* Mobile & Tablet Responsive Styles */
+/* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .container {
     padding: 15px 10px;

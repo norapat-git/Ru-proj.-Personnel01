@@ -75,6 +75,7 @@
                     <div class="profile-block-item">
                       <strong class="profile-block-title">[ข้อมูลสังกัดและการเงิน]</strong>
                       <div><b>รหัสหน่วยงาน</b> {{ person.PER_FAC_C }}</div>
+                      <div><b>ชื่อย่อหน่วยงาน</b> {{ person.FAC_NAME2 || '-' }}</div>
                       <div><b>เงินเดือนถือจ่าย</b> {{ person.PER_HOLD_SALARY | number: '1.2-2' }}</div>
                       <div><b>ประเภทกองทุน</b> {{ person.FUND_NAME || '-' }}</div>
                     </div>
@@ -226,6 +227,25 @@
     <!-- ไม่พบข้อมูล -->
     <div class="empty-search-state" style="color: #e53e3e; border-color: #feb2b2; background-color: #fff5f5;">
       ❌ ไม่พบข้อมูล
+    </div>
+  }
+
+  <!-- Custom Delete Confirmation Modal -->
+  @if (deleteTargetId) {
+    <div class="confirm-modal-overlay">
+      <div class="confirm-modal-box">
+        <div class="confirm-modal-header">
+          <h3>⚠️ ยืนยันการลบข้อมูล</h3>
+        </div>
+        <div class="confirm-modal-body">
+          <p>คุณต้องการลบข้อมูลบุคลากรรายนี้ใช่หรือไม่?</p>
+          <p class="confirm-modal-subtext">การดำเนินการนี้จะไม่สามารถกู้คืนข้อมูลกลับมาได้</p>
+        </div>
+        <div class="confirm-modal-footer">
+          <button type="button" class="btn-modal-cancel" (click)="cancelDelete()">ยกเลิก</button>
+          <button type="button" class="btn-modal-confirm" (click)="confirmDelete()">ยืนยันการลบ</button>
+        </div>
+      </div>
     </div>
   }
 

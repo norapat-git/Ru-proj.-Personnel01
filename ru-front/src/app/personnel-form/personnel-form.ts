@@ -319,7 +319,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
   }
 
-  // บันทึกข้อมูล
+  // บันทึกข้อมูลล
   saveData() {
     if (!this.validateForm()) {
       // scroll ขึ้นไปที่ field แรกที่ error

@@ -1,7 +1,7 @@
 <div class="form-box">
   <h4>ระบบบันทึกข้อมูลบุคลากรมหาวิทยาลัย (ครบถ้วนทุกคอลัมน์)</h4>
 
-  <!-- แถบแจ้งผลลัพธ์หลัง save (แทน alert popup) -->
+  <!-- popup result save -->
   @if (formMessage) {
     <div [class]="formMessage.type === 'success' ? 'form-banner form-banner-success' : 'form-banner form-banner-error'">
       {{ formMessage.text }}

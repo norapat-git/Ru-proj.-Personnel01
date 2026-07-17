@@ -1,7 +1,7 @@
 <div class="result-container">
   
   @if (personnelList().length > 0) {
-    <!-- Desktop View: Table Layout -->
+    <!-- Desktop View Table Layout -->
     <div class="desktop-only-table">
       <div class="table-responsive">
         <table class="data-table">
@@ -125,7 +125,7 @@
       </div>
     </div>
 
-    <!-- Mobile View: Card List Layout -->
+    <!-- Mobile View Card List Layout -->
     <div class="mobile-only-cards">
       @for (person of personnelList(); track person.PER_CITIZEN_ID) {
         <div class="mobile-person-card">

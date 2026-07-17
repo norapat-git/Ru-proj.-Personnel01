@@ -21,7 +21,7 @@ export class PersonnelResult {
 
   // ฟังก์ชันรองรับการกดปุ่มดึงข้อมูลไปแก้ไขจากในตาราง
   triggerEditMode(rawSelection: any): void {
-    // ตัวพิมพ์ใหญ่->พิมพ์เล็ก
+    // แปลงตัวพิมพ์ใหญ่เป็นพิมพ์เล็ก
     this.personnelService.editingPersonnel.set({
       perCitizenId: rawSelection.PER_CITIZEN_ID,
       typeCode: rawSelection.TYPE_CODE,
@@ -91,7 +91,7 @@ export class PersonnelResult {
           });
           setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
 
-          // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันทีโดยไม่ต้องยิงคิวรีใหม่ให้หน่วงระบบ
+          // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันที
           const currentList = this.personnelService.personnelListSignal();
           this.personnelService.personnelListSignal.set(
             currentList.filter((item) => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetId),

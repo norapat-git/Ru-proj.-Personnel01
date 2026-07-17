@@ -21,7 +21,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // form control logic
   isEditMode: boolean = false;
 
-  // แถบแจ้งผลลัพธ์หลัง save — แทน alert popup
+  // popup result save
   formMessage: { type: 'success' | 'error'; text: string } | null = null;
 
   // ตัวเลือกตำแหน่งงาน
@@ -34,16 +34,16 @@ export class PersonnelForm implements OnInit, OnDestroy {
     { value: 'ตำแหน่งงานที่ 6', label: 'ตำแหน่งงานที่ 6' },
   ];
 
-  // ตัวเลือกคณะ / หน่วยงาน (โหลดจาก API: FACULTY_CODE)
+  // โหลดจาก API FACULTY_CODE
   facultyOptions: FacultyOption[] = [];
 
-  // ตัวเลือกคำนำหน้าชื่อ (โหลดจาก API: NORAPAT.PRENAME_CODE)
+  // โหลดจาก API PRENAME_CODE
   prenameOptions: PrenameOption[] = [];
 
-  // ตัวเลือกประเภทบุคลากร (โหลดจาก API: NORAPAT.PERSONTYPE)
+  // โหลดจาก API PERSONTYPE
   personTypeOptions: PersonTypeOption[] = [];
 
-  // ตัวเลือกประเภทกองทุน (โหลดจาก API: NORAPAT.FUND_TYPE)
+  // โหลดจาก API FUND_TYPE
   fundTypeOptions: FundTypeOption[] = [];
 
   personnelData: PersonnelInsertInput = {
@@ -188,20 +188,20 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
   }
 
-  // dropdown PERSONTYPE — เมื่อเลือก typeName แล้ว typeCode จะเปลี่ยนอัตโนมัติ
+  // dropdown PERSONTYPE เมื่อเลือก typeName แล้ว typeCode จะเปลี่ยนอัตโนมัติ
   onPersonTypeSelect(typeName: string) {
     const found = this.personTypeOptions.find(t => t.typeName === typeName);
     this.personnelData.typeName = typeName;
     this.personnelData.typeCode = found ? found.typeCode : null;
   }
 
-  // dropdown FUND_TYPE — เมื่อเลือก fundName แล้ว perFundType จะเปลี่ยนอัตโนมัติ
+  // dropdown FUND_TYPE เมื่อเลือก fundName แล้ว perFundType จะเปลี่ยนอัตโนมัติ
   onFundTypeSelect(fundName: string) {
     const found = this.fundTypeOptions.find(f => f.fundName === fundName);
     this.personnelData.perFundType = found ? found.fundCode : null;
   }
 
-  // helper: แปลง fundCode → fundName สำหรับ [ngModel] ของ dropdown
+  // helper: แปลง fundCode เป็น fundName สำหรับ [ngModel]
   getFundNameByCode(code: number | null): string {
     if (!code) return '';
     const found = this.fundTypeOptions.find(f => f.fundCode === code);
@@ -251,7 +251,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
   }
 
-  // ฟังก์ชันสแกนข้อมูลและตรวจสอบฟิลด์บังคับ Client-Side
+  // ฟังก์ชันสแกนข้อมูลและตรวจสอบฟิลด์บังคับ
   validateForm(): boolean {
     this.invalidFields = {};
     this.formMessage = null;
@@ -302,7 +302,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     return isValid;
   }
 
-  // แสดงข้อความแจ้งเตือนแบบ banner (แทน alert popup)
+  // แสดงข้อความแจ้งเตือนแบบ banner
   private showMessage(type: 'success' | 'error', text: string) {
     if (type === 'success') {
       // ตั้งค่า global toast notification และปิดฟอร์มทันที signal ผ่าน services

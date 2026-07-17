@@ -71,7 +71,7 @@ export interface PersonnelInsertInput {
   perHoldSalary: number | null;
 }
 
-//ตัวเลือกคำนำหน้าชื่อ 
+//คำนำหน้าชื่อ 
 export interface PrenameOption {
   preCode: number;
   preName: string;
@@ -80,22 +80,25 @@ export interface PrenameOption {
   preNameIdcard?: string;
 }
 
-//ตัวเลือกคณะ/หน่วยงาน
+//คณะ/หน่วยงาน
 export interface FacultyOption {
   facCode: number;
   facName: string;
   facName2?: string;
 }
 
-//ตัวเลือกประเภทบุคลากร 
+//ประเภทบุคลากร 
 export interface PersonTypeOption {
   typeCode: number;
   typeName: string;
   typeName2?: string;
 }
 
-//ตัวเลือกประเภทกองทุน
+//ประเภทกองทุน
 export interface FundTypeOption {
   fundCode: number;
   fundName: string;
 }
+
+
+

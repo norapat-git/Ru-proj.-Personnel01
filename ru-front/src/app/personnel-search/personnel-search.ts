@@ -22,7 +22,7 @@ export class PersonnelSearch implements OnInit {
   lastNameKeyword: string = '';
 
   constructor() {
-    // ซิงค์การเปลี่ยนเงื่อนไขการค้นหาตามประเภทสัญชาติโดยอัตโนมัติ
+    // เปลี่ยนเงื่อนไขการค้นหาตามสัญชาติอัตโนมัติ
     effect(() => {
       const value = this.nationality();
       this.filterType = value === 'thai' ? 'idCard' : 'passport';

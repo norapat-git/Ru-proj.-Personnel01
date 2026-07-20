@@ -135,16 +135,11 @@
       </div>
       <div>
         <label class="field-label">หมายเลข Slip เงินเดือน</label>
-        <input type="text" [(ngModel)]="personnelData.perSlipId" class="field-input" placeholder="เลขสลิปเงินเดือน 6 หลัก" maxlength="6" />
+        <input type="text" [ngModel]="personnelData.perSlipId" (input)="onNumberInput($event, 'perSlipId', 6)" class="field-input" placeholder="เลขสลิปเงินเดือน 6 หลัก" maxlength="6" />
       </div>
       <div>
         <label class="field-label">ตำแหน่งงาน</label>
-        <select [(ngModel)]="personnelData.poscName" class="field-select">
-          <option value="">-- เลือกตำแหน่งงาน --</option>
-          @for (pos of positionOptions; track pos.value) {
-            <option [value]="pos.value">{{ pos.label }}</option>
-          }
-        </select>
+        <input type="text" [(ngModel)]="personnelData.poscName" class="field-input" placeholder="กรอกชื่อตำแหน่งงาน" maxlength="100" />
       </div>
       <div>
         <label class="field-label">เลขที่ตำแหน่ง</label>
@@ -207,9 +202,9 @@
       <div>
         <label class="field-label">ออกจากกองทุน PVD</label>
         <select [(ngModel)]="personnelData.perPvdfQuit" class="field-select">
-          <option [value]="null">-- เลือกสถานะ --</option>
-          <option value="Y">Yes (ลาออกแล้ว)</option>
-          <option value="N">No (ยังไม่ลาออก)</option>
+          <option [ngValue]="null">-- เลือกสถานะ --</option>
+          <option [ngValue]="1">ชาย</option>
+          <option [ngValue]="2">หญิง</option>
         </select>
       </div>
       <div>
@@ -232,15 +227,26 @@
       </div>
       <div>
         <label class="field-label">การชำระเงินประกันสังคม</label>
-        <input type="text" [ngModel]="personnelData.perSsoPayment" (input)="onNumberInput($event, 'perSsoPayment', 1)" class="field-input" placeholder="ยอดเงินประกันสังคม 1 หลัก" maxlength="1" />
+        <select [(ngModel)]="personnelData.perSsoPayment" class="field-select">
+          <option [ngValue]="null">-- เลือกสถานะ --</option>
+          <option [ngValue]="1">ชำระ</option>
+          <option [ngValue]="2">ไม่ชำระ</option>
+          <option [ngValue]="3">อายุเกิน 60 ปี</option>
+        </select>
       </div>
       <div>
         <label class="field-label">สมาชิก ชพค.</label>
-        <input type="text" [ngModel]="personnelData.perFundTeacher" (input)="onNumberInput($event, 'perFundTeacher', 1)" class="field-input" placeholder="เงินสมทบกองทุนครูใหญ่ 1 หลัก" maxlength="1" />
+        <select [(ngModel)]="personnelData.perFundTeacher" class="field-select">
+          <option [ngValue]="null">-- เลือกสถานะ --</option>
+          <option [ngValue]="1">เป็นสมาชิก</option>
+        </select>
       </div>
       <div>
         <label class="field-label">สมาชิก ชพส.</label>
-        <input type="text" [ngModel]="personnelData.perFundAssteacher" (input)="onNumberInput($event, 'perFundAssteacher', 1)" class="field-input" placeholder="เงินสมทบกองทุนผู้ช่วย 1 หลัก" maxlength="1" />
+        <select [(ngModel)]="personnelData.perFundAssteacher" class="field-select">
+          <option [ngValue]="null">-- เลือกสถานะ --</option>
+          <option [ngValue]="1">เป็นสมาชิก</option>
+        </select>
       </div>
     </div>
   </fieldset>

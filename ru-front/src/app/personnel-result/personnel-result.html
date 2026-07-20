@@ -77,12 +77,12 @@
                       <div><b>รหัสหน่วยงาน</b> {{ person.PER_FAC_C }}</div>
                       <div><b>ชื่อย่อหน่วยงาน</b> {{ person.FAC_NAME2 || '-' }}</div>
                       <div><b>เงินเดือนถือจ่าย</b> {{ person.PER_HOLD_SALARY | number: '1.2-2' }}</div>
-                      <div><b>ประเภทกองทุน</b> {{ person.FUND_NAME || '-' }}</div>
                     </div>
 
                     <!-- บล็อกข้อมูลสวัสดิการและกองทุน -->
                     <div class="profile-block-welfare">
                       <strong class="profile-block-welfare-title">[ข้อมูลสวัสดิการและกองทุน]</strong>
+                      <div><b>ประเภทกองทุน</b> {{ person.FUND_NAME || '-' }}</div>
                       <div><b>สมัครกองทุน PVD</b> {{ person.PER_PVDF_APP || '-' }}</div>
                       <div><b>วันทีสมัครกองทุน PVD</b> {{ person.PER_PVDF_APP_D || '-' }}</div>
                       <div><b>ออกจากกองทุน PVD</b> {{ person.PER_PVDF_QUIT || '-' }}</div>

@@ -24,16 +24,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // popup result save
   formMessage: { type: 'success' | 'error'; text: string } | null = null;
 
-  // ตัวเลือกตำแหน่งงาน
-  positionOptions = [
-    { value: 'ตำแหน่งงานที่ 1', label: 'ตำแหน่งงานที่ 1' },
-    { value: 'ตำแหน่งงานที่ 2', label: 'ตำแหน่งงานที่ 2' },
-    { value: 'ตำแหน่งงานที่ 3', label: 'ตำแหน่งงานที่ 3' },
-    { value: 'ตำแหน่งงานที่ 4', label: 'ตำแหน่งงานที่ 4' },
-    { value: 'ตำแหน่งงานที่ 5', label: 'ตำแหน่งงานที่ 5' },
-    { value: 'ตำแหน่งงานที่ 6', label: 'ตำแหน่งงานที่ 6' },
-  ];
-
   // โหลดจาก API FACULTY_CODE
   facultyOptions: FacultyOption[] = [];
 
@@ -62,7 +52,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     perTaxId: '',
     perPvdfApp: '',
     perPvdfAppD: null,
-    perPvdfQuit: '',
+    perPvdfQuit: null,
     perPvdfQuitD: null,
     perFundType: null,
     perSaveRate: null,
@@ -216,7 +206,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     if (val.length > maxLength) {
       val = val.slice(0, maxLength);
     }
-    if (fieldName === 'perCitizenId' || fieldName === 'perTaxId' || fieldName === 'perSsoId') {
+    if (fieldName === 'perCitizenId' || fieldName === 'perTaxId' || fieldName === 'perSsoId' || fieldName === 'perSlipId') {
       (this.personnelData as any)[fieldName] = val;
     } else {
       (this.personnelData as any)[fieldName] = val ? Number(val) : null;

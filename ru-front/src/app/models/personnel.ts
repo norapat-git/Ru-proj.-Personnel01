@@ -12,7 +12,7 @@ export interface PersonnelDataResult {
   PER_TAX_ID: string;
   PER_PVDF_APP: string;
   PER_PVDF_APP_D: string;
-  PER_PVDF_QUIT: string;
+  PER_PVDF_QUIT: number | null;
   PER_PVDF_QUIT_D: string;
   PER_FUND_TYPE: number;
   PER_SAVE_RATE: number;
@@ -53,7 +53,7 @@ export interface PersonnelInsertInput {
   perTaxId: string;
   perPvdfApp: string;
   perPvdfAppD: string | null;
-  perPvdfQuit: string;
+  perPvdfQuit: number | null;
   perPvdfQuitD: string | null;
   perFundType: number | null;
   perSaveRate: number | null;

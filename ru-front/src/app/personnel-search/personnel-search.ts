@@ -57,7 +57,8 @@ export class PersonnelSearch implements OnInit {
   }
 
 
-  onSearchSubmit(): void {
+  //  fixx
+  async onSearchSubmit(): Promise<void> {
     // finalKeyword เก็บค่าที่ค้นหา
     let finalKeyword = '';
     if (this.filterType === 'nameTh') {
@@ -81,20 +82,19 @@ export class PersonnelSearch implements OnInit {
       queryParamsHandling: 'merge'
     });
 
-    this.personnelService.searchPersonnel(this.filterType, finalKeyword).subscribe({
-      next: (response: any) => {
-        this.personnelService.hasSearchedSignal.set(true);
-        if (response && response.success && response.data) {
-          this.personnelService.personnelListSignal.set(response.data);
-        } else {
-          this.personnelService.personnelListSignal.set([]);
-        }
-      },
-      error: (err: any) => {
-        console.error('Search failed:', err);
-        this.personnelService.hasSearchedSignal.set(true);
+    //  fixx
+    try {
+      const response = await this.personnelService.searchPersonnel(this.filterType, finalKeyword);
+      this.personnelService.hasSearchedSignal.set(true);
+      if (response && response.success && response.data) {
+        this.personnelService.personnelListSignal.set(response.data);
+      } else {
         this.personnelService.personnelListSignal.set([]);
       }
-    });
+    } catch (err: any) {
+      console.error('Search failed:', err);
+      this.personnelService.hasSearchedSignal.set(true);
+      this.personnelService.personnelListSignal.set([]);
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { Service, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { firstValueFrom } from 'rxjs'; // fix import firstValueFrom
 import { environment } from '../environment/environment';
 import { PersonnelDataResult, PersonnelInsertInput } from '../models/personnel';
 
@@ -20,36 +20,45 @@ export class PersonnelService {
   // สัญญาณสำหรับแจ้งเตือน
   notificationSignal = signal<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  searchPersonnel(type: string, keyword: string): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/search?type=${type}&keyword=${keyword}`);
+  // ค้นหาข้อมูลบุคลากร
+  searchPersonnel(type: string, keyword: string): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/search?type=${type}&keyword=${keyword}`));
   }
 
-  insertPersonnel(personData: PersonnelInsertInput): Observable<any> {
-    return this.http.post(`${this.apiUrl}/insert`, personData);
+  // เพิ่มข้อมูลบุคลากรใหม่
+  insertPersonnel(personData: PersonnelInsertInput): Promise<any> {
+    return firstValueFrom(this.http.post(`${this.apiUrl}/insert`, personData));
   }
 
-  updatePersonnel(personData: PersonnelInsertInput): Observable<any> {
-    return this.http.put(`${this.apiUrl}/update`, personData);
+  // แก้ไขข้อมูล
+  updatePersonnel(personData: PersonnelInsertInput): Promise<any> {
+    return firstValueFrom(this.http.put(`${this.apiUrl}/update`, personData));
   }
 
-  deletePersonnel(id: string): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/delete/${id}`);
+  // ลบข้อมูล
+  deletePersonnel(id: string): Promise<any> {
+    return firstValueFrom(this.http.delete(`${this.apiUrl}/delete/${id}`));
   }
 
-  getFaculties(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/faculties`);
+  // fixx
+  // ดึงรายชื่อคณะทั้งหมด
+  getFaculties(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/faculties`));
   }
 
-  getPrenames(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/prenames`);
+  //  เรียกดูรายชื่อคำนำหน้า
+  getPrenames(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/prenames`));
   }
 
-  getPersonTypes(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/persontypes`);
+  // ดึงประเภทบุคลากรทั้งหมด
+  getPersonTypes(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/persontypes`));
   }
 
-  getFundTypes(): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/fundtypes`);
+  // ดึงประเภทกองทุน
+  getFundTypes(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/fundtypes`));
   }
 
 }

@@ -84,63 +84,64 @@ export class PersonnelForm implements OnInit, OnDestroy {
   invalidFields: { [key: string]: boolean } = {};
 
   // ตรวจสอบสถานะและหยอดข้อมูลเดิมเข้าช่องอินพุตอัตโนมัติเมื่อหน้าจอแบบฟอร์มเปิดตัวทำงาน
-  ngOnInit(): void {
+  // fixx
+  async ngOnInit(): Promise<void> {
     // โหลดรายชื่อคณะจาก API เพื่อเติม dropdown
-    this.personnelService.getFaculties().subscribe({
-      next: (res: any) => {
-        if (res?.success && res.data) {
-          this.facultyOptions = res.data.map((row: any) => ({
-            facCode: row.FAC_CODE,
-            facName: row.FAC_NAME,
-            facName2: row.FAC_NAME2,
-          }));
-        }
-      },
-      error: (err) => console.error('Load faculties failed:', err),
-    });
+    try {
+      const res = await this.personnelService.getFaculties();
+      if (res?.success && res.data) {
+        this.facultyOptions = res.data.map((row: any) => ({
+          facCode: row.FAC_CODE,
+          facName: row.FAC_NAME,
+          facName2: row.FAC_NAME2,
+        }));
+      }
+    } catch (err) {
+      console.error('Load faculties failed:', err);
+    }
 
     // โหลดรายชื่อคำนำหน้าชื่อจาก API เพื่อเติม dropdown
-    this.personnelService.getPrenames().subscribe({
-      next: (res: any) => {
-        if (res?.success && res.data) {
-          this.prenameOptions = res.data.map((row: any) => ({
-            preCode: row.PRE_CODE,
-            preName: row.PRE_NAME,
-            preName2: row.PRE_NAME2,
-            preNameEn: row.PRE_NAME_EN,
-            preNameIdcard: row.PRE_NAME_IDCARD,
-          }));
-        }
-      },
-      error: (err) => console.error('Load prenames failed:', err),
-    });
+    try {
+      const res = await this.personnelService.getPrenames();
+      if (res?.success && res.data) {
+        this.prenameOptions = res.data.map((row: any) => ({
+          preCode: row.PRE_CODE,
+          preName: row.PRE_NAME,
+          preName2: row.PRE_NAME2,
+          preNameEn: row.PRE_NAME_EN,
+          preNameIdcard: row.PRE_NAME_IDCARD,
+        }));
+      }
+    } catch (err) {
+      console.error('Load prenames failed:', err);
+    }
 
     // โหลดประเภทบุคลากรจาก API เพื่อเติม dropdown
-    this.personnelService.getPersonTypes().subscribe({
-      next: (res: any) => {
-        if (res?.success && res.data) {
-          this.personTypeOptions = res.data.map((row: any) => ({
-            typeCode: row.TYPE_CODE,
-            typeName: row.TYPE_NAME,
-            typeName2: row.TYPE_NAME2,
-          }));
-        }
-      },
-      error: (err) => console.error('Load personTypes failed:', err),
-    });
+    try {
+      const res = await this.personnelService.getPersonTypes();
+      if (res?.success && res.data) {
+        this.personTypeOptions = res.data.map((row: any) => ({
+          typeCode: row.TYPE_CODE,
+          typeName: row.TYPE_NAME,
+          typeName2: row.TYPE_NAME2,
+        }));
+      }
+    } catch (err) {
+      console.error('Load personTypes failed:', err);
+    }
 
     // โหลดประเภทกองทุนจาก API เพื่อเติม dropdown
-    this.personnelService.getFundTypes().subscribe({
-      next: (res: any) => {
-        if (res?.success && res.data) {
-          this.fundTypeOptions = res.data.map((row: any) => ({
-            fundCode: row.FUND_CODE,
-            fundName: row.FUND_NAME,
-          }));
-        }
-      },
-      error: (err) => console.error('Load fundTypes failed:', err),
-    });
+    try {
+      const res = await this.personnelService.getFundTypes();
+      if (res?.success && res.data) {
+        this.fundTypeOptions = res.data.map((row: any) => ({
+          fundCode: row.FUND_CODE,
+          fundName: row.FUND_NAME,
+        }));
+      }
+    } catch (err) {
+      console.error('Load fundTypes failed:', err);
+    }
 
     const editPayload = this.personnelService.editingPersonnel();
     if (editPayload) {
@@ -320,7 +321,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
   }
 
   // บันทึกข้อมูลล
-  saveData() {
+  //  fixx
+  async saveData() {
     if (!this.validateForm()) {
       // scroll ขึ้นไปที่ field แรกที่ error
       const firstError = document.querySelector('.is-invalid');
@@ -344,31 +346,29 @@ export class PersonnelForm implements OnInit, OnDestroy {
       payload.originalCitizenId = original?.perCitizenId || null;
       payload.originalPassportNo = original?.perPassportNo || null;
 
-      this.personnelService.updatePersonnel(payload).subscribe({
-        next: (response: any) => {
-          if (response && response.success) {
-            this.showMessage('success', response.message || 'แก้ไขข้อมูลบุคลากรเรียบร้อยแล้ว');
-          }
-        },
-        error: (err) => {
-          console.error('Update Profile Fail:', err);
-          const errMsg = err.error?.message || err.message || 'ไม่สามารถติดต่อฐานข้อมูลเพื่อแก้ไขประวัติได้';
-          this.showMessage('error', errMsg);
-        },
-      });
+      // fixx
+      try {
+        const response = await this.personnelService.updatePersonnel(payload);
+        if (response && response.success) {
+          this.showMessage('success', response.message || 'แก้ไขข้อมูลบุคลากรเรียบร้อยแล้ว');
+        }
+      } catch (err: any) {
+        console.error('Update Profile Fail:', err);
+        const errMsg = err.error?.message || err.message || 'ไม่สามารถติดต่อฐานข้อมูลเพื่อแก้ไขประวัติได้';
+        this.showMessage('error', errMsg);
+      }
     } else {
-      this.personnelService.insertPersonnel(payload).subscribe({
-        next: (response: any) => {
-          if (response.success) {
-            this.showMessage('success', response.message || 'บันทึกข้อมูลเข้าระบบเรียบร้อยแล้ว');
-          }
-        },
-        error: (err) => {
-          console.error('Insert Fail:', err);
-          const errMsg = err.error?.message || err.message || 'ไม่สามารถติดต่อฐานข้อมูลเพื่อบันทึกข้อมูลใหม่ได้';
-          this.showMessage('error', errMsg);
-        },
-      });
+      // fixx
+      try {
+        const response = await this.personnelService.insertPersonnel(payload);
+        if (response && response.success) {
+          this.showMessage('success', response.message || 'บันทึกข้อมูลเข้าระบบเรียบร้อยแล้ว');
+        }
+      } catch (err: any) {
+        console.error('Insert Fail:', err);
+        const errMsg = err.error?.message || err.message || 'ไม่สามารถติดต่อฐานข้อมูลเพื่อบันทึกข้อมูลใหม่ได้';
+        this.showMessage('error', errMsg);
+      }
     }
   }
 

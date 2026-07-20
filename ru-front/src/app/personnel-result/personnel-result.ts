@@ -78,36 +78,36 @@ export class PersonnelResult {
     this.deleteTargetId = null;
   }
 
-  confirmDelete(): void {
+  // fixx
+  async confirmDelete(): Promise<void> {
     const targetId = this.deleteTargetId;
     if (!targetId) return;
 
-    this.personnelService.deletePersonnel(targetId).subscribe({
-      next: (res: any) => {
-        if (res && res.success) {
-          this.personnelService.notificationSignal.set({ 
-            type: 'success', 
-            message: res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว' 
-          });
-          setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
-
-          // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันที
-          const currentList = this.personnelService.personnelListSignal();
-          this.personnelService.personnelListSignal.set(
-            currentList.filter((item) => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetId),
-          );
-        }
-        this.deleteTargetId = null;
-      },
-      error: (err: any) => {
-        console.error('Delete Error:', err);
+    // fixx
+    try {
+      const res = await this.personnelService.deletePersonnel(targetId);
+      if (res && res.success) {
         this.personnelService.notificationSignal.set({ 
-          type: 'error', 
-          message: 'ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง' 
+          type: 'success', 
+          message: res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว' 
         });
         setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
-        this.deleteTargetId = null;
-      },
-    });
+
+        // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันที
+        const currentList = this.personnelService.personnelListSignal();
+        this.personnelService.personnelListSignal.set(
+          currentList.filter((item) => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetId),
+        );
+      }
+      this.deleteTargetId = null;
+    } catch (err: any) {
+      console.error('Delete Error:', err);
+      this.personnelService.notificationSignal.set({ 
+        type: 'error', 
+        message: 'ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง' 
+      });
+      setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
+      this.deleteTargetId = null;
+    }
   }
 }

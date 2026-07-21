@@ -35,10 +35,10 @@ export class PersonnelSearch implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      const searchKeyword = params[' ']; 
-      const searchType = params[' '];       
-      const firstName = params[' '];         
-      const lastName = params[' '];           
+      const searchKeyword = params['search_keyword']; 
+      const searchType = params['search_type'];       
+      const firstName = params['firstName'];         
+      const lastName = params['lastName'];           
       const facName = params['FAC_NAME'];             
 
       if (searchKeyword) {
@@ -71,6 +71,12 @@ export class PersonnelSearch implements OnInit {
       finalKeyword = parts.join(' ');
     } else {
       finalKeyword = this.singleKeyword.trim();
+    }
+
+    // Validation at Frontend
+    if (!finalKeyword) {
+      this.personnelService.showNotification('error', 'กรุณากรอกข้อมูลคำค้นหาก่อนทำรายการ', 3000);
+      return;
     }
 
     this.router.navigate([], {

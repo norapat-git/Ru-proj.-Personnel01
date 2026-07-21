@@ -19,6 +19,20 @@ export class PersonnelService {
 
   // สัญญาณสำหรับแจ้งเตือน
   notificationSignal = signal<{ type: 'success' | 'error'; message: string } | null>(null);
+  private notificationTimer: any = null;
+
+  // showNotification 3s
+  showNotification(type: 'success' | 'error', message: string, durationMs: number = 3000): void {
+    this.notificationSignal.set({ type, message });
+    if (this.notificationTimer) {
+      clearTimeout(this.notificationTimer);
+    }
+    if (durationMs > 0) {
+      this.notificationTimer = setTimeout(() => {
+        this.notificationSignal.set(null);
+      }, durationMs);
+    }
+  }
 
   // ค้นหาข้อมูลบุคลากร
   searchPersonnel(type: string, keyword: string): Promise<any> {

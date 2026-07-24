@@ -2,6 +2,7 @@ import { Component, inject, effect, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PersonnelService } from '../services/services';
+import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-search',
@@ -39,7 +40,8 @@ export class PersonnelSearch implements OnInit {
       const searchType = params['search_type'];       
       const firstName = params['firstName'];         
       const lastName = params['lastName'];           
-      const facName = params['FAC_NAME'];             
+      const facName = params['FAC_NAME']; 
+        
 
       if (searchKeyword) {
         this.singleKeyword = searchKeyword;
@@ -59,6 +61,12 @@ export class PersonnelSearch implements OnInit {
 
   //  fixx
   async onSearchSubmit(): Promise<void> {
+    // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง (Development Mode) ให้ดำเนินการขอ Token ก่อนเริ่มยิงค้นหา
+    if (!localStorage.getItem('token') && !environment.production) {
+      const testCitizenId = '1234567890123';
+      await this.personnelService.acquireToken(testCitizenId);
+    }
+
     // finalKeyword เก็บค่าที่ค้นหา
     let finalKeyword = '';
     if (this.filterType === 'nameTh') {
@@ -90,7 +98,11 @@ export class PersonnelSearch implements OnInit {
 
     //  fixx
     try {
-      const response = await this.personnelService.searchPersonnel(this.filterType, finalKeyword);
+      const payload = {
+        type: this.filterType,
+        keyword: finalKeyword
+      }
+      const response = await this.personnelService.searchPersonnel(payload);
       this.personnelService.hasSearchedSignal.set(true);
       if (response && response.success && response.data) {
         this.personnelService.personnelListSignal.set(response.data);

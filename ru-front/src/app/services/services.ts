@@ -1,8 +1,8 @@
 import { Service, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs'; // fix import firstValueFrom
-import { environment } from '../environment/environment';
 import { PersonnelDataResult, PersonnelInsertInput } from '../models/personnel';
+import { environment } from '../../environment/environment';
 
 @Service()
 export class PersonnelService {
@@ -35,8 +35,8 @@ export class PersonnelService {
   }
 
   // ค้นหาข้อมูลบุคลากร
-  searchPersonnel(type: string, keyword: string): Promise<any> {
-    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/search?type=${type}&keyword=${keyword}`));
+  searchPersonnel(object: any): Promise<any> {
+    return firstValueFrom(this.http.post<any>(`${this.apiUrl}/search`, object));
   }
 
   // เพิ่มข้อมูลบุคลากรใหม่
@@ -73,6 +73,26 @@ export class PersonnelService {
   // ดึงประเภทกองทุน
   getFundTypes(): Promise<any> {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/fundtypes`));
+  }
+
+  // ขอ Token จากเลขบัตรประชาชน บันทึกไว้ใน Local Storage
+  async acquireToken(citizenId: string): Promise<any> {
+    try {
+      const signUrl = this.apiUrl.replace('/personnel', '/sign');
+      const response = await firstValueFrom(
+        this.http.post<any>(signUrl, { PER_CITIZEN_ID: citizenId })
+      );
+      if (response && response.success && response.token) {
+        localStorage.setItem('token', response.token);
+        this.showNotification('success', 'เชื่อมต่อสิทธิ์ความปลอดภัยสำเร็จ', 3000);
+        return response.token;
+      }
+      return null;
+    } catch (err: any) {
+      console.error('Acquire token failed:', err);
+      this.showNotification('error', 'เกิดข้อผิดพลาดในการรับสิทธิ์เข้าถึงระบบ', 3000);
+      return null;
+    }
   }
 
 }

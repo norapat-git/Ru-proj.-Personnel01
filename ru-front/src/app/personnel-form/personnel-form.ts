@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, inject, OnInit, OnDestroy } from '@ang
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/services';
 import { PersonnelInsertInput, PrenameOption, FacultyOption, PersonTypeOption, FundTypeOption } from '../models/personnel';
+import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-form',
@@ -313,6 +314,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // บันทึกข้อมูลล
   //  fixx
   async saveData() {
+    // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง ให้ดำเนินการขอ Token ก่อนเริ่มเซฟข้อมูล
+    if (!localStorage.getItem('token') && !environment.production) {
+      const testCitizenId = '1234567890123';
+      await this.personnelService.acquireToken(testCitizenId);
+    }
+
     if (!this.validateForm()) {
       // scroll ขึ้นไปที่ field แรกที่ error
       const firstError = document.querySelector('.is-invalid');

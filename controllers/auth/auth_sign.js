@@ -12,39 +12,44 @@ class authenticateSignToken {
             //console.log(secrete_id);
 
             //const { client_id, secrete_id } = req.body;
-            const { STD_CODE } = req.body;
-            if (!STD_CODE) {
+            const { PER_CITIZEN_ID } = req.body;
+            if (!PER_CITIZEN_ID) {
                 //return res.status(401).json({ success: false, message: "Unauthorized Access" })
-                return null;
+                return res.status(400).json({ success: false, message: "กรุณาระบุ PER_CITIZEN_ID" });
             }
 
-            const token = await Helper.authJWTAccessToken(STD_CODE, process.env.secrete_id);
+            const token = await Helper.authJWTAccessToken(PER_CITIZEN_ID, process.env.secrete_id);
             // res.json({ success: true, refresh_token: token });
-            return token;
+            if (token) {
+                return res.status(200).json({ success: true, token: token });
+            } else {
+                return res.status(401).json({ success: false, message: "ไม่สามารถสร้าง Token ได้" });
+            }
         } catch (err) {
-            return null;
             // res.status(200).json({ success: false, message: "Unauthorized Access" });
+            return res.status(500).json({ success: false, message: err.message });
         }
     }
 
     static verify_mid(req, res, next) {
-        const { token } = req.body;
+        const authHeader = req.headers["authorization"];
 
-        // console.log(token);
-        if (typeof token !== 'undefined') {
+        if (authHeader && authHeader.startsWith("Bearer ")) {
+            const token = authHeader.replace("Bearer ", "");
+
             if (!token) {
-                return res.status(200).json({ success: false, message: "Unauthorized Access." });
+                return res.status(401).json({ success: false, message: "Unauthorized Access. Token is empty." });
             }
 
             try {
-                const decoded = Helper.verifyJWTtoken(process.env.secrete_id, token); // Use different variable name
-                req.decoded = decoded; // Optionally attach to request for downstream use
-                next(); // Proceed to the next middleware or route 
+                const decoded = Helper.verifyJWTtoken(process.env.secrete_id, token);
+                req.decoded = decoded; 
+                next(); 
             } catch (err) {
-                res.status(200).json({ success: false, message: "Authorized Expire." });
+                return res.status(401).json({ success: false, message: "Authorized Expire." });
             }
         } else {
-            res.status(200).json({ success: false, message: "Unauthorized Access" })
+            return res.status(401).json({ success: false, message: "Unauthorized Access. Missing Bearer Token." });
         }
     }
 }
@@ -52,4 +57,3 @@ class authenticateSignToken {
 
 module.exports = { authenticateSignToken }
 
-//hello

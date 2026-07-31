@@ -23,15 +23,15 @@ router.post("/counter_control2", _system.exam1);
 // ------------- (Personnel API) ------------------
 
 // sec1 > sec2
-router.get("/personnel/search", personnelControl.searchPersonnel);
+router.post("/personnel/search", auth_sign.authenticateSignToken.verify_mid, personnelControl.searchPersonnel);
 
 // sec2 > sec3
-router.post("/personnel/insert", personnelControl.insertPersonnel);
+router.post("/personnel/insert", auth_sign.authenticateSignToken.verify_mid, personnelControl.insertPersonnel);
 // put api
-router.put("/personnel/update", personnelControl.updatePersonnel);
+router.put("/personnel/update", auth_sign.authenticateSignToken.verify_mid, personnelControl.updatePersonnel);
 
 // delete api
-router.delete("/personnel/delete/:id", personnelControl.deletePersonnel);
+router.delete("/personnel/delete/:id", auth_sign.authenticateSignToken.verify_mid, personnelControl.deletePersonnel);
 
 // get faculties list for dropdown
 router.get("/personnel/faculties", personnelControl.getFaculties);

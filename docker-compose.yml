@@ -17,6 +17,10 @@ services:
     environment:
       NODE_ENV: production
       TZ: Asia/Bangkok
+      NODE_ORACLEDB_CONNECTIONSTRING: host.docker.internal:1521/xe
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
 
 networks:
   e-testing-api:

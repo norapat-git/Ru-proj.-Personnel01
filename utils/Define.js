@@ -24,7 +24,7 @@ const Define = {
     SECONDS: "seconds",
     //token expiration
     client_id: "",
-    EXPIRE_TIME: '36000s',
+    EXPIRE_TIME: '8h',
 }
 
 module.exports = Define

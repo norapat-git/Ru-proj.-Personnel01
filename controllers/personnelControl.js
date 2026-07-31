@@ -83,6 +83,7 @@ const PersonnelController = {
   //func save ข้อมูล
   async insertPersonnel(req, res) {
     try {
+      console.log("Insert Req Body:", req.body);
       const {
         perCitizenId,
         typeCode,

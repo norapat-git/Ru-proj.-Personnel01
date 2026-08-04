@@ -35,32 +35,57 @@ export class PersonnelSearch implements OnInit {
   }
 
   ngOnInit(): void {
+    // ถ้ามี query params จาก URL (เช่น กลับมาจากหน้าอื่น) ให้ค้นหาตามนั้น
     this.route.queryParams.subscribe(params => {
       const searchKeyword = params['search_keyword']; 
       const searchType = params['search_type'];       
       const firstName = params['firstName'];         
       const lastName = params['lastName'];           
-      const facName = params['FAC_NAME']; 
-        
 
       if (searchKeyword) {
         this.singleKeyword = searchKeyword;
         if (searchType) this.filterType = searchType;
-        this.onSearchSubmit();
+        this.onSearchSubmit(false);
       } else if (firstName || lastName) {
         this.firstNameKeyword = firstName || '';
         this.lastNameKeyword = lastName || '';
         this.filterType = 'nameTh';
-        this.onSearchSubmit();
-      } else if (facName) {
-        console.log('FAC_NAME from URL:', facName);
+        this.onSearchSubmit(false);
       }
     });
   }
 
+  async loadAllPersonnel(): Promise<void> {
+    try {
+      this.personnelService.isFilteredSearchSignal.set(false);
+
+      // Development mode: ต่ออายุ token ทุกครั้งที่กดเพื่อให้แน่ใจว่า token ยังใช้งานได้
+      if (!environment.production) {
+        const testCitizenId = '1234567890123';
+        await this.personnelService.acquireToken(testCitizenId);
+      }
+
+      const response = await this.personnelService.searchPersonnel({ type: 'all', keyword: 'all' });
+      console.log('[loadAllPersonnel] response:', response);
+
+      this.personnelService.hasSearchedSignal.set(true);
+      if (response && response.success && response.data) {
+        this.personnelService.personnelListSignal.set(response.data);
+        this.personnelService.showNotification('success', `โหลดข้อมูลบุคลากรทั้งหมด ${response.data.length} ราย`, 3000);
+      } else {
+        this.personnelService.personnelListSignal.set([]);
+      }
+    } catch (err: any) {
+      console.error('[loadAllPersonnel] Error:', err);
+      this.personnelService.hasSearchedSignal.set(true);
+      this.personnelService.personnelListSignal.set([]);
+      this.personnelService.showNotification('error', 'ไม่สามารถโหลดข้อมูลบุคลากรได้ กรุณาลองใหม่อีกครั้ง', 4000);
+    }
+  }
+
 
   //  fixx
-  async onSearchSubmit(): Promise<void> {
+  async onSearchSubmit(isManual: boolean = true): Promise<void> {
     // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง (Development Mode) ให้ดำเนินการขอ Token ก่อนเริ่มยิงค้นหา
     if (!localStorage.getItem('token') && !environment.production) {
       const testCitizenId = '1234567890123';
@@ -81,11 +106,15 @@ export class PersonnelSearch implements OnInit {
       finalKeyword = this.singleKeyword.trim();
     }
 
-    // Validation at Frontend
+    // Validation at Frontend: แสดงแจ้งเตือนเฉพาะเมื่อกดปุ่มค้นหาเอง (isManual = true)
     if (!finalKeyword) {
-      this.personnelService.showNotification('error', 'กรุณากรอกข้อมูลคำค้นหาก่อนทำรายการ', 3000);
+      if (isManual) {
+        this.personnelService.showNotification('error', 'กรุณากรอกข้อมูลคำค้นหาก่อนทำรายการ', 3000);
+      }
       return;
     }
+
+    this.personnelService.isFilteredSearchSignal.set(true);
 
     this.router.navigate([], {
       relativeTo: this.route,

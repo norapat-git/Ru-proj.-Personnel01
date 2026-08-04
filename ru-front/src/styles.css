@@ -73,22 +73,125 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
-/* Action Buttons */
-.btn-fill {
-  padding: 10px 20px;
-  background-color: var(--univ-primary);
-  color: white;
-  border: 1px solid var(--univ-primary);
-  border-radius: 4px;
+/* =========================================================
+   UNIFIED BUTTON SYSTEM & MICRO-ANIMATIONS
+   ========================================================= */
+
+button,
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-search,
+.btn-show-all,
+.btn-fill,
+.btn-cancel,
+.btn-save,
+.btn-action-edit,
+.btn-action-delete,
+.btn-modal-confirm,
+.btn-modal-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 8px;
+  font-family: inherit;
   font-size: 14px;
-  cursor: pointer;
   font-weight: 600;
-  transition: all 0.2s ease;
+  cursor: pointer;
+  outline: none;
+  border: 1px solid transparent;
+  box-sizing: border-box;
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
 }
 
-.btn-fill:hover {
-  background-color: var(--univ-primary-light);
-  border-color: var(--univ-primary-light);
+/* Micro-animations across all buttons */
+button:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-success:hover:not(:disabled),
+.btn-search:hover:not(:disabled),
+.btn-show-all:hover:not(:disabled),
+.btn-fill:hover:not(:disabled),
+.btn-cancel:hover:not(:disabled),
+.btn-save:hover:not(:disabled),
+.btn-action-edit:hover:not(:disabled),
+.btn-action-delete:hover:not(:disabled),
+.btn-modal-confirm:hover:not(:disabled),
+.btn-modal-cancel:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+button:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.btn-success:active:not(:disabled),
+.btn-search:active:not(:disabled),
+.btn-show-all:active:not(:disabled),
+.btn-fill:active:not(:disabled),
+.btn-cancel:active:not(:disabled),
+.btn-save:active:not(:disabled),
+.btn-action-edit:active:not(:disabled),
+.btn-action-delete:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* 1. Primary Button Theme (Navy / Gold Accent) */
+.btn-primary,
+.btn-search,
+.btn-fill {
+  background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+  color: #ffffff;
+  border: 1px solid #1a365d;
+  box-shadow: 0 4px 10px rgba(26, 54, 93, 0.25);
+}
+
+.btn-primary:hover:not(:disabled),
+.btn-search:hover:not(:disabled),
+.btn-fill:hover:not(:disabled) {
+  background: linear-gradient(135deg, #152c4f 0%, #2c5282 100%);
+  box-shadow: 0 6px 16px rgba(26, 54, 93, 0.35);
+}
+
+/* 2. Success Button Theme (Emerald Green) */
+.btn-success,
+.btn-show-all,
+.btn-save {
+  background: linear-gradient(135deg, #276749 0%, #38a169 100%);
+  color: #ffffff;
+  border: 1px solid #276749;
+  box-shadow: 0 4px 10px rgba(56, 161, 105, 0.25);
+}
+
+.btn-success:hover:not(:disabled),
+.btn-show-all:hover:not(:disabled),
+.btn-save:hover:not(:disabled) {
+  background: linear-gradient(135deg, #22543d 0%, #2f855a 100%);
+  box-shadow: 0 6px 16px rgba(56, 161, 105, 0.35);
+}
+
+/* 3. Secondary / Neutral Button Theme (Slate Gray Outline) */
+.btn-cancel,
+.btn-secondary,
+.btn-modal-cancel {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.btn-cancel:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-modal-cancel:hover:not(:disabled) {
+  background-color: #edf2f7;
+  color: #2d3748;
+  border-color: #a0aec0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
 .divider {
@@ -97,11 +200,31 @@ body {
   margin-bottom: 25px;
 }
 
-/* Personnel Search Panel */
+/* Personnel Search Panel & Stable Layout */
 .search-bar-container {
   display: flex;
+  flex-direction: column;
   gap: 16px;
-  align-items: center;
+}
+
+.search-inputs-wrapper {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.dropdown-group {
+  min-width: 260px;
+  flex: 0 0 280px;
+}
+
+.search-fields-group {
+  display: flex;
+  gap: 16px;
+  flex: 1;
+  min-width: 280px;
   flex-wrap: wrap;
 }
 
@@ -127,38 +250,22 @@ body {
 
 .search-select,
 .search-input {
+  width: 100%;
   padding: 10px 14px;
-  border: 1px solid #cbd5e0;
-  border-radius: 4px;
+  border: 1.5px solid #cbd5e0;
+  border-radius: 8px;
   font-size: 14px;
   outline: none;
   background-color: #fff;
   height: 42px;
   box-sizing: border-box;
+  transition: all 0.2s ease;
 }
 
 .search-select:focus,
 .search-input:focus {
   border-color: var(--univ-primary);
-  box-shadow: 0 0 0 2px rgba(26, 54, 93, 0.1);
-}
-
-.btn-search {
-  padding: 11px 24px;
-  background-color: var(--univ-secondary);
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  align-self: flex-end;
-  transition: background 0.2s;
-  height: 42px;
-}
-
-.btn-search:hover {
-  background-color: #b7791f;
+  box-shadow: 0 0 0 3px rgba(26, 54, 93, 0.12);
 }
 
 /* Personnel Form Panel */
@@ -782,4 +889,551 @@ body {
   border: 1px dashed #cbd5e0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
+/* ==========================================================================
+   Welfare Checkboxes List (Form Section 5)
+   ========================================================================== */
+.welfare-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 600px;
+}
+
+.welfare-checkbox-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.welfare-checkbox-card:hover:not(.disabled) {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+}
+
+.welfare-checkbox-card.disabled {
+  background-color: #f7fafc;
+  opacity: 0.8;
+}
+
+.welfare-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: #2d3748;
+  cursor: pointer;
+  margin: 0;
+  user-select: none;
+}
+
+.welfare-label input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #2b6cb0;
+  cursor: pointer;
+}
+
+.welfare-label input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.welfare-disabled-hint {
+  font-size: 12px;
+  color: #e53e3e;
+  font-weight: 500;
+  margin-left: 27px;
+}
+
+/* ==========================================================================
+   PVD Provident Fund Edit Block & Status Badges (Form Section 4)
+   ========================================================================== */
+.pvd-edit-block {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px 20px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.pvd-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 14px;
+}
+
+.pvd-badge-green {
+  background-color: #c6f6d5;
+  color: #22543d;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #9ae6b4;
+}
+
+.pvd-badge-red {
+  background-color: #fed7d7;
+  color: #9b2c2c;
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #feb2b2;
+}
+
+.btn-danger-outline {
+  padding: 7px 18px;
+  background-color: #fff5f5;
+  color: #e53e3e;
+  border: 1.5px solid #feb2b2;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-danger-outline:hover {
+  background-color: #e53e3e;
+  color: #ffffff;
+  border-color: #e53e3e;
+  box-shadow: 0 2px 6px rgba(229, 62, 62, 0.3);
+}
+
+.btn-success-outline {
+  padding: 7px 18px;
+  background-color: #f0fff4;
+  color: #276749;
+  border: 1.5px solid #9ae6b4;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-success-outline:hover {
+  background-color: #276749;
+  color: #ffffff;
+  border-color: #276749;
+  box-shadow: 0 2px 6px rgba(39, 103, 73, 0.3);
+}
+
+.field-input-danger {
+  border-color: #feb2b2 !important;
+  background-color: #fff5f5 !important;
+}
+
+.field-input-danger:focus {
+  border-color: #e53e3e !important;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.15) !important;
+}
+
+/* ==========================================================================
+   Delete Confirmation Modal Overlay & Dialog
+   ========================================================================== */
+.confirm-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.confirm-modal-box {
+  background: #ffffff;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.confirm-modal-header {
+  background-color: #fff5f5;
+  color: #c53030;
+  padding: 16px 20px;
+  border-bottom: 1px solid #feb2b2;
+}
+
+.confirm-modal-header h3 {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 700;
+}
+
+.confirm-modal-body {
+  padding: 20px;
+  font-size: 14px;
+  color: #2d3748;
+  line-height: 1.5;
+}
+
+.confirm-modal-subtext {
+  color: #e53e3e;
+  font-size: 12.5px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.confirm-modal-footer {
+  padding: 14px 20px;
+  background-color: #f7fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-modal-cancel {
+  padding: 9px 18px;
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-cancel:hover {
+  background-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.btn-modal-confirm {
+  padding: 9px 20px;
+  background-color: #e53e3e;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(229, 62, 62, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-modal-confirm:hover:not(:disabled) {
+  background-color: #c53030;
+  box-shadow: 0 4px 8px rgba(229, 62, 62, 0.3);
+}
+
+.btn-modal-confirm:disabled {
+  background-color: #feb2b2;
+  cursor: not-allowed;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
+/* ==========================================================================
+   Personnel Result Cards Grid System & Badges
+   ========================================================================== */
+.personnel-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.personnel-main-card {
+  background: #ffffff;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.personnel-main-card:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.personnel-card-header {
+  background-color: var(--univ-primary);
+  color: #ffffff;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  border-bottom: 3px solid var(--univ-secondary);
+}
+
+.person-name-title, .person-name-title-en {
+  margin: 0;
+  font-size: 17.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.personnel-card-body {
+  padding: 20px;
+  background-color: #f8fafc;
+}
+
+.profile-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  font-size: 13px;
+}
+
+.profile-card-box {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-card-box .box-header {
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.box-blue .box-header { background-color: #ebf8ff; color: #2b6cb0; border-bottom: 1px solid #bee3f8; }
+.box-teal .box-header { background-color: #e6fffa; color: #234e52; border-bottom: 1px solid #b2f5ea; }
+.box-purple .box-header { background-color: #faf5ff; color: #553c9a; border-bottom: 1px solid #e9d8fd; }
+.box-gold .box-header { background-color: #fffff0; color: #744210; border-bottom: 1px solid #fefcbf; }
+.box-gray .box-header { background-color: #f7fafc; color: #4a5568; border-bottom: 1px solid #e2e8f0; }
+
+.profile-card-box .box-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px dashed #f0f4f8;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.info-label {
+  color: #718096;
+  font-weight: 500;
+}
+
+.info-val {
+  color: #2d3748;
+  font-weight: 500;
+  text-align: right;
+}
+
+.info-val.bold { font-weight: 700; }
+.info-val.text-green { color: #276749; }
+
+.tag-status-green {
+  background-color: #c6f6d5;
+  color: #22543d;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.tag-status-red {
+  background-color: #fed7d7;
+  color: #9b2c2c;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.tag-status-gray {
+  background-color: #edf2f7;
+  color: #718096;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+
+.personnel-card-footer {
+  padding: 14px 20px;
+  background-color: #ffffff;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-action-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background-color: #2b6cb0;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(43, 108, 176, 0.2);
+  transition: all 0.2s ease;
+}
+
+.btn-action-edit:hover {
+  background-color: #2c5282;
+  box-shadow: 0 4px 8px rgba(43, 108, 176, 0.3);
+}
+
+.btn-action-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background-color: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-action-delete:hover {
+  background-color: #c53030;
+  color: #ffffff;
+  border-color: #c53030;
+}
+
+.btn-svg-icon {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+
+/* แถบแสดงจำนวนบุคลากรทั้งหมดด้านบน */
+.result-count-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: linear-gradient(135deg, #1a365d 0%, #2b6cb0 100%);
+  padding: 14px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.15);
+  color: #ffffff;
+}
+
+.count-badge {
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.count-number {
+  background-color: #ecc94b;
+  color: #1a202c;
+  font-size: 1.2rem;
+  font-weight: 800;
+  padding: 2px 14px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* แถวปุ่มค้นหา + ปุ่มแสดงทุกคน */
+.search-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+/* ปุ่มแสดงข้อมูลบุคลากรทุกคน */
+.btn-show-all {
+  padding: 11px 22px;
+  background: linear-gradient(135deg, #276749 0%, #38a169 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(56, 161, 105, 0.35);
+  white-space: nowrap;
+}
+
+.btn-show-all:hover {
+  background: linear-gradient(135deg, #22543d 0%, #276749 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(56, 161, 105, 0.45);
+}
+
 

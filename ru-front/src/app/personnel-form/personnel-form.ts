@@ -1,7 +1,7 @@
-import { Component, Output, EventEmitter, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/services';
-import { PersonnelInsertInput, PrenameOption, FacultyOption, PersonTypeOption, FundTypeOption } from '../models/personnel';
+import { PersonnelInsertInput, PrenameOption, FacultyOption, PersonTypeOption, FundTypeOption, ProjectTypeOption, SourceMoneyOption } from '../models/personnel';
 import { environment } from '../../environment/environment';
 
 @Component({
@@ -15,6 +15,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   @Output() onCancel = new EventEmitter<void>();
 
   private personnelService = inject(PersonnelService);
+  private cdr = inject(ChangeDetectorRef);
 
   // ดึง nationality value from service
   nationality = this.personnelService.staffNationalitySignal;
@@ -36,6 +37,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // โหลดจาก API FUND_TYPE
   fundTypeOptions: FundTypeOption[] = [];
+
+  // โหลดจาก API PROJECT_TYPE
+  projectTypeOptions: ProjectTypeOption[] = [];
+
+  // โหลดจาก API SOURCE_MONEY
+  sourceMoneyOptions: SourceMoneyOption[] = [];
 
   personnelData: PersonnelInsertInput = {
     perCitizenId: '',
@@ -69,15 +76,59 @@ export class PersonnelForm implements OnInit, OnDestroy {
     facName: '',
     perSalary: null,
     perHoldSalary: null,
+    perSourceMoney: null,
+    perPositionMoney: null,
+    perPositionPay: null,
+    perPositionMoneyEx: null,
+    perPositionPayEx: null,
+    perProject: null,
   };
 
   // ตรวจสอบข้อผิดพลาด input form
   invalidFields: { [key: string]: boolean } = {};
 
   // ตรวจสอบสถานะและหยอดข้อมูลเดิมเข้าช่องอินพุตอัตโนมัติเมื่อหน้าจอแบบฟอร์มเปิดตัวทำงาน
-  // fixx
   async ngOnInit(): Promise<void> {
-    // โหลดรายชื่อคณะจาก API เพื่อเติม dropdown
+    // 1. โหลดข้อมูลแก้ไขขึ้นมาทันทีในเฟรมแรกแบบ Synchronous
+    const editPayload = this.personnelService.editingPersonnel();
+    if (editPayload) {
+      this.isEditMode = true;
+      this.personnelData = { ...editPayload };
+
+      // ตรวจสอบและสลับสัญชาติอัตโนมัติตามข้อมูลที่โหลดมาแก้ไข
+      if (editPayload.perPassportNo && !editPayload.perCitizenId) {
+        this.personnelService.staffNationalitySignal.set('inter');
+      } else {
+        this.personnelService.staffNationalitySignal.set('thai');
+      }
+
+      // เมื่อโหลดข้อมูลแก้ไข ให้แตก PER_NAME_TH กลับเป็น first/last name
+      if (editPayload.perNameTh) {
+        const thParts = editPayload.perNameTh.trim().split(/\s+/);
+        if (thParts.length >= 2) {
+          this.personnelData.perFirstNameTh = thParts[0];
+          this.personnelData.perLastNameTh = thParts.slice(1).join(' ');
+        } else {
+          this.personnelData.perFirstNameTh = editPayload.perNameTh;
+          this.personnelData.perLastNameTh = '';
+        }
+      }
+
+      // เมื่อโหลดข้อมูลแก้ไข ให้แตก PER_NAME_EN กลับเป็น first/middle/last name
+      const parts = (editPayload.perNameEn || '').trim().split(/\s+/);
+      if (parts.length >= 2) {
+        this.personnelData.perFirstNameEn = parts[0];
+        this.personnelData.perLastNameEn = parts[parts.length - 1];
+        this.personnelData.perMiddleNameEn = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
+      } else {
+        this.personnelData.perFirstNameEn = editPayload.perNameEn || '';
+        this.personnelData.perMiddleNameEn = '';
+        this.personnelData.perLastNameEn = '';
+      }
+      this.cdr.detectChanges();
+    }
+
+    // 2. โหลดรายชื่อคณะจาก API เพื่อเติม dropdown
     try {
       const res = await this.personnelService.getFaculties();
       if (res?.success && res.data) {
@@ -134,30 +185,85 @@ export class PersonnelForm implements OnInit, OnDestroy {
       console.error('Load fundTypes failed:', err);
     }
 
-    const editPayload = this.personnelService.editingPersonnel();
-    if (editPayload) {
-      this.isEditMode = true;
-      this.personnelData = { ...editPayload };
-
-      // ตรวจสอบและสลับสัญชาติอัตโนมัติตามข้อมูลที่โหลดมาแก้ไข
-      if (editPayload.perPassportNo && !editPayload.perCitizenId) {
-        this.personnelService.staffNationalitySignal.set('inter');
-      } else {
-        this.personnelService.staffNationalitySignal.set('thai');
+    // โหลดประเภทโครงการจาก API เพื่อเติม dropdown
+    try {
+      const res = await this.personnelService.getProjectTypes();
+      if (res?.success && res.data) {
+        this.projectTypeOptions = res.data.map((row: any) => ({
+          proCode: row.PRO_CODE,
+          proName: row.PRO_NAME,
+        }));
       }
-
-      // เมื่อโหลดข้อมูลแก้ไข ให้แตก PER_NAME_EN กลับเป็น first/middle/last name
-      const parts = (editPayload.perNameEn || '').trim().split(/\s+/);
-      if (parts.length >= 2) {
-        this.personnelData.perFirstNameEn = parts[0];
-        this.personnelData.perLastNameEn = parts[parts.length - 1];
-        this.personnelData.perMiddleNameEn = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
-      } else {
-        this.personnelData.perFirstNameEn = editPayload.perNameEn || '';
-        this.personnelData.perMiddleNameEn = '';
-        this.personnelData.perLastNameEn = '';
-      }
+    } catch (err) {
+      console.error('Load projectTypes failed:', err);
     }
+
+    // โหลดแหล่งเงินทุนจาก API เพื่อเติม dropdown
+    try {
+      const res = await this.personnelService.getSourceMoneyTypes();
+      if (res?.success && res.data) {
+        this.sourceMoneyOptions = res.data.map((row: any) => ({
+          smCode: row.SM_CODE,
+          smName: row.SM_NAME,
+        }));
+      }
+    } catch (err) {
+      console.error('Load sourceMoneyTypes failed:', err);
+    }
+
+    this.cdr.detectChanges();
+  }
+
+  // ดึงข้อความคำนำหน้านามสำหรับแสดงใน dropdown
+  getSelectedPrenameText(): string {
+    return this.personnelData.preName || '';
+  }
+
+  // เมื่อเลือกคำนำหน้านามใน dropdown
+  onPrenameSelect(preNameText: string) {
+    const isInter = this.nationality() === 'inter';
+    const found = this.prenameOptions.find(p => isInter ? (p.preNameEn === preNameText || p.preName === preNameText) : p.preName === preNameText);
+    if (found) {
+      this.personnelData.preCode = found.preCode;
+      this.personnelData.preName = found.preName;
+    } else {
+      this.personnelData.preName = preNameText;
+    }
+  }
+
+  // ดึงชื่อประเภทบุคลากรสำหรับแสดงใน dropdown
+  getSelectedPersonTypeName(): string {
+    if (this.personnelData.typeName) return this.personnelData.typeName;
+    if (this.personnelData.typeCode) {
+      const found = this.personTypeOptions.find(t => t.typeCode === this.personnelData.typeCode);
+      return found ? found.typeName : '';
+    }
+    return '';
+  }
+
+  // ดึงชื่อคณะสำหรับแสดงใน dropdown
+  getSelectedFacultyName(): string {
+    if (this.personnelData.facName) return this.personnelData.facName;
+    if (this.personnelData.perFacC) {
+      const found = this.facultyOptions.find(f => f.facCode === this.personnelData.perFacC);
+      return found ? found.facName : '';
+    }
+    return '';
+  }
+
+  // รวมชื่อ-นามสกุล ภาษาไทย
+  onThaiNameInput(field: string) {
+    const first = (this.personnelData.perFirstNameTh || '').trim();
+    const last = (this.personnelData.perLastNameTh || '').trim();
+    this.personnelData.perNameTh = `${first} ${last}`.trim();
+  }
+
+  // รวมชื่อ-นามสกุล ภาษาอังกฤษ (First Middle Last)
+  onEnglishNameInput(field: string) {
+    const first = (this.personnelData.perFirstNameEn || '').trim();
+    const middle = (this.personnelData.perMiddleNameEn || '').trim();
+    const last = (this.personnelData.perLastNameEn || '').trim();
+    this.personnelData.perNameEn = [first, middle, last].filter(Boolean).join(' ');
   }
 
   // เมื่อเลือกคณะออโต้ FAC_CODE ลงช่อง perFacC
@@ -185,6 +291,13 @@ export class PersonnelForm implements OnInit, OnDestroy {
     const found = this.personTypeOptions.find(t => t.typeName === typeName);
     this.personnelData.typeName = typeName;
     this.personnelData.typeCode = found ? found.typeCode : null;
+
+    // ถ้า TypeCode เป็น 10 หรือ 11 ช่องประกันสังคมจะล็อกไม่ให้ชำระทันที (อายุเกิน 60 ปี)
+    if (this.isSsoPaymentDisabled()) {
+      this.personnelData.perSsoPayment = 3;
+    } else if (this.personnelData.perSsoPayment === 3) {
+      this.personnelData.perSsoPayment = 1;
+    }
   }
 
   // dropdown FUND_TYPE เมื่อเลือก fundName แล้ว perFundType จะเปลี่ยนอัตโนมัติ
@@ -207,7 +320,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     if (val.length > maxLength) {
       val = val.slice(0, maxLength);
     }
-    if (fieldName === 'perCitizenId' || fieldName === 'perTaxId' || fieldName === 'perSsoId' || fieldName === 'perSlipId') {
+    if (fieldName === 'perCitizenId' || fieldName === 'perTaxId' || fieldName === 'perSsoId') {
       (this.personnelData as any)[fieldName] = val;
     } else {
       (this.personnelData as any)[fieldName] = val ? Number(val) : null;
@@ -243,6 +356,91 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
   }
 
+  // ===================== Checkbox & Quit PVD Handlers =====================
+
+  /** ตรวจสอบว่าเป็นสมาชิกกองทุน PVD ที่ยังไม่ได้ออกจากกองทุนหรือไม่ */
+  isFundActiveMember(): boolean {
+    if (this.personnelData.perPvdfQuit === 1) return false;
+    const appVal = this.personnelData.perPvdfApp ? String(this.personnelData.perPvdfApp).trim().toUpperCase() : '';
+    return appVal === 'Y' || appVal === '1' || appVal === 'TRUE';
+  }
+
+  /** ตรวจสอบว่าเป็นสมาชิกกองทุน PVD (หรือเคยสมัคร/มีข้อมูล PVD) หรือไม่ */
+  isPvdfMember(): boolean {
+    return this.isFundActiveMember();
+  }
+
+  /** สลับสถานะกดปุ่มระหว่าง เป็นสมาชิกกองทุน (สีเขียว) และ ออกจากกองทุน (สีแดง) */
+  toggleQuitPvd() {
+    if (this.isFundActiveMember()) {
+      // ปัจจุบันเป็นสมาชิก -> กดปุ่มสีแดง "🚪 ออกจากกองทุน" -> สลับเป็นไม่ได้เป็นสมาชิก/ออกจากกองทุน
+      this.personnelData.perPvdfQuit = 1;
+      this.personnelData.perPvdfApp = 'N';
+      this.personnelData.perPvdfAppD = null;
+      this.personnelData.perFundType = null;
+      this.personnelData.perSaveRate = null;
+      if (!this.personnelData.perPvdfQuitD) {
+        this.personnelData.perPvdfQuitD = new Date().toISOString().substring(0, 10);
+      }
+    } else {
+      // ปัจจุบันไม่ได้เป็นสมาชิก/ออกจากกองทุน -> กดปุ่มสีเขียว "➕ เป็นสมาชิกกองทุน" -> สลับเป็นสมาชิก
+      this.personnelData.perPvdfQuit = null;
+      this.personnelData.perPvdfQuitD = null;
+      this.personnelData.notePvd = null;
+      this.personnelData.perPvdfApp = 'Y';
+      if (!this.personnelData.perPvdfAppD) {
+        this.personnelData.perPvdfAppD = new Date().toISOString().substring(0, 10);
+      }
+    }
+  }
+
+  // ===================== Section 5 Checkbox Handlers =====================
+
+  /** ตรวจสอบว่าประเภทบุคลากรอายุเกิน 60 ปี (TypeCode 10, 11) หรือไม่ */
+  isSsoPaymentDisabled(): boolean {
+    const code = Number(this.personnelData.typeCode);
+    return code === 10 || code === 11;
+  }
+
+  /** เช็คว่า Checkbox ประกันสังคมติ๊กอยู่หรือไม่ */
+  isSsoPaidChecked(): boolean {
+    if (this.isSsoPaymentDisabled()) return false;
+    return Number(this.personnelData.perSsoPayment) === 1;
+  }
+
+  /** ควบคุมการติ๊ก Checkbox ประกันสังคม */
+  onSsoPaymentCheckboxChange(checked: boolean) {
+    if (this.isSsoPaymentDisabled()) {
+      this.personnelData.perSsoPayment = 3;
+      return;
+    }
+    this.personnelData.perSsoPayment = checked ? 1 : 2;
+  }
+
+  /** สมาชิกกองทุน PVD — ติ๊ก = Y, เลิกติ๊ก = '' */
+  onPvdfAppChange(checked: boolean) {
+    this.personnelData.perPvdfApp = checked ? 'Y' : '';
+    if (checked) {
+      // ติ๊กสมาชิก → reset perPvdfQuit (ไม่เป็นสมาชิก)
+      this.personnelData.perPvdfQuit = null;
+      this.personnelData.perPvdfQuitD = null;
+      this.personnelData.notePvd = null;
+    } else {
+      // เลิกเป็นสมาชิก → ล้างวันสมัครและกองทุน
+      this.personnelData.perPvdfAppD = null;
+      this.personnelData.perFundType = null;
+    }
+  }
+
+  /** ไม่เป็นสมาชิกกองทุน PVD — ติ๊ก = 1, เลิกติ๊ก = null */
+  onPvdfQuitChange(checked: boolean) {
+    this.personnelData.perPvdfQuit = checked ? 1 : null;
+    if (!checked) {
+      this.personnelData.perPvdfQuitD = null;
+      this.personnelData.notePvd = null;
+    }
+  }
+
   // ฟังก์ชันสแกนข้อมูลและตรวจสอบฟิลด์บังคับ
   validateForm(): boolean {
     this.invalidFields = {};
@@ -268,6 +466,10 @@ export class PersonnelForm implements OnInit, OnDestroy {
         this.invalidFields['perPassportNo'] = true;
         isValid = false;
       }
+      if (!this.personnelData.preName || !this.personnelData.preName.trim()) {
+        this.invalidFields['preName'] = true;
+        isValid = false;
+      }
       if (!this.personnelData.perFirstNameEn || !this.personnelData.perFirstNameEn.trim()) {
         this.invalidFields['perFirstNameEn'] = true;
         isValid = false;
@@ -286,8 +488,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
       this.invalidFields['typeName'] = true;
       isValid = false;
     }
-    if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || this.personnelData.perSalary < 0) {
+    if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || (this.personnelData.perSalary as any) === '' || Number(this.personnelData.perSalary) < 0) {
       this.invalidFields['perSalary'] = true;
+      isValid = false;
+    }
+    if (this.personnelData.perHoldSalary === null || this.personnelData.perHoldSalary === undefined || (this.personnelData.perHoldSalary as any) === '' || Number(this.personnelData.perHoldSalary) < 0) {
+      this.invalidFields['perHoldSalary'] = true;
       isValid = false;
     }
 
@@ -321,15 +527,25 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
 
     if (!this.validateForm()) {
-      // scroll ขึ้นไปที่ field แรกที่ error
-      const firstError = document.querySelector('.is-invalid');
-      firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      this.showMessage('error', 'กรุณากรอกข้อมูลในช่องบังคับ (*) ให้ครบถ้วน');
+      this.cdr.detectChanges();
+      setTimeout(() => {
+        const firstErrorEl = document.querySelector('.field-input-error');
+        if (firstErrorEl) {
+          firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (firstErrorEl as HTMLElement).focus();
+        }
+      }, 100);
       return;
     }
 
-    // รวม First Name + Middle Name + Last Name เป็น perNameEn ช่องเดียว
+    // รวมชื่อ-นามสกุล ทั้งไทยและต่างชาติให้ตรงตามโครงสร้างข้อมูล
     const payload: any = { ...this.personnelData };
-    if (this.nationality() === 'inter') {
+    if (this.nationality() === 'thai') {
+      const first = (this.personnelData.perFirstNameTh || '').trim();
+      const last = (this.personnelData.perLastNameTh || '').trim();
+      payload.perNameTh = `${first} ${last}`.trim();
+    } else {
       const parts = [
         payload.perFirstNameEn?.trim(),
         payload.perMiddleNameEn?.trim(),

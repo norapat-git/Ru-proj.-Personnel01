@@ -11,6 +11,7 @@ export class PersonnelService {
 
   personnelListSignal = signal<PersonnelDataResult[]>([]);
   hasSearchedSignal = signal<boolean>(false);
+  isFilteredSearchSignal = signal<boolean>(false);
   currentModeSignal = signal<'result' | 'form'>('result');
   editingPersonnel = signal<PersonnelInsertInput | null>(null);
 
@@ -49,9 +50,14 @@ export class PersonnelService {
     return firstValueFrom(this.http.put(`${this.apiUrl}/update`, personData));
   }
 
-  // ลบข้อมูล
-  deletePersonnel(id: string): Promise<any> {
-    return firstValueFrom(this.http.delete(`${this.apiUrl}/delete/${id}`));
+  // ลบข้อมูลพร้อมส่งหมายเหตุการลบ (noteDel)
+  deletePersonnel(id: string, noteDel?: string): Promise<any> {
+    const encodedNote = noteDel ? encodeURIComponent(noteDel) : '';
+    return firstValueFrom(
+      this.http.delete(`${this.apiUrl}/delete/${id}?noteDel=${encodedNote}`, {
+        body: { noteDel: noteDel || '', NOTE_DEL: noteDel || '' },
+      })
+    );
   }
 
   // fixx
@@ -73,6 +79,16 @@ export class PersonnelService {
   // ดึงประเภทกองทุน
   getFundTypes(): Promise<any> {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/fundtypes`));
+  }
+
+  // ดึงประเภทโครงการ
+  getProjectTypes(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/projecttypes`));
+  }
+
+  // ดึงประเภทแหล่งเงิน
+  getSourceMoneyTypes(): Promise<any> {
+    return firstValueFrom(this.http.get<any>(`${this.apiUrl}/sourcemoney`));
   }
 
   // ขอ Token จากเลขบัตรประชาชน บันทึกไว้ใน Local Storage

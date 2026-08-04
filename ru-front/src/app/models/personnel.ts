@@ -35,6 +35,16 @@ export interface PersonnelDataResult {
   FULL_NAME_TH?: string;
   FUND_NAME?: string;
   FAC_NAME2?: string;
+  PER_SOURCE_MONEY?: number | null;
+  PER_POSITION_MONEY?: number | null;
+  PER_POSITION_PAY?: number | null;
+  PER_POSITION_MONEY_EX?: number | null;
+  PER_POSITION_PAY_EX?: number | null;
+  PER_PROJECT?: number | null;
+  PRO_NAME?: string | null;
+  SM_NAME?: string | null;
+  NOTE_PVD?: string | null;
+  NOTE_DEL?: string | null;
 }
 
 export interface PersonnelInsertInput {
@@ -46,6 +56,8 @@ export interface PersonnelInsertInput {
   preCode: number | null;
   preName: string;
   perNameTh: string;
+  perFirstNameTh?: string;
+  perLastNameTh?: string;
   perNameEn: string;
   perFirstNameEn: string;
   perMiddleNameEn: string;
@@ -69,6 +81,14 @@ export interface PersonnelInsertInput {
   facName: string;
   perSalary: number | null;
   perHoldSalary: number | null;
+  perSourceMoney?: number | null;
+  perPositionMoney?: number | null;
+  perPositionPay?: number | null;
+  perPositionMoneyEx?: number | null;
+  perPositionPayEx?: number | null;
+  perProject?: number | null;
+  notePvd?: string | null;
+  noteDel?: string | null;
 }
 
 //คำนำหน้าชื่อ 
@@ -98,6 +118,18 @@ export interface PersonTypeOption {
 export interface FundTypeOption {
   fundCode: number;
   fundName: string;
+}
+
+//ประเภทโครงการ
+export interface ProjectTypeOption {
+  proCode: number;
+  proName: string;
+}
+
+//แหล่งเงิน
+export interface SourceMoneyOption {
+  smCode: number;
+  smName: string;
 }
 
 

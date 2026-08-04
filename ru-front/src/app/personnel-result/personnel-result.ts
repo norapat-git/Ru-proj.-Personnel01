@@ -1,23 +1,41 @@
 import { Component, inject } from '@angular/core';
 import { DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
+import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/services';
 
 @Component({
   selector: 'app-personnel-result',
   standalone: true,
-  imports: [DecimalPipe], //DecimalPipe ตัดทศนิยมเงินเดือนหน้าจอ
+  imports: [DecimalPipe, FormsModule], //DecimalPipe ตัดทศนิยมเงินเดือนหน้าจอ
   templateUrl: './personnel-result.html',
 })
 export class PersonnelResult {
   private personnelService = inject(PersonnelService);
 
   personnelList = this.personnelService.personnelListSignal;
+  isFilteredSearch = this.personnelService.isFilteredSearchSignal;
 
   // สัญญาณแชร์สัญชาติ
   nationality = this.personnelService.staffNationalitySignal;
 
   // สำหรับการเปิด Modal ยืนยันการลบ
   deleteTargetId: string | null = null;
+  deleteNote: string = '';
+  deleteNoteError: boolean = false;
+
+  // แปลงรูปแบบวันที่ ISO/Timestamp เป็น วัน/เดือน/ปี (เช่น 26/06/2026)
+  formatDate(dateVal: any): string {
+    if (!dateVal) return '-';
+    const str = String(dateVal).trim();
+    if (!str) return '-';
+
+    const isoDate = str.substring(0, 10);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) {
+      const [year, month, day] = isoDate.split('-');
+      return `${day}/${month}/${year}`;
+    }
+    return isoDate || str;
+  }
 
   // ฟังก์ชันรองรับการกดปุ่มดึงข้อมูลไปแก้ไขจากในตาราง
   triggerEditMode(rawSelection: any): void {
@@ -36,12 +54,12 @@ export class PersonnelResult {
       perMiddleNameEn: '',
       perLastNameEn: '',
       perTaxId: rawSelection.PER_TAX_ID,
-      perPvdfApp: rawSelection.PER_PVDF_APP,
+      perPvdfApp: rawSelection.PER_PVDF_APP ? String(rawSelection.PER_PVDF_APP).trim().toUpperCase() : '',
       // ตัดความยาวสตริงวันที่ให้เหลือ 10 หลัก
       perPvdfAppD: rawSelection.PER_PVDF_APP_D
         ? rawSelection.PER_PVDF_APP_D.substring(0, 10)
         : null,
-      perPvdfQuit: rawSelection.PER_PVDF_QUIT,
+      perPvdfQuit: Number(rawSelection.PER_PVDF_QUIT) === 1 ? 1 : null,
       perPvdfQuitD: rawSelection.PER_PVDF_QUIT_D
         ? rawSelection.PER_PVDF_QUIT_D.substring(0, 10)
         : null,
@@ -63,6 +81,8 @@ export class PersonnelResult {
       facName: rawSelection.FAC_NAME,
       perSalary: rawSelection.PER_SALARY,
       perHoldSalary: rawSelection.PER_HOLD_SALARY,
+      perSourceMoney: rawSelection.PER_SOURCE_MONEY !== undefined && rawSelection.PER_SOURCE_MONEY !== null && rawSelection.PER_SOURCE_MONEY !== '' ? Number(rawSelection.PER_SOURCE_MONEY) : null,
+      notePvd: rawSelection.NOTE_PVD || null,
     });
 
     // สลับหน้าจอพื้นที่ส่วนล่างให้เปลี่ยนมาโชว์หน้าแบบฟอร์ม
@@ -72,20 +92,27 @@ export class PersonnelResult {
   // ฟังก์ชันกดลบข้อมูลจากขอบด้านล่างของแผงรายละเอียด Card
   triggerDelete(targetCitizenId: string): void {
     this.deleteTargetId = targetCitizenId;
+    this.deleteNote = '';
+    this.deleteNoteError = false;
   }
 
   cancelDelete(): void {
     this.deleteTargetId = null;
+    this.deleteNote = '';
+    this.deleteNoteError = false;
   }
 
-  // fixx
   async confirmDelete(): Promise<void> {
     const targetId = this.deleteTargetId;
     if (!targetId) return;
 
-    // fixx
+    if (!this.deleteNote || !this.deleteNote.trim()) {
+      this.deleteNoteError = true;
+      return;
+    }
+
     try {
-      const res = await this.personnelService.deletePersonnel(targetId);
+      const res = await this.personnelService.deletePersonnel(targetId, this.deleteNote.trim());
       if (res && res.success) {
         this.personnelService.notificationSignal.set({ 
           type: 'success', 
@@ -100,6 +127,8 @@ export class PersonnelResult {
         );
       }
       this.deleteTargetId = null;
+      this.deleteNote = '';
+      this.deleteNoteError = false;
     } catch (err: any) {
       console.error('Delete Error:', err);
       this.personnelService.notificationSignal.set({ 
@@ -108,6 +137,8 @@ export class PersonnelResult {
       });
       setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
       this.deleteTargetId = null;
+      this.deleteNote = '';
+      this.deleteNoteError = false;
     }
   }
 }

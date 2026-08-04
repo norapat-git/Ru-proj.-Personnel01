@@ -9,11 +9,60 @@ const DbTx = require("../models/db/DbTxModel");
 ("use strict");
 Error.stackTraceLimit = 50;
 
+const formatDateBind = (val) => {
+  if (!val || val === 'null' || val === 'undefined') return null;
+  const str = String(val).trim();
+  if (!str) return null;
+  const iso = str.substring(0, 10);
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  return null;
+};
+
+const parseNum = (val) => {
+  if (val === undefined || val === null) return null;
+  const str = String(val).trim();
+  if (str === '' || str === 'null' || str === 'undefined') return null;
+  const n = Number(str);
+  return isNaN(n) ? null : n;
+};
+
+const parseStr = (val, maxLen) => {
+  if (val === undefined || val === null) return null;
+  const str = String(val).trim();
+  if (str === '' || str === 'null' || str === 'undefined') return null;
+  return maxLen ? str.substring(0, maxLen) : str;
+};
+
+const parseStrBytes = (val, maxBytes) => {
+  if (val === undefined || val === null) return null;
+  const str = String(val).trim();
+  if (str === '' || str === 'null' || str === 'undefined') return null;
+  if (!maxBytes) return str;
+  let bytes = 0;
+  let resultStr = '';
+  for (let i = 0; i < str.length; i++) {
+    const charCode = str.charCodeAt(i);
+    let charBytes = 1;
+    if (charCode > 0x7f && charCode <= 0x7ff) {
+      charBytes = 2;
+    } else if (charCode > 0x7ff && charCode <= 0xffff) {
+      charBytes = 3;
+    } else if (charCode > 0xffff) {
+      charBytes = 4;
+    }
+    if (bytes + charBytes > maxBytes) break;
+    bytes += charBytes;
+    resultStr += str[i];
+  }
+  return resultStr || null;
+};
+
 const PersonnelController = {
   // sec1(search) - sec3(result)
   async searchPersonnel(req, res) {
     try {
-      const { type, keyword } = req.query;
+      const type = req.query?.type || req.body?.type || null;
+      const keyword = req.query?.keyword || req.body?.keyword || null;
       console.log(
         `[Backend] ค้นหาข้อมูลบุคลากรละเอียด 33 ฟิลด์ ฟิลด์: ${type} คำค้นหา: ${keyword}`,
       );
@@ -26,46 +75,50 @@ const PersonnelController = {
           p.PER_FUND_TYPE, p.PER_SAVE_RATE, p.PER_SSO_PAYMENT, p.PER_FUND_TEACHER, 
           p.PER_FUND_ASSTEACHER, p.PER_SSO_ID, p.PER_PASSPORT_NO, p.PER_PASSPORT_START_D, 
           p.PER_PASSPORT_EXPIRE_D, p.POSC_NAME, p.PER_FAC_C, 
-          p.FAC_NAME, p.PER_SALARY, p.PER_HOLD_SALARY, p.CREATED_DATE, 
-          p.CREATED_BY, p.UPDATED_DATE, p.UPDATED_BY,
+          p.FAC_NAME, p.PER_SALARY, p.PER_HOLD_SALARY, p.PER_SOURCE_MONEY,
+          p.PER_POSITION_MONEY, p.PER_POSITION_PAY, p.PER_POSITION_MONEY_EX, p.PER_POSITION_PAY_EX, p.PER_PROJECT,
+          p.CREATED_DATE, p.CREATED_BY, p.UPDATED_DATE, p.UPDATED_BY,
           pre.PRE_NAME || p.PER_NAME_TH AS FULL_NAME_TH,
           fund.FUND_NAME,
-          f.FAC_NAME2
+          f.FAC_NAME2,
+          proj.PRO_NAME,
+          sm.SM_NAME
         FROM PERSON_PAYROLL_OUT p
         LEFT JOIN NORAPAT.PRENAME_CODE pre ON p.PRE_CODE = pre.PRE_CODE
         LEFT JOIN PERSONTYPE t ON p.TYPE_CODE = t.TYPE_CODE
         LEFT JOIN FACULTY_CODE f ON p.PER_FAC_C = f.FAC_CODE
         LEFT JOIN FUND_TYPE fund ON p.PER_FUND_TYPE = fund.FUND_CODE
+        LEFT JOIN NORAPAT.PROJECT_TYPE proj ON p.PER_PROJECT = proj.PRO_CODE
+        LEFT JOIN NORAPAT.SOURCE_MONEY sm ON p.PER_SOURCE_MONEY = sm.SM_CODE
       `;
 
       const binds = {};
 
       if (type && keyword && keyword.trim() !== "") {
         if (type === "idCard") {
-          sql += ` WHERE p.PER_CITIZEN_ID LIKE :keyword`;
-          binds.keyword = `%${keyword}%`;
+          sql += ` WHERE p.PER_CITIZEN_ID = :keyword `;
+          binds.keyword = keyword.trim();
         } else if (type === "passport") {
-          sql += ` WHERE p.PER_PASSPORT_NO LIKE :keyword`;
-          binds.keyword = `%${keyword}%`;
+          sql += ` WHERE p.PER_PASSPORT_NO = :keyword `;
+          binds.keyword = keyword.trim();
         } else if (type === "ssoId") {
-          sql += ` WHERE p.PER_SSO_ID LIKE :keyword`;
-          binds.keyword = `%${keyword}%`;
+          sql += ` WHERE p.PER_SSO_ID = :keyword `;
+          binds.keyword = keyword.trim();
         } else if (type === "nameTh") {
-          sql += ` WHERE p.PER_NAME_TH LIKE :keyword`;
-          binds.keyword = `%${keyword}%`;
+          sql += ` WHERE p.PER_NAME_TH LIKE '%' || :keyword || '%' `;
+          binds.keyword = keyword.trim();
         } else if (type === "nameEn") {
-          // ค้นหาชื่อ ENG
-          sql += ` WHERE p.PER_NAME_EN LIKE :keyword`;
-          binds.keyword = `%${keyword}%`;
+          sql += ` WHERE UPPER(p.PER_NAME_EN) LIKE '%' || UPPER(:keyword) || '%' `;
+          binds.keyword = keyword.trim();
         }
       }
 
-      sql += ` ORDER BY p.PER_NAME_TH ASC`;
+      sql += ` ORDER BY p.CREATED_DATE DESC FETCH FIRST 100 ROWS ONLY`;
 
       // รันคำสั่งคิวรี
       const result = await ModelSelect.findAll(res, sql, binds);
 
-      if (result === null) {
+      if (!result) {
         return res.status(500).json({
           success: false,
           message: "เกิดข้อผิดพลาดในคิวรีระบบฐานข้อมูล",
@@ -113,10 +166,19 @@ const PersonnelController = {
         facName,
         perSalary,
         perHoldSalary,
+        perSourceMoney,
+        perPositionMoney,
+        perPositionPay,
+        perPositionMoneyEx,
+        perPositionPayEx,
+        perProject,
       } = req.body;
 
+      const rawNotePvd = req.body?.notePvd || req.body?.NOTE_PVD || req.body?.note_pvd || null;
+      const finalNotePvd = parseStrBytes(rawNotePvd, 20);
+
       console.log(
-        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบละเอียดเข้าตาราง PERSON_PAYROLL_OUT`,
+        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบรายละเอียดเข้าตาราง PERSON_PAYROLL_OUT`,
       );
 
       const sql = `
@@ -125,7 +187,9 @@ const PersonnelController = {
           PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
           PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
           PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-          FAC_NAME, PER_SALARY, PER_HOLD_SALARY, CREATED_DATE, CREATED_BY
+          FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+          PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+          CREATED_DATE, CREATED_BY
         ) VALUES (
           :perCitizenId, :typeCode, :typeName, :perSlipId, :perPosId, :preCode, :preName,
           :perNameTh, :perNameEn, :perTaxId, :perPvdfApp, 
@@ -137,45 +201,89 @@ const PersonnelController = {
           TO_DATE(:perPassportStartD, 'YYYY-MM-DD'), 
           TO_DATE(:perPassportExpireD, 'YYYY-MM-DD'), 
           :poscName, :perFacC,
-          :facName, :perSalary, :perHoldSalary, SYSDATE, 'ANGULAR_FULL_SYSTEM'
+          :facName, :perSalary, :perHoldSalary, :perSourceMoney,
+          :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
+          SYSDATE, 'ANGULAR_FULL_SYSTEM'
         )
       `;
 
       const binds = {
-        perCitizenId,
-        typeCode,
-        typeName,
-        perSlipId,
-        perPosId,
-        preCode,
-        preName,
-        perNameTh,
-        perNameEn,
-        perTaxId,
-        perPvdfApp,
-        perPvdfAppD: perPvdfAppD || null,
-        perPvdfQuit,
-        perPvdfQuitD: perPvdfQuitD || null,
-        perFundType,
-        perSaveRate,
-        perSsoPayment,
-        perFundTeacher,
-        perFundAssteacher,
-        perSsoId,
-        perPassportNo,
-        perPassportStartD: perPassportStartD || null,
-        perPassportExpireD: perPassportExpireD || null,
-        poscName,
-        perFacC,
-        facName,
-        perSalary,
-        perHoldSalary,
+        perCitizenId: parseStr(perCitizenId, 13),
+        typeCode: parseNum(typeCode),
+        typeName: parseStr(typeName, 100),
+        perSlipId: parseStr(perSlipId, 6),
+        perPosId: parseNum(perPosId),
+        preCode: parseNum(preCode),
+        preName: parseStr(preName, 30),
+        perNameTh: parseStr(perNameTh, 100),
+        perNameEn: parseStr(perNameEn, 100),
+        perTaxId: parseStr(perTaxId, 20),
+        perPvdfApp: parseStr(perPvdfApp, 1),
+        perPvdfAppD: formatDateBind(perPvdfAppD),
+        perPvdfQuit: parseStr(perPvdfQuit, 1),
+        perPvdfQuitD: formatDateBind(perPvdfQuitD),
+        perFundType: parseNum(perFundType),
+        perSaveRate: parseNum(perSaveRate),
+        perSsoPayment: parseNum(perSsoPayment),
+        perFundTeacher: parseNum(perFundTeacher),
+        perFundAssteacher: parseNum(perFundAssteacher),
+        perSsoId: parseStr(perSsoId, 20),
+        perPassportNo: parseStr(perPassportNo, 15),
+        perPassportStartD: formatDateBind(perPassportStartD),
+        perPassportExpireD: formatDateBind(perPassportExpireD),
+        poscName: parseStr(poscName, 100),
+        perFacC: parseNum(perFacC),
+        facName: parseStr(facName, 80),
+        perSalary: parseNum(perSalary),
+        perHoldSalary: parseNum(perHoldSalary),
+        perSourceMoney: parseNum(perSourceMoney),
+        perPositionMoney: parseNum(perPositionMoney),
+        perPositionPay: parseNum(perPositionPay),
+        perPositionMoneyEx: parseNum(perPositionMoneyEx),
+        perPositionPayEx: parseNum(perPositionPayEx),
+        perProject: parseNum(perProject),
       };
 
       console.log("SQL Binds:", binds);
       const isSuccess = await ModelInsert.insertdb(res, sql, binds);
 
       if (isSuccess) {
+        // หากผู้ใช้ระบุ notePvd ในแบบฟอร์ม ให้บันทึกลงตารางประวัติ UPD_HIST ด้วย
+        if (finalNotePvd) {
+          try {
+            const sqlHist = `
+              INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
+                PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
+                PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
+                PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
+                PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
+                FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+                PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+                CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+                NOTE_PVD, HIST_BY, FLAG
+              ) VALUES (
+                :perCitizenId, :typeCode, :typeName, :perSlipId, :perPosId, :preCode, :preName,
+                :perNameTh, :perNameEn, :perTaxId, :perPvdfApp, 
+                TO_DATE(:perPvdfAppD, 'YYYY-MM-DD'), 
+                :perPvdfQuit, 
+                TO_DATE(:perPvdfQuitD, 'YYYY-MM-DD'),
+                :perFundType, :perSaveRate, :perSsoPayment, :perFundTeacher, :perFundAssteacher, :perSsoId,
+                :perPassportNo, 
+                TO_DATE(:perPassportStartD, 'YYYY-MM-DD'), 
+                TO_DATE(:perPassportExpireD, 'YYYY-MM-DD'), 
+                :poscName, :perFacC,
+                :facName, :perSalary, :perHoldSalary, :perSourceMoney,
+                :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
+                SYSDATE, 'ANGULAR_FULL_SYSTEM', SYSDATE, 'ANGULAR_FULL_SYSTEM',
+                :notePvd, 'ANGULAR_INSERT_SYSTEM', 'I'
+              )
+            `;
+            await ModelInsert.insertdb(res, sqlHist, { ...binds, notePvd: finalNotePvd });
+          } catch (histErr) {
+            console.error("Insert Hist NotePvd error:", histErr);
+          }
+        }
+
         return res.status(201).json({
           success: true,
           message: "บันทึกข้อมูลบุคลากรเข้าสู่ระบบฐานข้อมูลสถาบันเรียบร้อยแล้ว",
@@ -229,9 +337,20 @@ const PersonnelController = {
         facName,
         perSalary,
         perHoldSalary,
+        perSourceMoney,
+        perPositionMoney,
+        perPositionPay,
+        perPositionMoneyEx,
+        perPositionPayEx,
+        perProject,
+        notePvd,
+        NOTE_PVD,
         originalCitizenId,
         originalPassportNo,
       } = req.body;
+
+      const rawNotePvd = req.body?.notePvd || req.body?.NOTE_PVD || req.body?.note_pvd || null;
+      const finalNotePvd = parseStrBytes(rawNotePvd, 20);
 
       // กรองคำว่า null/undefined ออก
       const sanitizeId = (val) => (val && val !== 'null' && val !== 'undefined') ? val : null;
@@ -247,33 +366,38 @@ const PersonnelController = {
       );
 
       const result = await DbTx.withTransaction(async (connection) => {
-        //บันทึกข้อมูลเดิมลงในตารางประวัติ Backup
+        //บันทึกข้อมูลเดิมลงในตารางประวัติ Backup พร้อม NOTE_PVD
         const sqlBackup = `
           INSERT INTO PERSON_PAYROLL_OUT_UPD_HIST (
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            HIST_BY, FLAG
+            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+            PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            NOTE_PVD, HIST_BY, FLAG
           )
           SELECT 
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            'ANGULAR_UPDATE_SYSTEM', 'U'
+            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+            PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            :notePvd, 'ANGULAR_UPDATE_SYSTEM', 'U'
           FROM PERSON_PAYROLL_OUT 
-          WHERE (PER_CITIZEN_ID IS NOT NULL AND PER_CITIZEN_ID = :targetCitizenId)
-             OR (PER_CITIZEN_ID IS NULL AND PER_PASSPORT_NO = :targetPassportNo)
+          WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
+             OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
         `;
 
         const resultBackup = await connection.execute(
           sqlBackup,
           { 
             targetCitizenId: targetCitizenId || null,
-            targetPassportNo: targetPassportNo || null
+            targetPassportNo: targetPassportNo || null,
+            notePvd: finalNotePvd
           },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -298,40 +422,52 @@ const PersonnelController = {
             PER_PASSPORT_EXPIRE_D = TO_DATE(:perPassportExpireD, 'YYYY-MM-DD'), 
             POSC_NAME = :poscName, PER_FAC_C = :perFacC,
             FAC_NAME = :facName, PER_SALARY = :perSalary, PER_HOLD_SALARY = :perHoldSalary,
+            PER_SOURCE_MONEY = :perSourceMoney,
+            PER_POSITION_MONEY = :perPositionMoney,
+            PER_POSITION_PAY = :perPositionPay,
+            PER_POSITION_MONEY_EX = :perPositionMoneyEx,
+            PER_POSITION_PAY_EX = :perPositionPayEx,
+            PER_PROJECT = :perProject,
             UPDATED_DATE = SYSDATE, UPDATED_BY = 'ANGULAR_UPDATE_SYSTEM'
-          WHERE (PER_CITIZEN_ID IS NOT NULL AND PER_CITIZEN_ID = :targetCitizenId)
-             OR (PER_CITIZEN_ID IS NULL AND PER_PASSPORT_NO = :targetPassportNo)
+          WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
+             OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
         `;
 
         const bindsUpdate = {
-          perCitizenId: perCitizenId || null,
-          typeCode,
-          typeName,
-          perSlipId,
-          perPosId,
-          preCode,
-          preName,
-          perNameTh,
-          perNameEn,
-          perTaxId,
-          perPvdfApp,
-          perPvdfAppD: perPvdfAppD || null,
-          perPvdfQuit,
-          perPvdfQuitD: perPvdfQuitD || null,
-          perFundType,
-          perSaveRate,
-          perSsoPayment,
-          perFundTeacher,
-          perFundAssteacher,
-          perSsoId,
-          perPassportNo,
-          perPassportStartD: perPassportStartD || null,
-          perPassportExpireD: perPassportExpireD || null,
-          poscName,
-          perFacC,
-          facName,
-          perSalary,
-          perHoldSalary,
+          perCitizenId: parseStr(perCitizenId, 13),
+          typeCode: parseNum(typeCode),
+          typeName: parseStr(typeName, 100),
+          perSlipId: parseStr(perSlipId, 6),
+          perPosId: parseNum(perPosId),
+          preCode: parseNum(preCode),
+          preName: parseStr(preName, 30),
+          perNameTh: parseStr(perNameTh, 100),
+          perNameEn: parseStr(perNameEn, 100),
+          perTaxId: parseStr(perTaxId, 20),
+          perPvdfApp: parseStr(perPvdfApp, 1),
+          perPvdfAppD: formatDateBind(perPvdfAppD),
+          perPvdfQuit: parseStr(perPvdfQuit, 1),
+          perPvdfQuitD: formatDateBind(perPvdfQuitD),
+          perFundType: parseNum(perFundType),
+          perSaveRate: parseNum(perSaveRate),
+          perSsoPayment: parseNum(perSsoPayment),
+          perFundTeacher: parseNum(perFundTeacher),
+          perFundAssteacher: parseNum(perFundAssteacher),
+          perSsoId: parseStr(perSsoId, 20),
+          perPassportNo: parseStr(perPassportNo, 15),
+          perPassportStartD: formatDateBind(perPassportStartD),
+          perPassportExpireD: formatDateBind(perPassportExpireD),
+          poscName: parseStr(poscName, 100),
+          perFacC: parseNum(perFacC),
+          facName: parseStr(facName, 80),
+          perSalary: parseNum(perSalary),
+          perHoldSalary: parseNum(perHoldSalary),
+          perSourceMoney: parseNum(perSourceMoney),
+          perPositionMoney: parseNum(perPositionMoney),
+          perPositionPay: parseNum(perPositionPay),
+          perPositionMoneyEx: parseNum(perPositionMoneyEx),
+          perPositionPayEx: parseNum(perPositionPayEx),
+          perProject: parseNum(perProject),
           targetCitizenId: targetCitizenId || null,
           targetPassportNo: targetPassportNo || null,
         };
@@ -431,10 +567,48 @@ const PersonnelController = {
     }
   },
 
+  // Get all project types for dropdown
+  async getProjectTypes(req, res) {
+    try {
+      const sql = `SELECT PRO_CODE, PRO_NAME FROM NORAPAT.PROJECT_TYPE ORDER BY PRO_CODE ASC`;
+      const result = await ModelSelect.findAll(res, sql, {});
+      if (result === null) {
+        return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลประเภทโครงการได้" });
+      }
+      const rows = result?.rows ?? [];
+      return res.status(200).json({ success: true, data: rows });
+    } catch (error) {
+      console.error("getProjectTypes Error:", error);
+      if (!res.headersSent) {
+        return res.status(500).json({ success: false, txt: error.message });
+      }
+    }
+  },
+
+  // Get all source money types for dropdown
+  async getSourceMoneyTypes(req, res) {
+    try {
+      const sql = `SELECT SM_CODE, SM_NAME FROM NORAPAT.SOURCE_MONEY ORDER BY SM_CODE ASC`;
+      const result = await ModelSelect.findAll(res, sql, {});
+      if (result === null) {
+        return res.status(500).json({ success: false, message: "ไม่สามารถดึงข้อมูลแหล่งเงินได้" });
+      }
+      const rows = result?.rows ?? [];
+      return res.status(200).json({ success: true, data: rows });
+    } catch (error) {
+      console.error("getSourceMoneyTypes Error:", error);
+      if (!res.headersSent) {
+        return res.status(500).json({ success: false, txt: error.message });
+      }
+    }
+  },
+
   // Delete!
   async deletePersonnel(req, res) {
     try {
       const { id } = req.params; // ดักรับรหัส ID ท้ายลิงก์ URL
+      const noteDel = req.body?.noteDel || req.body?.NOTE_DEL || req.query?.noteDel || req.query?.NOTE_DEL || null;
+
       console.log(
         `[Backend] กำลังลบข้อมูลบุคลากรออกจากระบบ เลขบัตรประชาชน/พาสปอร์ต: ${id} (ใช้ Transaction Backup)`,
       );
@@ -443,32 +617,43 @@ const PersonnelController = {
         return res.status(400).json({ success: false, message: "Invalid input data: id is required" });
       }
 
+      if (!noteDel || !String(noteDel).trim()) {
+        return res.status(400).json({ success: false, message: "กรุณาระบุหมายเหตุการลบข้อมูล (NOTE_DEL)" });
+      }
+
+      const finalNoteDel = String(noteDel).trim().substring(0, 20);
+
       const result = await DbTx.withTransaction(async (connection) => {
 
-        //บันทึกข้อมูลที่จะลบลงในตารางประวัติ Backup
+        //บันทึกข้อมูลที่จะลบลงในตารางประวัติ Backup พร้อม NOTE_DEL (ตรงตามโครงสร้างตาราง PERSON_PAYROLL_OUT_DEL_HIST)
         const sqlBackup = `
           INSERT INTO PERSON_PAYROLL_OUT_DEL_HIST (
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            HIST_BY, FLAG
+            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+            PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            NOTE_DEL, HIST_BY, FLAG
           )
           SELECT 
             PER_CITIZEN_ID, TYPE_CODE, TYPE_NAME, PER_SLIP_ID, PER_POS_ID, PRE_CODE, PRE_NAME,
             PER_NAME_TH, PER_NAME_EN, PER_TAX_ID, PER_PVDF_APP, PER_PVDF_APP_D, PER_PVDF_QUIT, PER_PVDF_QUIT_D,
             PER_FUND_TYPE, PER_SAVE_RATE, PER_SSO_PAYMENT, PER_FUND_TEACHER, PER_FUND_ASSTEACHER, PER_SSO_ID,
             PER_PASSPORT_NO, PER_PASSPORT_START_D, PER_PASSPORT_EXPIRE_D, POSC_NAME, PER_FAC_C,
-            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            'ANGULAR_DELETE_SYSTEM', 'D'
+            FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
+            PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
+            CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
+            :noteDel, 'ANGULAR_DELETE_SYSTEM', 'D'
           FROM PERSON_PAYROLL_OUT 
-          WHERE PER_CITIZEN_ID = :id OR (PER_CITIZEN_ID IS NULL AND PER_PASSPORT_NO = :id)
+          WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
+             OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetId)))
         `;
 
         const resultBackup = await connection.execute(
           sqlBackup,
-          { id },
+          { targetId: id, noteDel: finalNoteDel },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 
@@ -479,11 +664,12 @@ const PersonnelController = {
         // ลบข้อมูลจริงออกจากตารางหลัก
         const sqlDelete = `
           DELETE FROM PERSON_PAYROLL_OUT 
-          WHERE PER_CITIZEN_ID = :id OR (PER_CITIZEN_ID IS NULL AND PER_PASSPORT_NO = :id)
+          WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
+             OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetId)))
         `;
         const resultDelete = await connection.execute(
           sqlDelete,
-          { id },
+          { targetId: id },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 

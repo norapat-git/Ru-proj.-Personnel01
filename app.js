@@ -71,8 +71,8 @@ app.get('/', (req, res) => {
 
 app.use('/api/doc', routes);
 app.use('/api/', routeControll);
-app.use('/api/service', routes); 
 app.use('/api/service/frontend', routes_frontend); 
+app.use('/api/service', routes); 
 
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });

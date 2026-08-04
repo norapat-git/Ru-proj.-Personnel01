@@ -45,4 +45,10 @@ router.get("/personnel/persontypes", personnelControl.getPersonTypes);
 // get fund types list for dropdown
 router.get("/personnel/fundtypes", personnelControl.getFundTypes);
 
+// get project types list for dropdown
+router.get("/personnel/projecttypes", personnelControl.getProjectTypes);
+
+// get source money list for dropdown
+router.get("/personnel/sourcemoney", personnelControl.getSourceMoneyTypes);
+
 module.exports = router;

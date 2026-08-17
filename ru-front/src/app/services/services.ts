@@ -15,6 +15,10 @@ export class PersonnelService {
   currentModeSignal = signal<'result' | 'form'>('result');
   editingPersonnel = signal<PersonnelInsertInput | null>(null);
 
+  // สัญญาณสถานะ Loading สำหรับการดึงข้อมูลจาก API
+  isLoadingSignal = signal<boolean>(false);
+  loadingMessageSignal = signal<string>('กำลังโหลดข้อมูลบุคลากร...');
+
   // สัญญาณแชร์สัญชาติ
   staffNationalitySignal = signal<'thai' | 'inter'>('thai');
 
@@ -100,13 +104,11 @@ export class PersonnelService {
       );
       if (response && response.success && response.token) {
         localStorage.setItem('token', response.token);
-        this.showNotification('success', 'เชื่อมต่อสิทธิ์ความปลอดภัยสำเร็จ', 3000);
         return response.token;
       }
       return null;
     } catch (err: any) {
-      console.error('Acquire token failed:', err);
-      this.showNotification('error', 'เกิดข้อผิดพลาดในการรับสิทธิ์เข้าถึงระบบ', 3000);
+      console.warn('Acquire token background notice:', err);
       return null;
     }
   }

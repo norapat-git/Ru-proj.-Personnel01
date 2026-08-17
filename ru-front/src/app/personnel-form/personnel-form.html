@@ -7,7 +7,7 @@
   }
 
   <h2 class="form-title">
-    {{ isEditMode ? '✏️ แบบฟอร์มแก้ไขประวัติข้อมูลบุคลากร' : '➕ แบบฟอร์มเพิ่มข้อมูลบุคลากรใหม่' }}
+    {{ isEditMode ? 'แบบฟอร์มแก้ไขประวัติข้อมูลบุคลากร' : 'แบบฟอร์มเพิ่มข้อมูลบุคลากรใหม่' }}
   </h2>
 
   <!-- 1. ข้อมูลส่วนบุคคลพื้นฐาน -->
@@ -65,11 +65,16 @@
             [ngModel]="getSelectedPrenameText()"
             (ngModelChange)="onPrenameSelect($event)"
             [class.field-input-error]="invalidFields['preName']"
+            [disabled]="isLoadingOptions() || isLoading()"
             class="field-select"
           >
-            <option value="">-- เลือกคำนำหน้านาม --</option>
-            @for (item of prenameOptions; track item.preCode) {
-              <option [value]="item.preName">{{ item.preName }}</option>
+            @if (isLoadingOptions()) {
+              <option value="">-- กำลังโหลดตัวเลือก... --</option>
+            } @else {
+              <option value="">-- เลือกคำนำหน้านาม --</option>
+              @for (item of prenameOptions; track item.preCode) {
+                <option [value]="item.preName">{{ item.preName }}</option>
+              }
             }
           </select>
           @if (invalidFields['preName']) {
@@ -164,13 +169,18 @@
             [ngModel]="getSelectedPrenameText()"
             (ngModelChange)="onPrenameSelect($event)"
             [class.field-input-error]="invalidFields['preName']"
+            [disabled]="isLoadingOptions() || isLoading()"
             class="field-select"
           >
-            <option value="">-- Select Title --</option>
-            @for (item of prenameOptions; track item.preCode) {
-              <option [value]="item.preNameEn || item.preName">
-                {{ item.preNameEn || item.preName }}
-              </option>
+            @if (isLoadingOptions()) {
+              <option value="">-- Loading Titles... --</option>
+            } @else {
+              <option value="">-- Select Title --</option>
+              @for (item of prenameOptions; track item.preCode) {
+                <option [value]="item.preNameEn || item.preName">
+                  {{ item.preNameEn || item.preName }}
+                </option>
+              }
             }
           </select>
           @if (invalidFields['preName']) {
@@ -234,11 +244,16 @@
           [ngModel]="getSelectedPersonTypeName()"
           (ngModelChange)="onPersonTypeSelect($event)"
           [class.field-input-error]="invalidFields['typeName']"
+          [disabled]="isLoadingOptions() || isLoading()"
           class="field-select"
         >
-          <option value="">-- เลือกประเภทบุคลากร --</option>
-          @for (typeItem of personTypeOptions; track typeItem.typeCode) {
-            <option [value]="typeItem.typeName">{{ typeItem.typeName }}</option>
+          @if (isLoadingOptions()) {
+            <option value="">-- กำลังโหลดตัวเลือก... --</option>
+          } @else {
+            <option value="">-- เลือกประเภทบุคลากร --</option>
+            @for (typeItem of personTypeOptions; track typeItem.typeCode) {
+              <option [value]="typeItem.typeName">{{ typeItem.typeName }}</option>
+            }
           }
         </select>
         @if (invalidFields['typeName']) {
@@ -252,11 +267,16 @@
           [ngModel]="getSelectedFacultyName()"
           (ngModelChange)="onFacultySelect($event)"
           [class.field-input-error]="invalidFields['facName']"
+          [disabled]="isLoadingOptions() || isLoading()"
           class="field-select"
         >
-          <option value="">-- เลือกคณะ / หน่วยงาน --</option>
-          @for (fac of facultyOptions; track fac.facCode) {
-            <option [value]="fac.facName">{{ fac.facName }}</option>
+          @if (isLoadingOptions()) {
+            <option value="">-- กำลังโหลดตัวเลือก... --</option>
+          } @else {
+            <option value="">-- เลือกคณะ / หน่วยงาน --</option>
+            @for (fac of facultyOptions; track fac.facCode) {
+              <option [value]="fac.facName">{{ fac.facName }}</option>
+            }
           }
         </select>
         @if (invalidFields['facName']) {
@@ -371,16 +391,21 @@
         <label class="field-label">ประเภทโครงการ (Project Type)</label>
         <select
           [(ngModel)]="personnelData.perProject"
+          [disabled]="isLoadingOptions() || isLoading()"
           class="field-select"
         >
-          <option [ngValue]="null">-- เลือกประเภทโครงการ --</option>
-          @for (proj of projectTypeOptions; track proj.proCode) {
-            <option [ngValue]="proj.proCode">{{ proj.proName }}</option>
+          @if (isLoadingOptions()) {
+            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
+          } @else {
+            <option [ngValue]="null">-- เลือกประเภทโครงการ --</option>
+            @for (proj of projectTypeOptions; track proj.proCode) {
+              <option [ngValue]="proj.proCode">{{ proj.proName }}</option>
+            }
           }
         </select>
         @if (personnelData.perProject !== null && personnelData.perProject !== undefined) {
           <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
-            รหัสโครงการ (PRO_CODE): <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perProject }}</span>
+            รหัสโครงการ : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perProject }}</span>
           </small>
         }
       </div>
@@ -389,16 +414,21 @@
         <label class="field-label">แหล่งเงินทุน (Source Money)</label>
         <select
           [(ngModel)]="personnelData.perSourceMoney"
+          [disabled]="isLoadingOptions() || isLoading()"
           class="field-select"
         >
-          <option [ngValue]="null">-- เลือกแหล่งเงินทุน --</option>
-          @for (sm of sourceMoneyOptions; track sm.smCode) {
-            <option [ngValue]="sm.smCode">{{ sm.smName }}</option>
+          @if (isLoadingOptions()) {
+            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
+          } @else {
+            <option [ngValue]="null">-- เลือกแหล่งเงินทุน --</option>
+            @for (sm of sourceMoneyOptions; track sm.smCode) {
+              <option [ngValue]="sm.smCode">{{ sm.smName }}</option>
+            }
           }
         </select>
         @if (personnelData.perSourceMoney !== null && personnelData.perSourceMoney !== undefined) {
           <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
-            รหัสแหล่งเงิน (SM_CODE): <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perSourceMoney }}</span>
+            รหัสแหล่งเงิน : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perSourceMoney }}</span>
           </small>
         }
       </div>
@@ -412,6 +442,90 @@
           class="field-input"
           placeholder="ระบุตัวเลข"
         />
+      </div>
+    </div>
+
+    <!-- สถานะการรับเงิน (Y/N Flag Checkboxes) -->
+    <div class="fin-status-section">
+      <div class="fin-status-title">สถานะการรับเงิน</div>
+      <div class="fin-status-grid">
+
+        <!-- F_REV_SALARY -->
+        <label class="fin-flag-card" [class.fin-flag-active]="isFRevSalaryChecked()">
+          <div class="fin-flag-check-row">
+            <input
+              type="checkbox"
+              class="fin-flag-checkbox"
+              id="chk-f-rev-salary"
+              [checked]="isFRevSalaryChecked()"
+              (change)="personnelData.fRevSalary = $any($event.target).checked ? 'Y' : 'N'"
+            />
+            <span class="fin-flag-label-text">สถานะการรับเงินเดือน</span>
+            @if (isFRevSalaryChecked()) {
+              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
+            } @else {
+              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
+            }
+          </div>
+        </label>
+
+        <!-- F_REV_POS_MONEY -->
+        <label class="fin-flag-card" [class.fin-flag-active]="isFRevPosMoneyChecked()">
+          <div class="fin-flag-check-row">
+            <input
+              type="checkbox"
+              class="fin-flag-checkbox"
+              id="chk-f-rev-pos-money"
+              [checked]="isFRevPosMoneyChecked()"
+              (change)="personnelData.fRevPosMoney = $any($event.target).checked ? 'Y' : 'N'"
+            />
+            <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่ง</span>
+            @if (isFRevPosMoneyChecked()) {
+              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
+            } @else {
+              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
+            }
+          </div>
+        </label>
+
+        <!-- F_REV_PAY_EX -->
+        <label class="fin-flag-card" [class.fin-flag-active]="isFRevPayExChecked()">
+          <div class="fin-flag-check-row">
+            <input
+              type="checkbox"
+              class="fin-flag-checkbox"
+              id="chk-f-rev-pay-ex"
+              [checked]="isFRevPayExChecked()"
+              (change)="personnelData.fRevPayEx = $any($event.target).checked ? 'Y' : 'N'"
+            />
+            <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่งผู้บริหาร</span>
+            @if (isFRevPayExChecked()) {
+              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
+            } @else {
+              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
+            }
+          </div>
+        </label>
+
+        <!-- F_TOTAL_INCOME -->
+        <label class="fin-flag-card" [class.fin-flag-active]="isFTotalIncomeChecked()">
+          <div class="fin-flag-check-row">
+            <input
+              type="checkbox"
+              class="fin-flag-checkbox"
+              id="chk-f-total-income"
+              [checked]="isFTotalIncomeChecked()"
+              (change)="personnelData.fTotalIncome = $any($event.target).checked ? 'Y' : 'N'"
+            />
+            <span class="fin-flag-label-text">สถานะการรับเงินรายได้ทั้งหมด</span>
+            @if (isFTotalIncomeChecked()) {
+              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
+            } @else {
+              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
+            }
+          </div>
+        </label>
+
       </div>
     </div>
   </fieldset>
@@ -437,11 +551,13 @@
 
         @if (isFundActiveMember()) {
           <button type="button" (click)="toggleQuitPvd()" class="btn-danger-outline">
-            🚪 ออกจากกองทุน
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>ออกจากกองทุน</span>
           </button>
         } @else {
           <button type="button" (click)="toggleQuitPvd()" class="btn-success-outline">
-            ➕ เป็นสมาชิกกองทุน
+            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>เป็นสมาชิกกองทุน</span>
           </button>
         }
       </div>
@@ -536,7 +652,17 @@
 
   <!-- ปุ่มล่างฟอร์ม -->
   <div class="form-actions">
-    <button type="button" (click)="cancelForm()" class="btn-cancel">ยกเลิก</button>
-    <button type="button" (click)="saveData()" class="btn-save">บันทึกข้อมูลเข้าระบบ</button>
+    <button type="button" (click)="cancelForm()" class="btn-cancel" [disabled]="isLoading()">ยกเลิก</button>
+    <button type="button" (click)="saveData()" class="btn-save" [disabled]="isLoading()">
+      @if (isLoading()) {
+        <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.6" stroke-opacity="0.25"/>
+          <path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+        </svg>
+        <span>กำลังบันทึกข้อมูล...</span>
+      } @else {
+        <span>{{ isEditMode ? 'บันทึกการแก้ไขข้อมูล' : 'บันทึกข้อมูลเข้าระบบ' }}</span>
+      }
+    </button>
   </div>
 </div>

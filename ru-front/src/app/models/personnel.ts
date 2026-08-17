@@ -45,6 +45,10 @@ export interface PersonnelDataResult {
   SM_NAME?: string | null;
   NOTE_PVD?: string | null;
   NOTE_DEL?: string | null;
+  F_REV_SALARY?: string | null;       // สถานะการรับเงินเดือน (Y/N)
+  F_REV_POS_MONEY?: string | null;    // สถานะการรับเงินประจำตำแหน่ง (Y/N)
+  F_REV_PAY_EX?: string | null;       // สถานะการรับเงินประจำตำแหน่งผู้บริหาร (Y/N)
+  F_TOTAL_INCOME?: string | null;     // สถานะการรับเงินรายได้ทั้งหมด (Y/N)
 }
 
 export interface PersonnelInsertInput {
@@ -89,6 +93,10 @@ export interface PersonnelInsertInput {
   perProject?: number | null;
   notePvd?: string | null;
   noteDel?: string | null;
+  fRevSalary?: string | null;       // F_REV_SALARY (Y/N)
+  fRevPosMoney?: string | null;     // F_REV_POS_MONEY (Y/N)
+  fRevPayEx?: string | null;        // F_REV_PAY_EX (Y/N)
+  fTotalIncome?: string | null;     // F_TOTAL_INCOME (Y/N)
 }
 
 //คำนำหน้าชื่อ 

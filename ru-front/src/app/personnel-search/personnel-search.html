@@ -1,3 +1,8 @@
+<!-- Nationality Toggle — เล็กๆ บนสุดของ search panel -->
+<div class="search-nationality-bar">
+  <app-nationality-toggle></app-nationality-toggle>
+</div>
+
 <div class="search-bar-container">
   <!-- ส่วนกรอกเงื่อนไขการค้นหา (Filter Dropdown + Input Fields) -->
   <div class="search-inputs-wrapper">
@@ -6,12 +11,12 @@
       <label class="search-label">เงื่อนไขการตรวจสอบ</label>
       <select [(ngModel)]="filterType" class="search-select">
         @if (nationality() === 'thai') {
-          <option value="idCard">💳 เลขบัตรประชาชน (National ID)</option>
-          <option value="nameTh">📝 ชื่อจริง - นามสกุล (ภาษาไทย)</option>
+          <option value="idCard">เลขบัตรประชาชน (National ID)</option>
+          <option value="nameTh">ชื่อจริง - นามสกุล (ภาษาไทย)</option>
         } @else {
-          <option value="passport">🛂 เลขพาสปอร์ต (Passport ID)</option>
-          <option value="ssoId">🛡️ เลขประกันสังคม (Social Security ID)</option>
-          <option value="nameEn">🔤 ชื่อจริง - นามสกุล (English Name)</option>
+          <option value="passport">เลขพาสปอร์ต (Passport ID)</option>
+          <option value="ssoId">เลขประกันสังคม (Social Security ID)</option>
+          <option value="nameEn">ชื่อจริง - นามสกุล (English Name)</option>
         }
       </select>
     </div>
@@ -26,6 +31,7 @@
             [(ngModel)]="firstNameKeyword"
             placeholder="ระบุชื่อจริง..."
             class="search-input"
+            (keyup.enter)="onSearchSubmit()"
           />
         </div>
         @if (filterType === 'nameEn') {
@@ -36,6 +42,7 @@
               [(ngModel)]="middleNameKeyword"
               placeholder="ระบุชื่อกลาง (ถ้ามี)..."
               class="search-input"
+              (keyup.enter)="onSearchSubmit()"
             />
           </div>
         }
@@ -46,6 +53,7 @@
             [(ngModel)]="lastNameKeyword"
             placeholder="ระบุนามสกุล..."
             class="search-input"
+            (keyup.enter)="onSearchSubmit()"
           />
         </div>
       } @else {
@@ -58,6 +66,7 @@
             [(ngModel)]="singleKeyword"
             placeholder="กรอกข้อมูลเพื่อตรวจสอบ..."
             class="search-input"
+            (keyup.enter)="onSearchSubmit()"
           />
         </div>
       }
@@ -66,11 +75,13 @@
 
   <!-- แถวปุ่มกดค้นหา และปุ่มแสดงทุกคน (Search Actions Row) -->
   <div class="search-actions-row">
-    <button (click)="onSearchSubmit()" class="btn-primary btn-search">
-      🔍 ค้นหาข้อมูล
+    <button (click)="onSearchSubmit()" class="btn-primary btn-search" [disabled]="isLoading()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span>ค้นหาข้อมูล</span>
     </button>
-    <button (click)="loadAllPersonnel()" class="btn-success btn-show-all">
-      👥 แสดงข้อมูลบุคลากรทุกคน
+    <button (click)="loadAllPersonnel()" class="btn-secondary btn-show-all" [disabled]="isLoading()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>แสดงข้อมูลบุคลากรทุกคน</span>
     </button>
   </div>
 </div>

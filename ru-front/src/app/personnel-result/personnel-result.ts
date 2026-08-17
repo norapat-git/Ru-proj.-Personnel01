@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal, computed, effect } from '@angular/core';
 import { DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/services';
@@ -14,11 +14,98 @@ export class PersonnelResult {
 
   personnelList = this.personnelService.personnelListSignal;
   isFilteredSearch = this.personnelService.isFilteredSearchSignal;
+  isLoading = this.personnelService.isLoadingSignal; // สัญญาณสถานะ Loading
 
   // สัญญาณแชร์สัญชาติ
   nationality = this.personnelService.staffNationalitySignal;
 
-  // สำหรับการเปิด Modal ยืนยันการลบ
+  // Pagination Config (20 รายต่อหน้า)
+  readonly pageSize = 20;
+  currentPage = signal<number>(1);
+
+  // คำค้นหากรองชื่อ-นามสกุลแบบ Real-time ทันทีที่พิมพ์
+  nameFilter = signal<string>('');
+
+  constructor() {
+    // รีเซ็ตหน้ากลับไปหน้า 1 ทุกครั้งที่มีการค้นหาใหม่ หรือข้อมูลในลิสต์เปลี่ยน หรือเปลี่ยนคำค้นหา
+    effect(() => {
+      this.personnelList();
+      this.nameFilter();
+      this.currentPage.set(1);
+    }, { allowSignalWrites: true });
+  }
+
+  // รายการบุคลากรที่ผ่านการกรองชื่อ-นามสกุลแบบ Real-time
+  filteredPersonnelList = computed(() => {
+    const list = this.personnelList();
+    const query = this.nameFilter().trim().toLowerCase();
+
+    if (!query) {
+      return list;
+    }
+
+    return list.filter((person) => {
+      const nameTh = String(person.PER_NAME_TH || '').toLowerCase();
+      const fullNameTh = String(person.FULL_NAME_TH || '').toLowerCase();
+      const nameEn = String(person.PER_NAME_EN || '').toLowerCase();
+      const preName = String(person.PRE_NAME || person.PRE_CODE || '').toLowerCase();
+      const combinedTh = `${preName} ${nameTh}`.toLowerCase();
+
+      return nameTh.includes(query) || 
+             fullNameTh.includes(query) || 
+             nameEn.includes(query) || 
+             combinedTh.includes(query);
+    });
+  });
+
+  // จำนวนหน้ารวมทั้งหมด
+  totalPages = computed(() => {
+    const total = this.filteredPersonnelList().length;
+    return Math.ceil(total / this.pageSize) || 1;
+  });
+
+  // ตัดข้อมูลสำหรับแสดงผลเฉพาะหน้าที่เลือก
+  paginatedPersonnelList = computed(() => {
+    const list = this.filteredPersonnelList();
+    const start = (this.currentPage() - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  });
+
+  // ลำดับรายการเริ่มต้นของหน้าที่กำลังแสดง
+  get startItemIndex(): number {
+    if (this.filteredPersonnelList().length === 0) return 0;
+    return (this.currentPage() - 1) * this.pageSize + 1;
+  }
+
+  // ลำดับรายการสุดท้ายของหน้าที่กำลังแสดง
+  get endItemIndex(): number {
+    return Math.min(this.currentPage() * this.pageSize, this.filteredPersonnelList().length);
+  }
+
+  // เปลี่ยนหน้า
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  // ล้างคำค้นหาด่วน
+  clearNameFilter(): void {
+    this.nameFilter.set('');
+  }
+
+  // Modal แสดงรายละเอียดบุคลากร
+  selectedDetailPerson = signal<any>(null);
+
+  openDetailModal(person: any): void {
+    this.selectedDetailPerson.set(person);
+  }
+
+  closeDetailModal(): void {
+    this.selectedDetailPerson.set(null);
+  }
+
+  // Modal ยืนยันการลบ
   deleteTargetId: string | null = null;
   deleteNote: string = '';
   deleteNoteError: boolean = false;
@@ -83,6 +170,10 @@ export class PersonnelResult {
       perHoldSalary: rawSelection.PER_HOLD_SALARY,
       perSourceMoney: rawSelection.PER_SOURCE_MONEY !== undefined && rawSelection.PER_SOURCE_MONEY !== null && rawSelection.PER_SOURCE_MONEY !== '' ? Number(rawSelection.PER_SOURCE_MONEY) : null,
       notePvd: rawSelection.NOTE_PVD || null,
+      fRevSalary: rawSelection.F_REV_SALARY === 'Y' ? 'Y' : 'N',
+      fRevPosMoney: rawSelection.F_REV_POS_MONEY === 'Y' ? 'Y' : 'N',
+      fRevPayEx: rawSelection.F_REV_PAY_EX === 'Y' ? 'Y' : 'N',
+      fTotalIncome: rawSelection.F_TOTAL_INCOME === 'Y' ? 'Y' : 'N',
     });
 
     // สลับหน้าจอพื้นที่ส่วนล่างให้เปลี่ยนมาโชว์หน้าแบบฟอร์ม
@@ -103,6 +194,10 @@ export class PersonnelResult {
   }
 
   async confirmDelete(): Promise<void> {
+    if (this.isLoading()) {
+      return;
+    }
+
     const targetId = this.deleteTargetId;
     if (!targetId) return;
 
@@ -110,6 +205,9 @@ export class PersonnelResult {
       this.deleteNoteError = true;
       return;
     }
+
+    this.personnelService.loadingMessageSignal.set('กำลังลบข้อมูลบุคลากรออกจากระบบ...');
+    this.personnelService.isLoadingSignal.set(true);
 
     try {
       const res = await this.personnelService.deletePersonnel(targetId, this.deleteNote.trim());
@@ -139,6 +237,8 @@ export class PersonnelResult {
       this.deleteTargetId = null;
       this.deleteNote = '';
       this.deleteNoteError = false;
+    } finally {
+      this.personnelService.isLoadingSignal.set(false);
     }
   }
 }

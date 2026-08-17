@@ -2,13 +2,15 @@ import { Component, inject, effect, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PersonnelService } from '../services/services';
+import { NationalityToggle } from '../nationality-toggle/nationality-toggle';
 import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-search',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, NationalityToggle],
   templateUrl: './personnel-search.html',
+  styleUrls: ['./personnel-search.css'],
 })
 export class PersonnelSearch implements OnInit {
   private personnelService = inject(PersonnelService);
@@ -16,6 +18,7 @@ export class PersonnelSearch implements OnInit {
   private router = inject(Router);
 
   nationality = this.personnelService.staffNationalitySignal; // ดึงสัญญาณสัญชาติจากคลังกลาง
+  isLoading = this.personnelService.isLoadingSignal;           // สัญญาณสถานะ Loading
   filterType: string = 'idCard';
   singleKeyword: string = '';
   firstNameKeyword: string = '';
@@ -56,6 +59,12 @@ export class PersonnelSearch implements OnInit {
   }
 
   async loadAllPersonnel(): Promise<void> {
+    if (this.isLoading()) {
+      return;
+    }
+    this.personnelService.loadingMessageSignal.set('กำลังโหลดข้อมูลบุคลากร...');
+    this.personnelService.isLoadingSignal.set(true);
+    this.personnelService.personnelListSignal.set([]);
     try {
       this.personnelService.isFilteredSearchSignal.set(false);
 
@@ -80,12 +89,18 @@ export class PersonnelSearch implements OnInit {
       this.personnelService.hasSearchedSignal.set(true);
       this.personnelService.personnelListSignal.set([]);
       this.personnelService.showNotification('error', 'ไม่สามารถโหลดข้อมูลบุคลากรได้ กรุณาลองใหม่อีกครั้ง', 4000);
+    } finally {
+      this.personnelService.isLoadingSignal.set(false);
     }
   }
 
 
   //  fixx
   async onSearchSubmit(isManual: boolean = true): Promise<void> {
+    if (this.isLoading()) {
+      return;
+    }
+
     // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง (Development Mode) ให้ดำเนินการขอ Token ก่อนเริ่มยิงค้นหา
     if (!localStorage.getItem('token') && !environment.production) {
       const testCitizenId = '1234567890123';
@@ -125,7 +140,9 @@ export class PersonnelSearch implements OnInit {
       queryParamsHandling: 'merge'
     });
 
-    //  fixx
+    this.personnelService.loadingMessageSignal.set('กำลังโหลดข้อมูลบุคลากร...');
+    this.personnelService.isLoadingSignal.set(true);
+    this.personnelService.personnelListSignal.set([]);
     try {
       const payload = {
         type: this.filterType,
@@ -142,6 +159,8 @@ export class PersonnelSearch implements OnInit {
       console.error('Search failed:', err);
       this.personnelService.hasSearchedSignal.set(true);
       this.personnelService.personnelListSignal.set([]);
+    } finally {
+      this.personnelService.isLoadingSignal.set(false);
     }
   }
 }

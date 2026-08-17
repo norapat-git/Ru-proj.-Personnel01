@@ -22,11 +22,11 @@ module.exports = {
 
     env: {
       NODE_ENV: "development",
-      PORT: 4888
+      PORT: 4000
     },
     env_production: {
       NODE_ENV: "production",
-      PORT: 4888
+      PORT: 4000
     }
   },/*  {
     name: 'worker',

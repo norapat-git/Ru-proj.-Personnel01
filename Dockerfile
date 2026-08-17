@@ -32,7 +32,7 @@ RUN chown -R node:node /usr/src/app
 
 USER node
 
-EXPOSE 4888
+EXPOSE 4000
 
 # CMD ["pm2-runtime", "start", "system_prod.config.js"]
 CMD ["pm2-runtime", "start", "system_prod.config.js", "--env", "production"]

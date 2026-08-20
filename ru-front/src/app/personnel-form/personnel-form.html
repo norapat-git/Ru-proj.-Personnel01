@@ -345,29 +345,6 @@
       </div>
 
       <div>
-        <label class="field-label">ประเภทโครงการ (Project Type)</label>
-        <select
-          [(ngModel)]="personnelData.perProject"
-          [disabled]="isLoadingOptions() || isLoading()"
-          class="field-select"
-        >
-          @if (isLoadingOptions()) {
-            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
-          } @else {
-            <option [ngValue]="null">-- เลือกประเภทโครงการ --</option>
-            @for (proj of projectTypeOptions; track proj.proCode) {
-              <option [ngValue]="proj.proCode">{{ proj.proName }}</option>
-            }
-          }
-        </select>
-        @if (personnelData.perProject !== null && personnelData.perProject !== undefined) {
-          <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
-            รหัสโครงการ : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perProject }}</span>
-          </small>
-        }
-      </div>
-
-      <div>
         <label class="field-label">แหล่งเงินทุน (Source Money)</label>
         <select
           [(ngModel)]="personnelData.perSourceMoney"
@@ -386,6 +363,29 @@
         @if (personnelData.perSourceMoney !== null && personnelData.perSourceMoney !== undefined) {
           <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
             รหัสแหล่งเงิน : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perSourceMoney }}</span>
+          </small>
+        }
+      </div>
+
+      <div>
+        <label class="field-label">ประเภทโครงการ (Project Type)</label>
+        <select
+          [(ngModel)]="personnelData.perProject"
+          [disabled]="isLoadingOptions() || isLoading()"
+          class="field-select"
+        >
+          @if (isLoadingOptions()) {
+            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
+          } @else {
+            <option [ngValue]="null">-- เลือกประเภทโครงการ --</option>
+            @for (proj of projectTypeOptions; track proj.proCode) {
+              <option [ngValue]="proj.proCode">{{ proj.proName }}</option>
+            }
+          }
+        </select>
+        @if (personnelData.perProject !== null && personnelData.perProject !== undefined) {
+          <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
+            รหัสโครงการ : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perProject }}</span>
           </small>
         }
       </div>

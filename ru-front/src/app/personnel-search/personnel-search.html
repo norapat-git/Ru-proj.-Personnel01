@@ -21,55 +21,36 @@
       </select>
     </div>
 
-    <!-- ช่องกรอกคำค้นหา แตกช่องตามประเภทเงื่อนไข -->
+    <!-- ช่องกรอกคำค้นหา (กล่องเดียวสำหรับทุกเงื่อนไข) -->
     <div class="search-fields-group">
-      @if (filterType === 'nameTh' || filterType === 'nameEn') {
-        <div class="form-group-search-flex">
-          <label class="search-label">ชื่อจริง (First Name)</label>
-          <input
-            type="text"
-            [(ngModel)]="firstNameKeyword"
-            placeholder="ระบุชื่อจริง..."
-            class="search-input"
-            (keyup.enter)="onSearchSubmit()"
-          />
-        </div>
-        @if (filterType === 'nameEn') {
-          <div class="form-group-search-flex">
-            <label class="search-label">ชื่อกลาง (Middle Name)</label>
-            <input
-              type="text"
-              [(ngModel)]="middleNameKeyword"
-              placeholder="ระบุชื่อกลาง (ถ้ามี)..."
-              class="search-input"
-              (keyup.enter)="onSearchSubmit()"
-            />
-          </div>
-        }
-        <div class="form-group-search-flex">
-          <label class="search-label">นามสกุล (Surname)</label>
-          <input
-            type="text"
-            [(ngModel)]="lastNameKeyword"
-            placeholder="ระบุนามสกุล..."
-            class="search-input"
-            (keyup.enter)="onSearchSubmit()"
-          />
-        </div>
-      } @else {
-        <div class="form-group-search-flex">
-          <label class="search-label">
-            {{ filterType === 'idCard' ? 'ระบุเลขบัตรประชาชน 13 หลัก' : (filterType === 'passport' ? 'ระบุเลขพาสปอร์ต' : 'ระบุเลขประกันสังคม') }}
-          </label>
-          <input
-            type="text"
-            [(ngModel)]="singleKeyword"
-            placeholder="กรอกข้อมูลเพื่อตรวจสอบ..."
-            class="search-input"
-            (keyup.enter)="onSearchSubmit()"
-          />
-        </div>
-      }
+      <div class="form-group-search-flex">
+        <label class="search-label">
+          @if (filterType === 'idCard') {
+            ระบุเลขบัตรประชาชน 13 หลัก
+          } @else if (filterType === 'passport') {
+            ระบุเลขพาสปอร์ต
+          } @else if (filterType === 'ssoId') {
+            ระบุเลขประกันสังคม
+          } @else if (filterType === 'nameTh') {
+            ระบุชื่อ หรือ นามสกุล (ภาษาไทย)
+          } @else if (filterType === 'nameEn') {
+            ระบุชื่อ หรือ นามสกุล (English Name)
+          }
+        </label>
+        <input
+          type="text"
+          [(ngModel)]="singleKeyword"
+          [placeholder]="
+            filterType === 'idCard' ? 'กรอกเลขบัตรประชาชน 13 หลัก...' :
+            (filterType === 'passport' ? 'กรอกเลขพาสปอร์ต...' :
+            (filterType === 'ssoId' ? 'กรอกเลขประกันสังคม 13 หลัก...' :
+            (filterType === 'nameTh' ? 'พิมพ์ชื่อ หรือ นามสกุล เพื่อค้นหา...' :
+            'Type full name or partial name in English to search...')))
+          "
+          class="search-input"
+          (keyup.enter)="onSearchSubmit()"
+        />
+      </div>
     </div>
   </div>
 

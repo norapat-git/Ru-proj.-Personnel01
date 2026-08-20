@@ -1,50 +1,264 @@
+/* Nationality Picker Modal */
+.nat-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99990;
+  animation: natOverlayIn 0.2s ease-out;
+  padding: 20px;
+}
+
+@keyframes natOverlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.nat-picker-modal {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 36px 32px 28px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 24px 48px -8px rgba(0, 0, 0, 0.18), 0 8px 16px -4px rgba(0, 0, 0, 0.06);
+  text-align: center;
+  animation: natModalIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid #e2e8f0;
+}
+
+@keyframes natModalIn {
+  from { transform: scale(0.93) translateY(12px); opacity: 0; }
+  to   { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.nat-picker-title {
+  color: #1a365d;
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  letter-spacing: 0.3px;
+}
+
+.nat-picker-subtitle {
+  color: #718096;
+  font-size: 0.9rem;
+  margin: 0 0 28px 0;
+}
+
+.nat-picker-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+.nat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 32px 18px 26px;
+  min-height: 210px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  font-family: inherit;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+}
+
+.nat-card:hover {
+  border-color: #3182ce;
+  background: #f8fafc;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px -4px rgba(26, 54, 93, 0.12), 0 4px 8px rgba(0, 0, 0, 0.04);
+}
+
+.nat-card:active {
+  transform: translateY(-1px);
+}
+
+/* Icon Box inside Card */
+.nat-card-icon-box {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+}
+
+.nat-card:hover .nat-card-icon-box {
+  transform: scale(1.08);
+}
+
+.thai-box {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.inter-box {
+  background: #ebf8ff;
+  border: 1.5px solid #bee3f8;
+}
+
+.nat-svg-icon {
+  display: block;
+}
+
+.nat-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.nat-card-name {
+  color: #1a365d;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.nat-card-sub {
+  color: #718096;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.nat-card-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a0aec0;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+.nat-card:hover .nat-card-arrow {
+  color: #3182ce;
+  transform: translateX(3px);
+}
+
+.nat-picker-cancel {
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #718096;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 24px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.nat-picker-cancel:hover {
+  color: #2d3748;
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+/* Global Notification Banner */
 .global-banner {
   position: fixed;
-  top: 20px;
-  right: 20px;
-  padding: 16px 24px;
-  border-radius: 12px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-  z-index: 9999;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 22px 10px 14px;
+  border-radius: 50px;
+  font-size: 14.5px;
+  font-weight: 600;
+  z-index: 99999;
   display: flex;
   align-items: center;
   gap: 12px;
-  min-width: 300px;
-  max-width: 450px;
-  animation: slideInToast 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  border-left: 5px solid;
+  min-width: 280px;
+  max-width: 90vw;
+  animation: slideInTopCenter 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1.5px solid transparent;
+  pointer-events: none;
 }
 
-@keyframes slideInToast {
+@keyframes slideInTopCenter {
   from {
     opacity: 0;
-    transform: translateY(-20px) scale(0.95);
+    transform: translate(-50%, -24px) scale(0.92);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translate(-50%, 0) scale(1);
   }
 }
 
+.banner-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.global-banner.loading {
+  background: rgba(235, 248, 255, 0.96);
+  color: #1a365d;
+  border-color: #90cdf4;
+  box-shadow: 0 12px 28px -4px rgba(49, 130, 206, 0.28), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.global-banner.loading .banner-icon-box {
+  background-color: #bee3f8;
+  color: #2b6cb0;
+}
+
 .global-banner.success {
-  background-color: #ecfdf5;
+  background: rgba(236, 253, 245, 0.96);
   color: #065f46;
-  border-left-color: #10b981;
-  border-top: 1px solid #a7f3d0;
-  border-right: 1px solid #a7f3d0;
-  border-bottom: 1px solid #a7f3d0;
+  border-color: #6ee7b7;
+  box-shadow: 0 12px 28px -4px rgba(16, 185, 129, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.global-banner.success .banner-icon-box {
+  background-color: #d1fae5;
+  color: #059669;
 }
 
 .global-banner.error {
-  background-color: #fef2f2;
+  background: rgba(254, 242, 242, 0.96);
   color: #991b1b;
-  border-left-color: #ef4444;
-  border-top: 1px solid #fca5a5;
-  border-right: 1px solid #fca5a5;
-  border-bottom: 1px solid #fca5a5;
+  border-color: #fca5a5;
+  box-shadow: 0 12px 28px -4px rgba(239, 68, 68, 0.25), 0 4px 12px rgba(0, 0, 0, 0.08);
 }
+
+.global-banner.error .banner-icon-box {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.banner-message {
+  line-height: 1.4;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 
 /* Custom Confirm Modal Styling */
 .confirm-modal-overlay {

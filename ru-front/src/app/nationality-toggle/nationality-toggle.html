@@ -3,16 +3,18 @@
     type="button" 
     class="toggle-btn" 
     [class.active]="nationality() === 'thai'"
+    [disabled]="isLoading()"
     (click)="setNationality('thai')"
   >
-    บุคลากรชาวไทย (Thai)
+    🇹🇭 บุคลากรชาวไทย
   </button>
   <button 
     type="button" 
     class="toggle-btn" 
     [class.active]="nationality() === 'inter'"
+    [disabled]="isLoading()"
     (click)="setNationality('inter')"
   >
-    บุคลากรต่างชาติ (Expatriate)
+    🌐 บุคลากรต่างชาติ
   </button>
 </div>

@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "build:tomcat": "ng build --base-href /ru-front/",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },

@@ -12,8 +12,10 @@ export class NationalityToggle {
 
   // ดึงสัญญาณสัญชาติจากคลังกลาง
   nationality = this.personnelService.staffNationalitySignal;
+  isLoading = this.personnelService.isLoadingSignal;
 
   setNationality(val: 'thai' | 'inter') {
+    if (this.isLoading()) return;
     this.personnelService.staffNationalitySignal.set(val);
   }
 }

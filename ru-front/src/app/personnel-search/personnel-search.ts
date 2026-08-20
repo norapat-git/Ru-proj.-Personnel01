@@ -21,9 +21,6 @@ export class PersonnelSearch implements OnInit {
   isLoading = this.personnelService.isLoadingSignal;           // สัญญาณสถานะ Loading
   filterType: string = 'idCard';
   singleKeyword: string = '';
-  firstNameKeyword: string = '';
-  middleNameKeyword: string = '';
-  lastNameKeyword: string = '';
 
   constructor() {
     // เปลี่ยนเงื่อนไขการค้นหาตามสัญชาติอัตโนมัติ
@@ -31,9 +28,6 @@ export class PersonnelSearch implements OnInit {
       const value = this.nationality();
       this.filterType = value === 'thai' ? 'idCard' : 'passport';
       this.singleKeyword = '';
-      this.firstNameKeyword = '';
-      this.middleNameKeyword = '';
-      this.lastNameKeyword = '';
     });
   }
 
@@ -42,17 +36,10 @@ export class PersonnelSearch implements OnInit {
     this.route.queryParams.subscribe(params => {
       const searchKeyword = params['search_keyword']; 
       const searchType = params['search_type'];       
-      const firstName = params['firstName'];         
-      const lastName = params['lastName'];           
 
       if (searchKeyword) {
         this.singleKeyword = searchKeyword;
         if (searchType) this.filterType = searchType;
-        this.onSearchSubmit(false);
-      } else if (firstName || lastName) {
-        this.firstNameKeyword = firstName || '';
-        this.lastNameKeyword = lastName || '';
-        this.filterType = 'nameTh';
         this.onSearchSubmit(false);
       }
     });
@@ -96,7 +83,6 @@ export class PersonnelSearch implements OnInit {
   }
 
 
-  //  fixx
   async onSearchSubmit(isManual: boolean = true): Promise<void> {
     if (this.isLoading()) {
       return;
@@ -108,19 +94,7 @@ export class PersonnelSearch implements OnInit {
       await this.personnelService.acquireToken(testCitizenId);
     }
 
-    // finalKeyword เก็บค่าที่ค้นหา
-    let finalKeyword = '';
-    if (this.filterType === 'nameTh') {
-      finalKeyword = `${this.firstNameKeyword} ${this.lastNameKeyword}`.trim();
-    } else if (this.filterType === 'nameEn') {
-      // รวมชื่อต้น + ชื่อกลาง (ถ้ามี) + นามสกุล
-      const parts = [this.firstNameKeyword, this.middleNameKeyword, this.lastNameKeyword]
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-      finalKeyword = parts.join(' ');
-    } else {
-      finalKeyword = this.singleKeyword.trim();
-    }
+    const finalKeyword = this.singleKeyword.trim();
 
     // Validation at Frontend: แสดงแจ้งเตือนเฉพาะเมื่อกดปุ่มค้นหาเอง (isManual = true)
     if (!finalKeyword) {

@@ -82,33 +82,17 @@
           }
         </div>
 
-        <div>
-          <label class="field-label">ชื่อ (ภาษาไทย) <span class="required-star">*</span></label>
+        <div style="grid-column: span 2;">
+          <label class="field-label">ชื่อ - นามสกุล (ภาษาไทย) <span class="required-star">*</span></label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perFirstNameTh"
-            (input)="onThaiNameInput('perFirstNameTh')"
-            [class.field-input-error]="invalidFields['perFirstNameTh']"
+            [(ngModel)]="personnelData.perNameTh"
+            [class.field-input-error]="invalidFields['perNameTh']"
             class="field-input"
-            placeholder="ระบุชื่อภาษาไทย"
+            placeholder="ระบุชื่อจริง ชื่อกลาง (ถ้ามี) และนามสกุลภาษาไทย"
           />
-          @if (invalidFields['perFirstNameTh']) {
-            <small class="field-error-text">กรุณากรอกชื่อภาษาไทย</small>
-          }
-        </div>
-
-        <div>
-          <label class="field-label">นามสกุล (ภาษาไทย) <span class="required-star">*</span></label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perLastNameTh"
-            (input)="onThaiNameInput('perLastNameTh')"
-            [class.field-input-error]="invalidFields['perLastNameTh']"
-            class="field-input"
-            placeholder="ระบุนามสกุลภาษาไทย"
-          />
-          @if (invalidFields['perLastNameTh']) {
-            <small class="field-error-text">กรุณากรอกนามสกุลภาษาไทย</small>
+          @if (invalidFields['perNameTh']) {
+            <small class="field-error-text">กรุณากรอกชื่อ-นามสกุลภาษาไทย</small>
           }
         </div>
       </div>
@@ -188,44 +172,17 @@
           }
         </div>
 
-        <div>
-          <label class="field-label">First Name <span class="required-star">*</span></label>
+        <div style="grid-column: span 2;">
+          <label class="field-label">Full Name (English) <span class="required-star">*</span></label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perFirstNameEn"
-            (input)="onEnglishNameInput('perFirstNameEn')"
-            [class.field-input-error]="invalidFields['perFirstNameEn']"
+            [(ngModel)]="personnelData.perNameEn"
+            [class.field-input-error]="invalidFields['perNameEn']"
             class="field-input"
-            placeholder="First Name"
+            placeholder="First name, middle name (if any), and last name"
           />
-          @if (invalidFields['perFirstNameEn']) {
-            <small class="field-error-text">Please enter First Name</small>
-          }
-        </div>
-
-        <div>
-          <label class="field-label">Middle Name (optional)</label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perMiddleNameEn"
-            (input)="onEnglishNameInput('perMiddleNameEn')"
-            class="field-input"
-            placeholder="Middle Name (Optional)"
-          />
-        </div>
-
-        <div>
-          <label class="field-label">Last Name <span class="required-star">*</span></label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perLastNameEn"
-            (input)="onEnglishNameInput('perLastNameEn')"
-            [class.field-input-error]="invalidFields['perLastNameEn']"
-            class="field-input"
-            placeholder="Last Name"
-          />
-          @if (invalidFields['perLastNameEn']) {
-            <small class="field-error-text">Please enter Last Name</small>
+          @if (invalidFields['perNameEn']) {
+            <small class="field-error-text">Please enter full name in English</small>
           }
         </div>
       </div>

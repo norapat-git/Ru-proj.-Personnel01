@@ -56,9 +56,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
     preName: '',
     perNameTh: '',
     perNameEn: '',
-    perFirstNameEn: '',
-    perMiddleNameEn: '',
-    perLastNameEn: '',
     perTaxId: '',
     perPvdfApp: '',
     perPvdfAppD: null,
@@ -108,29 +105,9 @@ export class PersonnelForm implements OnInit, OnDestroy {
         this.personnelService.staffNationalitySignal.set('thai');
       }
 
-      // เมื่อโหลดข้อมูลแก้ไข ให้แตก PER_NAME_TH กลับเป็น first/last name
-      if (editPayload.perNameTh) {
-        const thParts = editPayload.perNameTh.trim().split(/\s+/);
-        if (thParts.length >= 2) {
-          this.personnelData.perFirstNameTh = thParts[0];
-          this.personnelData.perLastNameTh = thParts.slice(1).join(' ');
-        } else {
-          this.personnelData.perFirstNameTh = editPayload.perNameTh;
-          this.personnelData.perLastNameTh = '';
-        }
-      }
-
-      // เมื่อโหลดข้อมูลแก้ไข ให้แตก PER_NAME_EN กลับเป็น first/middle/last name
-      const parts = (editPayload.perNameEn || '').trim().split(/\s+/);
-      if (parts.length >= 2) {
-        this.personnelData.perFirstNameEn = parts[0];
-        this.personnelData.perLastNameEn = parts[parts.length - 1];
-        this.personnelData.perMiddleNameEn = parts.length > 2 ? parts.slice(1, -1).join(' ') : '';
-      } else {
-        this.personnelData.perFirstNameEn = editPayload.perNameEn || '';
-        this.personnelData.perMiddleNameEn = '';
-        this.personnelData.perLastNameEn = '';
-      }
+      // โหลดชื่อ-นามสกุลเข้าฟอร์ม
+      this.personnelData.perNameTh = editPayload.perNameTh || '';
+      this.personnelData.perNameEn = editPayload.perNameEn || '';
       this.cdr.detectChanges();
     }
 
@@ -253,21 +230,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
       return found ? found.facName : '';
     }
     return '';
-  }
-
-  // รวมชื่อ-นามสกุล ภาษาไทย
-  onThaiNameInput(field: string) {
-    const first = (this.personnelData.perFirstNameTh || '').trim();
-    const last = (this.personnelData.perLastNameTh || '').trim();
-    this.personnelData.perNameTh = `${first} ${last}`.trim();
-  }
-
-  // รวมชื่อ-นามสกุล ภาษาอังกฤษ (First Middle Last)
-  onEnglishNameInput(field: string) {
-    const first = (this.personnelData.perFirstNameEn || '').trim();
-    const middle = (this.personnelData.perMiddleNameEn || '').trim();
-    const last = (this.personnelData.perLastNameEn || '').trim();
-    this.personnelData.perNameEn = [first, middle, last].filter(Boolean).join(' ');
   }
 
   // เมื่อเลือกคณะออโต้ FAC_CODE ลงช่อง perFacC
@@ -496,12 +458,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
         this.invalidFields['preName'] = true;
         isValid = false;
       }
-      if (!this.personnelData.perFirstNameEn || !this.personnelData.perFirstNameEn.trim()) {
-        this.invalidFields['perFirstNameEn'] = true;
-        isValid = false;
-      }
-      if (!this.personnelData.perLastNameEn || !this.personnelData.perLastNameEn.trim()) {
-        this.invalidFields['perLastNameEn'] = true;
+      if (!this.personnelData.perNameEn || !this.personnelData.perNameEn.trim()) {
+        this.invalidFields['perNameEn'] = true;
         isValid = false;
       }
     }
@@ -574,18 +532,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
     // รวมชื่อ-นามสกุล ทั้งไทยและต่างชาติให้ตรงตามโครงสร้างข้อมูล
     const payload: any = { ...this.personnelData };
 
-    if (this.nationality() === 'thai') {
-      const first = (this.personnelData.perFirstNameTh || '').trim();
-      const last = (this.personnelData.perLastNameTh || '').trim();
-      payload.perNameTh = `${first} ${last}`.trim();
-    } else {
-      const parts = [
-        payload.perFirstNameEn?.trim(),
-        payload.perMiddleNameEn?.trim(),
-        payload.perLastNameEn?.trim(),
-      ].filter(s => s && s.length > 0);
-      payload.perNameEn = parts.join(' ');
-    }
+    payload.perNameTh = (this.personnelData.perNameTh || '').trim();
+    payload.perNameEn = (this.personnelData.perNameEn || '').trim();
 
     this.personnelService.loadingMessageSignal.set(
       this.isEditMode ? 'กำลังบันทึกการแก้ไขข้อมูล...' : 'กำลังบันทึกข้อมูลเข้าระบบ...'

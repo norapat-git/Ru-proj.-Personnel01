@@ -63,9 +63,9 @@ export interface PersonnelInsertInput {
   perFirstNameTh?: string;
   perLastNameTh?: string;
   perNameEn: string;
-  perFirstNameEn: string;
-  perMiddleNameEn: string;
-  perLastNameEn: string;
+  perFirstNameEn?: string;
+  perMiddleNameEn?: string;
+  perLastNameEn?: string;
   perTaxId: string;
   perPvdfApp: string;
   perPvdfAppD: string | null;

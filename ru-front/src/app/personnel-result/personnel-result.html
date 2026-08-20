@@ -1,6 +1,40 @@
 <div class="result-container">
   
-  @if (personnelList().length > 0) {
+  @if (isLoading()) {
+    <!-- Skeleton Table Loading State -->
+    <div class="skeleton-table-wrapper">
+      <div class="skeleton-toolbar">
+        <div class="skeleton-shimmer skeleton-input-box"></div>
+        <div class="skeleton-shimmer skeleton-count-box"></div>
+      </div>
+      <div class="table-responsive">
+        <table class="personnel-table skeleton-table-content">
+          <thead>
+            <tr>
+              <th style="width: 50px;" class="text-center">#</th>
+              <th style="width: 140px;">คำนำหน้านาม</th>
+              <th>ชื่อ - นามสกุล</th>
+              <th>ประเภทบุคลากร</th>
+              <th>คณะ / หน่วยงาน</th>
+              <th class="text-center" style="min-width: 200px;">การจัดการ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of [1, 2, 3, 4, 5]; track row) {
+              <tr class="skeleton-row-item">
+                <td class="text-center"><div class="skeleton-cell skeleton-cell-sm"></div></td>
+                <td><div class="skeleton-cell skeleton-cell-badge"></div></td>
+                <td><div class="skeleton-cell skeleton-cell-name"></div></td>
+                <td><div class="skeleton-cell skeleton-cell-type"></div></td>
+                <td><div class="skeleton-cell skeleton-cell-fac"></div></td>
+                <td class="text-center"><div class="skeleton-cell skeleton-cell-actions"></div></td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  } @else if (personnelList().length > 0) {
     <!-- แถบเครื่องมือหัวตาราง: กรองรายชื่อ (ซ้าย) + จำนวนรายการชิดขวา (ขวา) -->
     <div class="result-header-toolbar">
       <div class="result-toolbar-left">

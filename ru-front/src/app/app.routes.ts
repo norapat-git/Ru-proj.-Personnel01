@@ -6,7 +6,7 @@ export const routes: Routes = [
   {
     path: '',
     component: App,
-    canActivate: [authGuard] // ตรวจสิทธิ์ก่อนเข้าหน้าแรก
+    canActivate: [authGuard]
   },
   { path: '**', redirectTo: '' }
 ];

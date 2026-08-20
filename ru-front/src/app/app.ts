@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { PersonnelSearch } from './personnel-search/personnel-search';
 import { PersonnelForm } from './personnel-form/personnel-form';
 import { PersonnelResult } from './personnel-result/personnel-result';
@@ -20,6 +20,9 @@ export class App implements OnInit {
   notification = this.personnelService.notificationSignal;
   isLoading = this.personnelService.isLoadingSignal;
   loadingMessage = this.personnelService.loadingMessageSignal;
+
+  // รหัสผู้ใช้ปัจจุบันที่ดึงจาก JWT Token
+  currentUserCitizenId = computed(() => this.personnelService.getCurrentCitizenId());
 
   // สถานะ Modal เลือกสัญชาติก่อนเปิดฟอร์มเพิ่มบุคลากร
   showNationalityPicker = signal<boolean>(false);

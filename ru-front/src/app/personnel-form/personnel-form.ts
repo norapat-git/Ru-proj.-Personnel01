@@ -573,6 +573,19 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
     // รวมชื่อ-นามสกุล ทั้งไทยและต่างชาติให้ตรงตามโครงสร้างข้อมูล
     const payload: any = { ...this.personnelData };
+
+    // ดึงเลขบัตรประชาชน / Secret ID จาก JWT Token เพื่อบันทึก Audit Trail
+    const currentUserId = this.personnelService.getCurrentCitizenId() || '';
+    if (this.isEditMode) {
+      payload.updatedBy = currentUserId;
+      payload.UPDATED_BY = currentUserId;
+    } else {
+      payload.createdBy = currentUserId;
+      payload.CREATED_BY = currentUserId;
+      payload.updatedBy = currentUserId;
+      payload.UPDATED_BY = currentUserId;
+    }
+
     if (this.nationality() === 'thai') {
       const first = (this.personnelData.perFirstNameTh || '').trim();
       const last = (this.personnelData.perLastNameTh || '').trim();

@@ -140,5 +140,10 @@ export interface SourceMoneyOption {
   smName: string;
 }
 
-
-
+// โครงสร้าง Payload ของ JWT Token
+export interface JwtPayload {
+  client_id?: string;   // เลขบัตรประชาชน (PER_CITIZEN_ID / Secret ID)
+  iat?: number;         // เวลาสร้าง Token (Timestamp)
+  exp?: number;         // เวลาหมดอายุ Token (Timestamp)
+  [key: string]: any;
+}

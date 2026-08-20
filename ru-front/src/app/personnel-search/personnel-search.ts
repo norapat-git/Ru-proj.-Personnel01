@@ -62,6 +62,7 @@ export class PersonnelSearch implements OnInit {
     if (this.isLoading()) {
       return;
     }
+    this.personnelService.hasSearchedSignal.set(true);
     this.personnelService.loadingMessageSignal.set('กำลังโหลดข้อมูลบุคลากร...');
     this.personnelService.isLoadingSignal.set(true);
     this.personnelService.personnelListSignal.set([]);
@@ -140,6 +141,7 @@ export class PersonnelSearch implements OnInit {
       queryParamsHandling: 'merge'
     });
 
+    this.personnelService.hasSearchedSignal.set(true);
     this.personnelService.loadingMessageSignal.set('กำลังโหลดข้อมูลบุคลากร...');
     this.personnelService.isLoadingSignal.set(true);
     this.personnelService.personnelListSignal.set([]);

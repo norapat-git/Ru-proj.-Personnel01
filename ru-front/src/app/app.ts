@@ -21,9 +21,6 @@ export class App implements OnInit {
   isLoading = this.personnelService.isLoadingSignal;
   loadingMessage = this.personnelService.loadingMessageSignal;
 
-  // รหัสผู้ใช้ปัจจุบันที่ดึงจาก JWT Token
-  currentUserCitizenId = computed(() => this.personnelService.getCurrentCitizenId());
-
   // สถานะ Modal เลือกสัญชาติก่อนเปิดฟอร์มเพิ่มบุคลากร
   showNationalityPicker = signal<boolean>(false);
 

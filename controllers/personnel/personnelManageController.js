@@ -54,9 +54,10 @@ const personnelManageController = {
 
       const rawNotePvd = req.body?.notePvd || req.body?.NOTE_PVD || req.body?.note_pvd || null;
       const finalNotePvd = parseStrBytes(rawNotePvd, 20);
+      const actionUser = parseStr(req.decoded?.client_id || req.body?.createdBy || req.body?.CREATED_BY || 'SYSTEM', 50);
 
       console.log(
-        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบรายละเอียดเข้าตาราง PERSON_PAYROLL_OUT`,
+        `[Backend] กำลังทำคำสั่งบันทึกข้อมูลแบบรายละเอียดเข้าตาราง PERSON_PAYROLL_OUT (ผู้ทำรายการ: ${actionUser})`,
       );
 
       const sql = `
@@ -83,7 +84,7 @@ const personnelManageController = {
           :facName, :perSalary, :perHoldSalary, :perSourceMoney,
           :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
           :fRevSalary, :fRevPosMoney, :fRevPayEx, :fTotalIncome,
-          SYSDATE, 'ANGULAR_FULL_SYSTEM'
+          SYSDATE, :createdBy
         )
       `;
 
@@ -126,6 +127,7 @@ const personnelManageController = {
         fRevPosMoney: parseStr(fRevPosMoney || 'N', 1),
         fRevPayEx: parseStr(fRevPayEx || 'N', 1),
         fTotalIncome: parseStr(fTotalIncome || 'N', 1),
+        createdBy: actionUser,
       };
 
       console.log("SQL Binds:", binds);
@@ -158,11 +160,11 @@ const personnelManageController = {
                 :poscName, :perFacC,
                 :facName, :perSalary, :perHoldSalary, :perSourceMoney,
                 :perPositionMoney, :perPositionPay, :perPositionMoneyEx, :perPositionPayEx, :perProject,
-                SYSDATE, 'ANGULAR_FULL_SYSTEM', SYSDATE, 'ANGULAR_FULL_SYSTEM',
-                :notePvd, 'ANGULAR_INSERT_SYSTEM', 'I'
+                SYSDATE, :createdBy, SYSDATE, :createdBy,
+                :notePvd, :histBy, 'I'
               )
             `;
-            await ModelInsert.insertdb(res, sqlHist, { ...binds, notePvd: finalNotePvd });
+            await ModelInsert.insertdb(res, sqlHist, { ...binds, notePvd: finalNotePvd, histBy: actionUser });
           } catch (histErr) {
             console.error("Insert Hist NotePvd error:", histErr);
           }
@@ -240,17 +242,17 @@ const personnelManageController = {
       const rawNotePvd = req.body?.notePvd || req.body?.NOTE_PVD || req.body?.note_pvd || null;
       const finalNotePvd = parseStrBytes(rawNotePvd, 20);
 
-      // กรองคำว่า null/undefined ออก
       const sanitizeId = (val) => (val && val !== 'null' && val !== 'undefined') ? val : null;
       const targetCitizenId = sanitizeId(originalCitizenId) || sanitizeId(perCitizenId);
       const targetPassportNo = sanitizeId(originalPassportNo) || sanitizeId(perPassportNo);
+      const actionUser = parseStr(req.decoded?.client_id || req.body?.updatedBy || req.body?.UPDATED_BY || 'SYSTEM', 50);
 
       if (!targetCitizenId && !targetPassportNo) {
         return res.status(400).json({ success: false, message: "Invalid input data: perCitizenId or perPassportNo is required to identify the record" });
       }
 
       console.log(
-        `[Backend] กำลังแก้ไขข้อมูลบุคลากร คีย์หลักเดิม CitizenID: ${targetCitizenId || 'null'}, PassportNo: ${targetPassportNo || 'null'} (ใช้ Transaction Backup)`,
+        `[Backend] กำลังแก้ไขข้อมูลบุคลากร คีย์หลักเดิม CitizenID: ${targetCitizenId || 'null'}, PassportNo: ${targetPassportNo || 'null'} (ผู้แก้ไข: ${actionUser})`,
       );
 
       const result = await DbTx.withTransaction(async (connection) => {
@@ -274,7 +276,7 @@ const personnelManageController = {
             FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
             CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            :notePvd, 'ANGULAR_UPDATE_SYSTEM', 'U'
+            :notePvd, :histBy, 'U'
           FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
@@ -285,7 +287,8 @@ const personnelManageController = {
           { 
             targetCitizenId: targetCitizenId || null,
             targetPassportNo: targetPassportNo || null,
-            notePvd: finalNotePvd
+            notePvd: finalNotePvd,
+            histBy: actionUser
           },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
@@ -320,7 +323,7 @@ const personnelManageController = {
             F_REV_POS_MONEY = :fRevPosMoney,
             F_REV_PAY_EX = :fRevPayEx,
             F_TOTAL_INCOME = :fTotalIncome,
-            UPDATED_DATE = SYSDATE, UPDATED_BY = 'ANGULAR_UPDATE_SYSTEM'
+            UPDATED_DATE = SYSDATE, UPDATED_BY = :updatedBy
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetCitizenId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetPassportNo)))
         `;
@@ -366,6 +369,7 @@ const personnelManageController = {
           fTotalIncome: parseStr(fTotalIncome || 'N', 1),
           targetCitizenId: targetCitizenId || null,
           targetPassportNo: targetPassportNo || null,
+          updatedBy: actionUser,
         };
 
         const resultUpdate = await connection.execute(
@@ -410,6 +414,7 @@ const personnelManageController = {
       }
 
       const finalNoteDel = String(noteDel).trim().substring(0, 20);
+      const actionUser = parseStr(req.decoded?.client_id || req.body?.updatedBy || req.body?.UPDATED_BY || req.query?.updatedBy || 'SYSTEM', 50);
 
       const result = await DbTx.withTransaction(async (connection) => {
         //บันทึกข้อมูลที่จะลบลงในตารางประวัติ Backup พร้อม NOTE_DEL
@@ -432,7 +437,7 @@ const personnelManageController = {
             FAC_NAME, PER_SALARY, PER_HOLD_SALARY, PER_SOURCE_MONEY,
             PER_POSITION_MONEY, PER_POSITION_PAY, PER_POSITION_MONEY_EX, PER_POSITION_PAY_EX, PER_PROJECT,
             CREATED_DATE, CREATED_BY, UPDATED_DATE, UPDATED_BY,
-            :noteDel, 'ANGULAR_DELETE_SYSTEM', 'D'
+            :noteDel, :histBy, 'D'
           FROM PERSON_PAYROLL_OUT 
           WHERE (PER_CITIZEN_ID IS NOT NULL AND TRIM(PER_CITIZEN_ID) = TRIM(:targetId))
              OR (PER_CITIZEN_ID IS NULL AND UPPER(TRIM(PER_PASSPORT_NO)) = UPPER(TRIM(:targetId)))
@@ -440,7 +445,7 @@ const personnelManageController = {
 
         const resultBackup = await connection.execute(
           sqlBackup,
-          { targetId: id, noteDel: finalNoteDel },
+          { targetId: id, noteDel: finalNoteDel, histBy: actionUser },
           { outFormat: oracledb.OUT_FORMAT_OBJECT }
         );
 

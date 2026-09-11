@@ -1,0 +1,6 @@
+/* Nationality toggle bar — centered above search inputs */
+.search-nationality-bar {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
+}

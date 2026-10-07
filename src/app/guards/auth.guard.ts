@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, ActivatedRouteSnapshot } from '@angular/router';
 import { environment } from '../../environment/environment';
-import { PersonnelService } from '../services/services';
+import { PersonnelService } from '../services/personnel.service';
 
 // Auth Guard
 export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {

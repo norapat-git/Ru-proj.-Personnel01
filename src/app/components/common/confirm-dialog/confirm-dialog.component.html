@@ -1,0 +1,61 @@
+@if (state().isOpen) {
+<div class="confirm-dialog-overlay" (click)="onOverlayClick()">
+  <div class="confirm-dialog-card confirm-dialog-{{ state().variant }}" (click)="$event.stopPropagation()">
+    <!-- Icon Header -->
+    <div class="confirm-icon-badge">
+      @if (state().variant === 'danger') {
+      <span class="material-symbols-rounded">warning</span>
+      } @else if (state().variant === 'warning') {
+      <span class="material-symbols-rounded">error_outline</span>
+      } @else {
+      <span class="material-symbols-rounded">help_outline</span>
+      }
+    </div>
+
+    <!-- Text Content -->
+    <div class="confirm-dialog-body">
+      <h3 class="confirm-dialog-title">{{ state().title }}</h3>
+      <p class="confirm-dialog-message">{{ state().message }}</p>
+      @if (state().subMessage) {
+      <p class="confirm-dialog-submessage">{{ state().subMessage }}</p>
+      }
+
+      <!-- Optional Note Textarea (e.g. deletion reason) -->
+      @if (state().requireNote) {
+      <div class="confirm-note-field">
+        <label class="confirm-note-label">
+          {{ state().noteLabel || 'สาเหตุ / หมายเหตุการดำเนินการ' }}
+          <span class="required-badge">* บังคับระบุ</span>
+        </label>
+        <textarea [ngModel]="state().noteValue" (ngModelChange)="onNoteChange($event)"
+          [placeholder]="state().notePlaceholder || 'กรุณาระบุหมายเหตุหรือเหตุผลในการดำเนินการ...'" rows="3"
+          class="confirm-note-input" [class.has-error]="state().noteError"></textarea>
+        @if (state().noteError) {
+        <div class="confirm-error-message">
+          <span class="material-symbols-rounded">error</span>
+          <span>{{ state().noteError }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Action Footer -->
+    <div class="confirm-dialog-footer">
+      <button type="button" class="btn-dialog-cancel" (click)="onCancel()" [disabled]="state().isLoading">
+        {{ state().cancelText }}
+      </button>
+      <button type="button" class="btn-dialog-confirm" [class.btn-danger]="state().variant === 'danger'"
+        [class.btn-warning]="state().variant === 'warning'" [class.btn-info]="state().variant === 'info'"
+        (click)="onConfirm()" [disabled]="state().isLoading || (state().requireNote && !state().noteValue.trim())">
+        @if (state().isLoading) {
+        <span class="spinner-icon"></span>
+        <span>กำลังประมวลผล...</span>
+        } @else {
+        <span>{{ state().confirmText }}</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}

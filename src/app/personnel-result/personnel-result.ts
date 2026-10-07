@@ -1,16 +1,23 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
-import { DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
+import { CommonModule, DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
 import { FormsModule } from '@angular/forms';
-import { PersonnelService } from '../services/services';
+import { PersonnelService } from '../services/personnel.service';
+import { ToastService } from '../services/toast.service';
+import { ConfirmDialogService } from '../services/confirm-dialog.service';
+import { SkeletonComponent } from '../components/common/skeleton/skeleton.component';
+import { ContextMenuItem } from '../models';
+import { CustomContextMenuComponent } from '../components/common/custom-context-menu/custom-context-menu.component';
 
 @Component({
   selector: 'app-personnel-result',
   standalone: true,
-  imports: [DecimalPipe, FormsModule], //DecimalPipe ตัดทศนิยมเงินเดือนหน้าจอ
+  imports: [CommonModule, DecimalPipe, FormsModule, SkeletonComponent, CustomContextMenuComponent],
   templateUrl: './personnel-result.html',
 })
 export class PersonnelResult {
   private personnelService = inject(PersonnelService);
+  private toastService = inject(ToastService);
+  private confirmDialogService = inject(ConfirmDialogService);
 
   personnelList = this.personnelService.personnelListSignal;
   isFilteredSearch = this.personnelService.isFilteredSearchSignal;
@@ -25,6 +32,44 @@ export class PersonnelResult {
 
   // คำค้นหากรองชื่อ-นามสกุลแบบ Real-time ทันทีที่พิมพ์
   nameFilter = signal<string>('');
+
+  // Context Menu State
+  contextMenuVisible = signal<boolean>(false);
+  contextMenuX = signal<number>(0);
+  contextMenuY = signal<number>(0);
+  contextMenuPerson = signal<any>(null);
+
+  contextMenuItems = computed<ContextMenuItem[]>(() => {
+    const isFiltered = this.isFilteredSearch();
+    return [
+      { id: 'view', label: 'ดูรายละเอียดประวัติ', icon: 'visibility' },
+      { id: 'copy', label: 'คัดลอกรหัสประจำตัว', icon: 'content_copy', dividerAfter: isFiltered },
+      ...(isFiltered
+        ? [
+            { id: 'edit', label: 'แก้ไขประวัติข้อมูล', icon: 'edit', variant: 'primary' as const },
+            { id: 'delete', label: 'ลบข้อมูลบุคลากร', icon: 'delete', variant: 'danger' as const }
+          ]
+        : [])
+    ];
+  });
+
+  // Apple Pill Pagination Pages
+  paginationPages = computed<(number | string)[]>(() => {
+    const current = this.currentPage();
+    const total = this.totalPages();
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [];
+    if (current <= 4) {
+      pages.push(1, 2, 3, 4, 5, '...', total);
+    } else if (current >= total - 3) {
+      pages.push(1, '...', total - 4, total - 3, total - 2, total - 1, total);
+    } else {
+      pages.push(1, '...', current - 1, current, current + 1, '...', total);
+    }
+    return pages;
+  });
 
   constructor() {
     // รีเซ็ตหน้ากลับไปหน้า 1 ทุกครั้งที่มีการค้นหาใหม่ หรือข้อมูลในลิสต์เปลี่ยน หรือเปลี่ยนคำค้นหา
@@ -185,29 +230,86 @@ export class PersonnelResult {
     this.personnelService.currentModeSignal.set('form');
   }
 
-  // ฟังก์ชันกดลบข้อมูลจากขอบด้านล่างของแผงรายละเอียด Card
-  triggerDelete(targetCitizenId: string): void {
-    this.deleteTargetId = targetCitizenId;
-    this.deleteNote = '';
-    this.deleteNoteError = false;
+  // Context Menu Handlers
+  onRowContextMenu(event: MouseEvent, person: any): void {
+    event.preventDefault();
+    this.contextMenuPerson.set(person);
+    this.contextMenuX.set(event.clientX);
+    this.contextMenuY.set(event.clientY);
+    this.contextMenuVisible.set(true);
   }
 
-  cancelDelete(): void {
-    this.deleteTargetId = null;
-    this.deleteNote = '';
-    this.deleteNoteError = false;
+  openRowMenu(event: MouseEvent, person: any): void {
+    event.stopPropagation();
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    this.contextMenuPerson.set(person);
+    this.contextMenuX.set(rect.left - 180);
+    this.contextMenuY.set(rect.bottom + 4);
+    this.contextMenuVisible.set(true);
   }
 
-  async confirmDelete(): Promise<void> {
-    if (this.isLoading()) {
-      return;
+  closeContextMenu(): void {
+    this.contextMenuVisible.set(false);
+  }
+
+  onContextMenuItemClick(item: ContextMenuItem): void {
+    const person = this.contextMenuPerson();
+    if (!person) return;
+
+    switch (item.id) {
+      case 'view':
+        this.openDetailModal(person);
+        break;
+      case 'copy':
+        this.copyPersonnelId(person);
+        break;
+      case 'edit':
+        this.triggerEditMode(person);
+        break;
+      case 'delete':
+        this.triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO);
+        break;
     }
+  }
 
-    const targetId = this.deleteTargetId;
-    if (!targetId) return;
+  copyPersonnelId(person: any): void {
+    const id = person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || '';
+    if (!id) return;
 
-    if (!this.deleteNote || !this.deleteNote.trim()) {
-      this.deleteNoteError = true;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(id).then(() => {
+        this.toastService.success(`คัดลอกรหัส "${id}" เรียบร้อยแล้ว`, 'คัดลอกสำเร็จ');
+      });
+    } else {
+      this.toastService.info(`รหัส: ${id}`);
+    }
+  }
+
+  // ฟังก์ชันลบข้อมูลโดยใช้ ConfirmDialogService (พร้อมบันทึกหมายเหตุการลบ)
+  async triggerDelete(targetCitizenId: string): Promise<void> {
+    if (this.isLoading()) return;
+
+    const person = this.personnelList().find(
+      p => (p.PER_CITIZEN_ID || p.PER_PASSPORT_NO) === targetCitizenId
+    );
+    const personName = person
+      ? (person['FULL_NAME_TH'] || person.PER_NAME_TH || person.PER_NAME_EN || targetCitizenId)
+      : targetCitizenId;
+
+    const result = await this.confirmDialogService.confirm({
+      title: 'ยืนยันการลบข้อมูลบุคลากร',
+      message: `คุณต้องการลบข้อมูลของ "${personName}" ออกจากระบบใช่หรือไม่?`,
+      subMessage: 'การดำเนินการนี้จะทำการลบข้อมูลออกจากฐานข้อมูลถาวร และไม่สามารถกู้คืนได้',
+      variant: 'danger',
+      confirmText: 'ลบข้อมูลบุคลากร',
+      cancelText: 'ยกเลิก',
+      requireNote: true,
+      noteLabel: 'สาเหตุ / หมายเหตุการลบข้อมูล',
+      notePlaceholder: 'กรุณาระบุสาเหตุหรือหมายเหตุการลบข้อมูลบุคลากร...'
+    });
+
+    if (!result.confirmed) {
       return;
     }
 
@@ -215,35 +317,22 @@ export class PersonnelResult {
     this.personnelService.isLoadingSignal.set(true);
 
     try {
-      const res = await this.personnelService.deletePersonnel(targetId, this.deleteNote.trim());
+      const res = await this.personnelService.deletePersonnel(targetCitizenId, result.note || '');
       if (res && res.success) {
-        this.personnelService.notificationSignal.set({ 
-          type: 'success', 
-          message: res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว' 
-        });
-        setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
-
-        // ลบแถวข้อมูลออกจากหน้าจอแสดงผลของหน้าบ้านทันที
+        this.toastService.success(res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว');
+        // ลบแถวข้อมูลออกจากหน้าจอแสดงผล
         const currentList = this.personnelService.personnelListSignal();
         this.personnelService.personnelListSignal.set(
-          currentList.filter((item) => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetId),
+          currentList.filter(item => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetCitizenId)
         );
+        this.closeDetailModal();
       }
-      this.deleteTargetId = null;
-      this.deleteNote = '';
-      this.deleteNoteError = false;
     } catch (err: any) {
       console.error('Delete Error:', err);
-      this.personnelService.notificationSignal.set({ 
-        type: 'error', 
-        message: 'ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง' 
-      });
-      setTimeout(() => this.personnelService.notificationSignal.set(null), 3000);
-      this.deleteTargetId = null;
-      this.deleteNote = '';
-      this.deleteNoteError = false;
+      this.toastService.error('ไม่สามารถลบข้อมูลได้ เนื่องจากระบบเชื่อมต่อฐานข้อมูลขัดข้อง');
     } finally {
       this.personnelService.isLoadingSignal.set(false);
     }
   }
 }
+

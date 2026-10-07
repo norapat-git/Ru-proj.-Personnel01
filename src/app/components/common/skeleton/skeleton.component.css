@@ -1,0 +1,43 @@
+:host {
+  display: contents;
+}
+
+.skeleton-shimmer-box {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background-color: var(--skeleton-base, #e2e8f0);
+}
+
+.skeleton-shimmer-box::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0,
+    var(--skeleton-shine, rgba(255, 255, 255, 0.6)) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 1.6s infinite ease-in-out;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-text {
+  margin: 3px 0;
+}
+
+.skeleton-circle {
+  flex-shrink: 0;
+}
+
+

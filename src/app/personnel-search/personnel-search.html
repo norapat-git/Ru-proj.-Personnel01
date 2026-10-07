@@ -1,24 +1,24 @@
-<!-- Nationality Toggle — เล็กๆ บนสุดของ search panel -->
+<!-- Nationality Toggle — Apple Segmented Control (มีระบบล็อคอัตโนมัติขณะดูข้อมูล) -->
 <div class="search-nationality-bar">
-  <app-nationality-toggle></app-nationality-toggle>
+  <app-nationality-toggle
+    [isLocked]="isLocked()"
+    (onUnlock)="unlockSearch()"
+  ></app-nationality-toggle>
 </div>
 
 <div class="search-bar-container">
-  <!-- ส่วนกรอกเงื่อนไขการค้นหา (Filter Dropdown + Input Fields) -->
-  <div class="search-inputs-wrapper">
-    <!-- Dropdown เปลี่ยนเงื่อนไขตามสัญชาติที่เลือกอัตโนมัติ -->
+  <!-- ส่วนกรอกเงื่อนไขการค้นหา (Custom Select + Input Fields) พร้อมอนิเมชั่นสลับสัญชาติ -->
+  <div class="search-inputs-wrapper" [class.switch-thai]="nationality() === 'thai'" [class.switch-inter]="nationality() === 'inter'">
+    <!-- Dropdown สไตล์ Apple เปลี่ยนเงื่อนไขตามสัญชาติที่เลือกอัตโนมัติ -->
     <div class="form-group-search dropdown-group">
       <label class="search-label">เงื่อนไขการตรวจสอบ</label>
-      <select [(ngModel)]="filterType" class="search-select">
-        @if (nationality() === 'thai') {
-          <option value="idCard">เลขบัตรประชาชน (National ID)</option>
-          <option value="nameTh">ชื่อจริง - นามสกุล (ภาษาไทย)</option>
-        } @else {
-          <option value="passport">เลขพาสปอร์ต (Passport ID)</option>
-          <option value="ssoId">เลขประกันสังคม (Social Security ID)</option>
-          <option value="nameEn">ชื่อจริง - นามสกุล (English Name)</option>
-        }
-      </select>
+      <app-custom-select
+        [options]="filterOptions()"
+        [ngModel]="filterType"
+        (ngModelChange)="onFilterTypeChange($event)"
+        [searchable]="false"
+        [disabled]="isLoading()"
+      ></app-custom-select>
     </div>
 
     <!-- ช่องกรอกคำค้นหา (กล่องเดียวสำหรับทุกเงื่อนไข) -->
@@ -37,19 +37,37 @@
             ระบุชื่อ หรือ นามสกุล (English Name)
           }
         </label>
-        <input
-          type="text"
-          [(ngModel)]="singleKeyword"
-          [placeholder]="
-            filterType === 'idCard' ? 'กรอกเลขบัตรประชาชน 13 หลัก...' :
-            (filterType === 'passport' ? 'กรอกเลขพาสปอร์ต...' :
-            (filterType === 'ssoId' ? 'กรอกเลขประกันสังคม 13 หลัก...' :
-            (filterType === 'nameTh' ? 'พิมพ์ชื่อ หรือ นามสกุล เพื่อค้นหา...' :
-            'Type full name or partial name in English to search...')))
-          "
-          class="search-input"
-          (keyup.enter)="onSearchSubmit()"
-        />
+        <div class="search-input-box-wrapper">
+          <span class="material-symbols-rounded search-input-icon">search</span>
+          <input
+            type="text"
+            [(ngModel)]="singleKeyword"
+            [placeholder]="
+              filterType === 'idCard' ? 'กรอกเลขบัตรประชาชน 13 หลัก...' :
+              (filterType === 'passport' ? 'กรอกเลขพาสปอร์ต...' :
+              (filterType === 'ssoId' ? 'กรอกเลขประกันสังคม 13 หลัก...' :
+              (filterType === 'nameTh' ? 'พิมพ์ชื่อ หรือ นามสกุล เพื่อค้นหา...' :
+              'Type full name or partial name in English to search...')))
+            "
+            class="search-input"
+            (keyup.enter)="onSearchSubmit()"
+            [disabled]="isLoading()"
+          />
+          <div class="search-trailing-actions">
+            @if (singleKeyword) {
+              <button
+                type="button"
+                class="search-clear-btn"
+                (click)="singleKeyword = ''"
+                title="ล้างคำค้นหา"
+                aria-label="ล้างคำค้นหา"
+              >
+                <span class="material-symbols-rounded">close</span>
+              </button>
+            }
+            <span class="search-shortcut-hint">↵ Enter</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -57,12 +75,13 @@
   <!-- แถวปุ่มกดค้นหา และปุ่มแสดงทุกคน (Search Actions Row) -->
   <div class="search-actions-row">
     <button (click)="onSearchSubmit()" class="btn-primary btn-search" [disabled]="isLoading()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      <span class="material-symbols-rounded">search</span>
       <span>ค้นหาข้อมูล</span>
     </button>
     <button (click)="loadAllPersonnel()" class="btn-secondary btn-show-all" [disabled]="isLoading()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="material-symbols-rounded">group</span>
       <span>แสดงข้อมูลบุคลากรทุกคน</span>
     </button>
   </div>
 </div>
+

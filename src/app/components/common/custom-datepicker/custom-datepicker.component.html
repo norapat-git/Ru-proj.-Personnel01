@@ -1,0 +1,119 @@
+<div class="custom-datepicker-container" [class.is-open]="isOpen()" [class.is-disabled]="disabled" [class.is-invalid]="invalid">
+  <!-- Input Trigger Box -->
+  <div class="datepicker-trigger" (click)="togglePicker()" [attr.tabindex]="disabled ? -1 : 0">
+    <span class="material-symbols-rounded datepicker-icon">calendar_today</span>
+    
+    <span class="datepicker-display-text" [class.is-placeholder]="!selectedValue()">
+      {{ selectedValue() ? formattedDisplayValue() : placeholder }}
+    </span>
+
+    @if (allowClear && selectedValue() && !disabled) {
+      <button type="button" class="datepicker-clear-btn" (click)="clearValue($event)" title="ล้างวันที่">
+        <span class="material-symbols-rounded">close</span>
+      </button>
+    }
+
+    <span class="material-symbols-rounded datepicker-chevron" [class.is-flipped]="isOpen()">
+      expand_more
+    </span>
+  </div>
+
+  <!-- Apple Minimalist Calendar Card Popover (Placed on Top / Above Box) -->
+  @if (isOpen()) {
+    <div 
+      class="datepicker-popover-card" 
+      [class.placement-top]="placement === 'top'"
+      [class.placement-bottom]="placement === 'bottom'"
+      (click)="$event.stopPropagation()"
+    >
+      <!-- Calendar Header (Chevrons + Clickable Month/Year in Blue Thai) -->
+      <div class="cal-header">
+        <button type="button" class="cal-nav-btn" (click)="prevAction($event)" title="ก่อนหน้า">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        
+        <button type="button" class="cal-title-btn" (click)="toggleViewMode($event)" title="คลิกเพื่อเลือก พ.ศ. / เดือน">
+          <span class="cal-title-text">{{ headerTitle() }}</span>
+          <span class="material-symbols-rounded cal-title-icon">
+            {{ viewMode() === 'days' ? 'arrow_drop_down' : 'arrow_drop_up' }}
+          </span>
+        </button>
+
+        <button type="button" class="cal-nav-btn" (click)="nextAction($event)" title="ถัดไป">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+
+      <!-- 1. Days View Mode (Default Minimalist Grid with Thai Weekdays) -->
+      @if (viewMode() === 'days') {
+        <!-- Weekdays Header Row in Thai -->
+        <div class="cal-weekdays-grid">
+          @for (day of weekDaysTh; track $index) {
+            <div class="cal-weekday-cell">{{ day }}</div>
+          }
+        </div>
+
+        <!-- Calendar Days Grid -->
+        <div class="cal-days-grid">
+          @for (d of calendarDays(); track $index) {
+            <div class="cal-day-cell-wrapper">
+              @if (d.isCurrentMonth) {
+                <button
+                  type="button"
+                  class="cal-day-btn"
+                  [class.is-selected]="d.isSelected"
+                  [class.is-today]="d.isToday && !d.isSelected"
+                  (click)="selectDay(d, $event)"
+                >
+                  {{ d.dayNumber }}
+                </button>
+              } @else {
+                <span class="cal-day-other">{{ d.dayNumber }}</span>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- 2. Months View Mode (Thai Months) -->
+      @if (viewMode() === 'months') {
+        <div class="cal-months-grid">
+          @for (m of monthNamesTh; track $index) {
+            <button
+              type="button"
+              class="cal-month-btn"
+              [class.is-selected]="viewDate().getMonth() === $index"
+              (click)="selectMonth($index, $event)"
+            >
+              <span class="m-th-full">{{ m }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- 3. Years View Mode (Thai BE Years) -->
+      @if (viewMode() === 'years') {
+        <div class="cal-years-grid">
+          @for (y of yearsList(); track $index) {
+            <button
+              type="button"
+              class="cal-year-btn"
+              [class.is-selected]="viewDate().getFullYear() === y"
+              (click)="selectYear(y, $event)"
+            >
+              <span class="y-be-main">{{ y + 543 }}</span>
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Quick Actions Bar (Today shortcut) -->
+      <div class="cal-footer-bar">
+        <button type="button" class="cal-today-btn" (click)="setToday($event)">
+          <span class="material-symbols-rounded">today</span>
+          <span>วันนี้</span>
+        </button>
+      </div>
+    </div>
+  }
+</div>

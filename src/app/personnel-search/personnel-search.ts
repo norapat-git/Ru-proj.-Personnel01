@@ -1,14 +1,17 @@
-import { Component, inject, effect, OnInit } from '@angular/core';
+import { Component, inject, effect, OnInit, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PersonnelService } from '../services/services';
+import { PersonnelService } from '../services/personnel.service';
 import { NationalityToggle } from '../nationality-toggle/nationality-toggle';
+import { CustomSelectOption } from '../models';
+import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
 import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-search',
   standalone: true,
-  imports: [FormsModule, NationalityToggle],
+  imports: [CommonModule, FormsModule, NationalityToggle, CustomSelectComponent],
   templateUrl: './personnel-search.html',
   styleUrls: ['./personnel-search.css'],
 })
@@ -17,13 +20,34 @@ export class PersonnelSearch implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
-  nationality = this.personnelService.staffNationalitySignal; // ดึงสัญญาณสัญชาติจากคลังกลาง
-  isLoading = this.personnelService.isLoadingSignal;           // สัญญาณสถานะ Loading
+  nationality = this.personnelService.staffNationalitySignal;
+  isLoading = this.personnelService.isLoadingSignal;
+  hasSearched = this.personnelService.hasSearchedSignal;
+
   filterType: string = 'idCard';
   singleKeyword: string = '';
 
+  // ล็อค toggle เมื่อกำลังแสดงผลการค้นหา หรือ ดึงข้อมูลทั้งหมด
+  isLocked = computed<boolean>(() => {
+    return this.hasSearched();
+  });
+
+  filterOptions = computed<CustomSelectOption[]>(() => {
+    if (this.nationality() === 'thai') {
+      return [
+        { value: 'idCard', label: 'เลขบัตรประชาชน (National ID)', icon: 'badge' },
+        { value: 'nameTh', label: 'ชื่อจริง - นามสกุล (ภาษาไทย)', icon: 'person' },
+      ];
+    } else {
+      return [
+        { value: 'passport', label: 'เลขพาสปอร์ต (Passport ID)', icon: 'badge' },
+        { value: 'ssoId', label: 'เลขประกันสังคม (SSO ID)', icon: 'verified_user' },
+        { value: 'nameEn', label: 'ชื่อจริง - นามสกุล (English Name)', icon: 'person' },
+      ];
+    }
+  });
+
   constructor() {
-    // เปลี่ยนเงื่อนไขการค้นหาตามสัญชาติอัตโนมัติ
     effect(() => {
       const value = this.nationality();
       this.filterType = value === 'thai' ? 'idCard' : 'passport';
@@ -32,12 +56,13 @@ export class PersonnelSearch implements OnInit {
   }
 
   ngOnInit(): void {
-    // ถ้ามี query params จาก URL (เช่น กลับมาจากหน้าอื่น) ให้ค้นหาตามนั้น
     this.route.queryParams.subscribe(params => {
       const searchKeyword = params['search_keyword']; 
       const searchType = params['search_type'];       
 
       if (searchKeyword) {
+        const isInter = ['passport', 'ssoId', 'nameEn'].includes(searchType);
+        this.personnelService.staffNationalitySignal.set(isInter ? 'inter' : 'thai');
         this.singleKeyword = searchKeyword;
         if (searchType) this.filterType = searchType;
         this.onSearchSubmit(false);
@@ -45,10 +70,31 @@ export class PersonnelSearch implements OnInit {
     });
   }
 
+  onFilterTypeChange(type: string): void {
+    this.filterType = type;
+    this.singleKeyword = '';
+  }
+
+  unlockSearch(): void {
+    if (this.isLoading()) return;
+    this.singleKeyword = '';
+    this.personnelService.hasSearchedSignal.set(false);
+    this.personnelService.personnelListSignal.set([]);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        search_keyword: null,
+        search_type: null
+      },
+      queryParamsHandling: 'merge'
+    });
+  }
+
   async loadAllPersonnel(): Promise<void> {
     if (this.isLoading()) {
       return;
     }
+    this.personnelService.staffNationalitySignal.set('thai'); // แสดงเป็นภาษาไทยปกติ
     this.personnelService.hasSearchedSignal.set(true);
     this.personnelService.loadingMessageSignal.set('กำลังโหลดข้อมูลบุคลากร...');
     this.personnelService.isLoadingSignal.set(true);
@@ -56,14 +102,12 @@ export class PersonnelSearch implements OnInit {
     try {
       this.personnelService.isFilteredSearchSignal.set(false);
 
-      // Development mode: ต่ออายุ token ทุกครั้งที่กดเพื่อให้แน่ใจว่า token ยังใช้งานได้
       if (!environment.production) {
         const testCitizenId = '1234567890123';
         await this.personnelService.acquireToken(testCitizenId);
       }
 
       const response = await this.personnelService.searchPersonnel({ type: 'all', keyword: 'all' });
-      console.log('[loadAllPersonnel] response:', response);
 
       this.personnelService.hasSearchedSignal.set(true);
       if (response && response.success && response.data) {
@@ -82,13 +126,11 @@ export class PersonnelSearch implements OnInit {
     }
   }
 
-
   async onSearchSubmit(isManual: boolean = true): Promise<void> {
     if (this.isLoading()) {
       return;
     }
 
-    // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง (Development Mode) ให้ดำเนินการขอ Token ก่อนเริ่มยิงค้นหา
     if (!localStorage.getItem('token') && !environment.production) {
       const testCitizenId = '1234567890123';
       await this.personnelService.acquireToken(testCitizenId);
@@ -96,7 +138,6 @@ export class PersonnelSearch implements OnInit {
 
     const finalKeyword = this.singleKeyword.trim();
 
-    // Validation at Frontend: แสดงแจ้งเตือนเฉพาะเมื่อกดปุ่มค้นหาเอง (isManual = true)
     if (!finalKeyword) {
       if (isManual) {
         this.personnelService.showNotification('error', 'กรุณากรอกข้อมูลคำค้นหาก่อนทำรายการ', 3000);

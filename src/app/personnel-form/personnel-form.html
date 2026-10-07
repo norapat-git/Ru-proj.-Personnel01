@@ -2,625 +2,807 @@
   
   @if (formMessage) {
     <div [class]="'alert-box alert-' + formMessage.type">
-      {{ formMessage.text }}
+      <span class="material-symbols-rounded">
+        {{ formMessage.type === 'success' ? 'check_circle' : 'error' }}
+      </span>
+      <span>{{ formMessage.text }}</span>
     </div>
   }
 
-  <h2 class="form-title">
-    {{ isEditMode ? 'แบบฟอร์มแก้ไขประวัติข้อมูลบุคลากร' : 'แบบฟอร์มเพิ่มข้อมูลบุคลากรใหม่' }}
-  </h2>
+  <!-- Form Header -->
+  <div class="form-header-top">
+    <div class="form-header-badge">
+      <span class="material-symbols-rounded">{{ isEditMode ? 'edit_note' : 'person_add' }}</span>
+      <span>{{ isEditMode ? 'โหมดแก้ไขประวัติข้อมูลบุคลากร' : 'โหมดลงทะเบียนบุคลากรใหม่ (ขั้นตอนที่ ' + currentStep() + '/5)' }}</span>
+    </div>
+    <h2 class="form-title">
+      {{ isEditMode ? 'แบบฟอร์มแก้ไขประวัติข้อมูลบุคลากร' : 'แบบฟอร์มเพิ่มข้อมูลบุคลากรใหม่' }}
+    </h2>
+    <p class="form-subtitle">
+      {{ isEditMode 
+        ? 'แก้ไขข้อมูลบุคลากรในแต่ละส่วน และกดบันทึกเพื่ออัปเดตข้อมูลเข้าระบบ' 
+        : 'กรอกข้อมูลทีละขั้นตอน (1-5) ให้ครบถ้วนตามเครื่องหมาย * เพื่อไปยังขั้นตอนถัดไป' 
+      }}
+    </p>
+  </div>
 
-  <!-- 1. ข้อมูลส่วนบุคคลพื้นฐาน -->
-  <fieldset class="form-fieldset-identity">
-    <legend class="form-fieldset-legend">
-      1. ข้อมูลส่วนบุคคลพื้นฐาน - ประเภท: {{ nationality() === 'thai' ? 'บุคลากรชาวไทย' : 'บุคลากรต่างชาติ' }}
-    </legend>
+  <!-- Stepper Bar (แสดงเฉพาะโหมดเพิ่มบุคลากรใหม่) -->
+  @if (!isEditMode) {
+    <div class="stepper-wrapper">
+      <div class="stepper-track">
+        <div 
+          class="stepper-progress-fill" 
+          [style.width.%]="((currentStep() - 1) / (steps.length - 1)) * 100"
+        ></div>
+      </div>
+      <div class="stepper-items">
+        @for (s of steps; track s.step) {
+          <div 
+            class="stepper-item" 
+            [class.active]="currentStep() === s.step"
+            [class.completed]="s.step < currentStep() || s.step <= maxReachedStep()"
+            [class.disabled]="s.step > maxReachedStep()"
+            (click)="goToStep(s.step)"
+            role="button"
+            [attr.tabindex]="s.step <= maxReachedStep() ? 0 : -1"
+          >
+            <div class="stepper-bubble">
+              @if (s.step < currentStep()) {
+                <span class="material-symbols-rounded step-icon-check">check</span>
+              } @else {
+                <span class="step-number">{{ s.step }}</span>
+              }
+            </div>
+            <div class="stepper-text">
+              <span class="step-title">{{ s.title }}</span>
+              <span class="step-desc">{{ s.desc }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
 
-    @if (nationality() === 'thai') {
+  <!-- =========================================================================
+       SECTION 1: ข้อมูลส่วนบุคคลพื้นฐาน
+       ========================================================================= -->
+  @if (isEditMode || currentStep() === 1) {
+    <fieldset class="form-fieldset-identity step-animated">
+      <legend class="form-fieldset-legend">
+        <span class="legend-icon material-symbols-rounded">badge</span>
+        <span>1. ข้อมูลส่วนบุคคลพื้นฐาน ({{ nationality() === 'thai' ? 'บุคลากรชาวไทย' : 'บุคลากรต่างชาติ' }})</span>
+      </legend>
+
+      @if (nationality() === 'thai') {
+        <div class="form-grid-33">
+          <div>
+            <label class="field-label">เลขประจำตัวประชาชน <span class="required-star">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perCitizenId"
+              (input)="onNumberInput($event, 'perCitizenId', 13)"
+              [readonly]="isEditMode"
+              [class.field-input-error]="invalidFields['perCitizenId']"
+              class="field-input"
+              placeholder="เลข 13 หลัก"
+              maxlength="13"
+            />
+            @if (invalidFields['perCitizenId']) {
+              <small class="field-error-text">กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก</small>
+            }
+          </div>
+
+          <div>
+            <label class="field-label">หมายเลขประกันสังคม</label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perSsoId"
+              (input)="onNumberInput($event, 'perSsoId', 13)"
+              class="field-input"
+              placeholder="เลข 13 หลัก"
+              maxlength="13"
+            />
+          </div>
+
+          <div>
+            <label class="field-label">เลขประจำตัวผู้เสียภาษีอากร</label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perTaxId"
+              (input)="onNumberInput($event, 'perTaxId', 13)"
+              class="field-input"
+              placeholder="เลข 13 หลัก"
+              maxlength="13"
+            />
+          </div>
+
+          <div>
+            <label class="field-label">คำนำหน้านาม <span class="required-star">*</span></label>
+            <app-custom-select
+              [options]="prenameSelectOptions()"
+              [ngModel]="getSelectedPrenameText()"
+              (ngModelChange)="onPrenameSelect($event)"
+              [invalid]="!!invalidFields['preName']"
+              [disabled]="isLoadingOptions() || isLoading()"
+              placeholder="-- เลือกคำนำหน้านาม --"
+              [searchable]="true"
+              icon="badge"
+            ></app-custom-select>
+            @if (invalidFields['preName']) {
+              <small class="field-error-text">กรุณาเลือกคำนำหน้านาม</small>
+            }
+          </div>
+
+          <div style="grid-column: span 2;">
+            <label class="field-label">ชื่อ - นามสกุล (ภาษาไทย) <span class="required-star">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perNameTh"
+              [class.field-input-error]="invalidFields['perNameTh']"
+              class="field-input"
+              placeholder="ระบุชื่อจริง ชื่อกลาง (ถ้ามี) และนามสกุลภาษาไทย"
+            />
+            @if (invalidFields['perNameTh']) {
+              <small class="field-error-text">กรุณากรอกชื่อ-นามสกุลภาษาไทย</small>
+            }
+          </div>
+        </div>
+      } @else {
+        <div class="form-grid-33">
+          <div>
+            <label class="field-label">Passport ID <span class="required-star">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perPassportNo"
+              [readonly]="isEditMode"
+              [class.field-input-error]="invalidFields['perPassportNo']"
+              class="field-input"
+              placeholder="เช่น A12345678"
+            />
+            @if (invalidFields['perPassportNo']) {
+              <small class="field-error-text">กรุณากรอกเลขหนังสือเดินทาง</small>
+            }
+          </div>
+
+          <div>
+            <label class="field-label">Date of application (Passport)</label>
+            <app-custom-datepicker
+              [(ngModel)]="personnelData.perPassportStartD"
+              placeholder="เลือกวันที่ออกหนังสือเดินทาง..."
+            ></app-custom-datepicker>
+          </div>
+
+          <div>
+            <label class="field-label">Date of expiration (Passport)</label>
+            <app-custom-datepicker
+              [(ngModel)]="personnelData.perPassportExpireD"
+              placeholder="เลือกวันหมดอายุหนังสือเดินทาง..."
+            ></app-custom-datepicker>
+          </div>
+
+          <div>
+            <label class="field-label">Social Security Number</label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perSsoId"
+              (input)="onNumberInput($event, 'perSsoId', 13)"
+              class="field-input"
+              placeholder="เลขประจำตัวประกันสังคม 13 หลัก"
+              maxlength="13"
+            />
+          </div>
+
+          <div>
+            <label class="field-label">Tax ID</label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perTaxId"
+              (input)="onNumberInput($event, 'perTaxId', 13)"
+              class="field-input"
+              placeholder="เลข 13 หลัก"
+              maxlength="13"
+            />
+          </div>
+
+          <div>
+            <label class="field-label">Prefix (Title) <span class="required-star">*</span></label>
+            <app-custom-select
+              [options]="prenameSelectOptions()"
+              [ngModel]="getSelectedPrenameText()"
+              (ngModelChange)="onPrenameSelect($event)"
+              [invalid]="!!invalidFields['preName']"
+              [disabled]="isLoadingOptions() || isLoading()"
+              placeholder="-- Select Title --"
+              [searchable]="true"
+              icon="badge"
+            ></app-custom-select>
+            @if (invalidFields['preName']) {
+              <small class="field-error-text">Please select Prefix (Title)</small>
+            }
+          </div>
+
+          <div style="grid-column: span 2;">
+            <label class="field-label">Full Name (English) <span class="required-star">*</span></label>
+            <input
+              type="text"
+              [(ngModel)]="personnelData.perNameEn"
+              [class.field-input-error]="invalidFields['perNameEn']"
+              class="field-input"
+              placeholder="First name, middle name (if any), and last name"
+            />
+            @if (invalidFields['perNameEn']) {
+              <small class="field-error-text">Please enter full name in English</small>
+            }
+          </div>
+        </div>
+      }
+    </fieldset>
+  }
+
+  <!-- =========================================================================
+       SECTION 2: โครงสร้างตำแหน่ง
+       ========================================================================= -->
+  @if (isEditMode || currentStep() === 2) {
+    <fieldset class="form-fieldset-identity step-animated">
+      <legend class="form-fieldset-legend">
+        <span class="legend-icon material-symbols-rounded">domain</span>
+        <span>2. ข้อมูลโครงสร้างตำแหน่ง (Position Structure)</span>
+      </legend>
       <div class="form-grid-33">
         <div>
-          <label class="field-label">เลขประจำตัวประชาชน <span class="required-star">*</span></label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perCitizenId"
-            (input)="onNumberInput($event, 'perCitizenId', 13)"
-            [readonly]="isEditMode"
-            [class.field-input-error]="invalidFields['perCitizenId']"
-            class="field-input"
-            placeholder="เลข 13 หลัก"
-            maxlength="13"
-          />
-          @if (invalidFields['perCitizenId']) {
-            <small class="field-error-text">กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก</small>
-          }
-        </div>
-
-        <div>
-          <label class="field-label">หมายเลขประกันสังคม</label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perSsoId"
-            (input)="onNumberInput($event, 'perSsoId', 13)"
-            class="field-input"
-            placeholder="เลข 13 หลัก"
-            maxlength="13"
-          />
-        </div>
-
-        <div>
-          <label class="field-label">เลขประจำตัวผู้เสียภาษีอากร</label>
-          <input
-            type="text"
-            [(ngModel)]="personnelData.perTaxId"
-            (input)="onNumberInput($event, 'perTaxId', 13)"
-            class="field-input"
-            placeholder="เลข 13 หลัก"
-            maxlength="13"
-          />
-        </div>
-
-        <div>
-          <label class="field-label">คำนำหน้านาม <span class="required-star">*</span></label>
-          <select
-            [ngModel]="getSelectedPrenameText()"
-            (ngModelChange)="onPrenameSelect($event)"
-            [class.field-input-error]="invalidFields['preName']"
+          <label class="field-label">ประเภทบุคลากร <span class="required-star">*</span></label>
+          <app-custom-select
+            [options]="personTypeSelectOptions()"
+            [ngModel]="getSelectedPersonTypeName()"
+            (ngModelChange)="onPersonTypeSelect($event)"
+            [invalid]="!!invalidFields['typeName']"
             [disabled]="isLoadingOptions() || isLoading()"
-            class="field-select"
-          >
-            @if (isLoadingOptions()) {
-              <option value="">-- กำลังโหลดตัวเลือก... --</option>
-            } @else {
-              <option value="">-- เลือกคำนำหน้านาม --</option>
-              @for (item of prenameOptions; track item.preCode) {
-                <option [value]="item.preName">{{ item.preName }}</option>
-              }
-            }
-          </select>
-          @if (invalidFields['preName']) {
-            <small class="field-error-text">กรุณาเลือกคำนำหน้านาม</small>
+            placeholder="-- เลือกประเภทบุคลากร --"
+            [searchable]="true"
+            icon="group"
+          ></app-custom-select>
+          @if (invalidFields['typeName']) {
+            <small class="field-error-text">กรุณาเลือกประเภทบุคลากร</small>
           }
         </div>
 
-        <div style="grid-column: span 2;">
-          <label class="field-label">ชื่อ - นามสกุล (ภาษาไทย) <span class="required-star">*</span></label>
+        <div>
+          <label class="field-label">คณะ / หน่วยงาน <span class="required-star">*</span></label>
+          <app-custom-select
+            [options]="facultySelectOptions()"
+            [ngModel]="getSelectedFacultyName()"
+            (ngModelChange)="onFacultySelect($event)"
+            [invalid]="!!invalidFields['facName']"
+            [disabled]="isLoadingOptions() || isLoading()"
+            placeholder="-- เลือกคณะ / หน่วยงาน --"
+            [searchable]="true"
+            icon="school"
+          ></app-custom-select>
+          @if (invalidFields['facName']) {
+            <small class="field-error-text">กรุณาเลือกคณะ / หน่วยงาน</small>
+          }
+        </div>
+
+        <div>
+          <label class="field-label">เลขที่ตำแหน่ง</label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perNameTh"
-            [class.field-input-error]="invalidFields['perNameTh']"
+            [ngModel]="personnelData.perPosId"
+            (input)="onNumberInput($event, 'perPosId', 10)"
             class="field-input"
-            placeholder="ระบุชื่อจริง ชื่อกลาง (ถ้ามี) และนามสกุลภาษาไทย"
+            placeholder="ระบุตัวเลขตำแหน่ง"
           />
-          @if (invalidFields['perNameTh']) {
-            <small class="field-error-text">กรุณากรอกชื่อ-นามสกุลภาษาไทย</small>
-          }
+        </div>
+
+        <div style="grid-column: span 3;">
+          <label class="field-label">ชื่อตำแหน่งงาน</label>
+          <input
+            type="text"
+            [(ngModel)]="personnelData.poscName"
+            class="field-input"
+            placeholder="เช่น อาจารย์, นักวิเคราะห์นโยบายและแผน, เจ้าหน้าที่บริหารงานทั่วไป"
+          />
         </div>
       </div>
-    } @else {
+    </fieldset>
+  }
+
+  <!-- =========================================================================
+       SECTION 3: การเงินและรายได้
+       ========================================================================= -->
+  @if (isEditMode || currentStep() === 3) {
+    <fieldset class="form-fieldset-identity step-animated">
+      <legend class="form-fieldset-legend">
+        <span class="legend-icon material-symbols-rounded">payments</span>
+        <span>3. การเงินและรายได้ (Financial Information)</span>
+      </legend>
       <div class="form-grid-33">
         <div>
-          <label class="field-label">Passport ID <span class="required-star">*</span></label>
+          <label class="field-label">เงินเดือน (บาท) <span class="required-star">*</span></label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perPassportNo"
-            [readonly]="isEditMode"
-            [class.field-input-error]="invalidFields['perPassportNo']"
+            [(ngModel)]="personnelData.perSalary"
+            (input)="onDecimalInput($event, 'perSalary', 10)"
+            [class.field-input-error]="invalidFields['perSalary']"
             class="field-input"
-            placeholder="เช่น A12345678"
+            placeholder="0.00"
           />
-          @if (invalidFields['perPassportNo']) {
-            <small class="field-error-text">กรุณากรอกเลขหนังสือเดินทาง</small>
+          @if (invalidFields['perSalary']) {
+            <small class="field-error-text">กรุณากรอกเงินเดือน</small>
           }
         </div>
 
         <div>
-          <label class="field-label">Date of application (Passport)</label>
-          <input type="date" [(ngModel)]="personnelData.perPassportStartD" class="field-input" />
-        </div>
-
-        <div>
-          <label class="field-label">Date of expiration (Passport)</label>
-          <input type="date" [(ngModel)]="personnelData.perPassportExpireD" class="field-input" />
-        </div>
-
-        <div>
-          <label class="field-label">Social Security Number</label>
+          <label class="field-label">เงินเดือนถือจ่าย (บาท) <span class="required-star">*</span></label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perSsoId"
-            (input)="onNumberInput($event, 'perSsoId', 13)"
+            [(ngModel)]="personnelData.perHoldSalary"
+            (input)="onDecimalInput($event, 'perHoldSalary', 10)"
+            [class.field-input-error]="invalidFields['perHoldSalary']"
             class="field-input"
-            placeholder="เลขประจำตัวประกันสังคม 13 หลัก"
-            maxlength="13"
+            placeholder="0.00"
+          />
+          @if (invalidFields['perHoldSalary']) {
+            <small class="field-error-text">กรุณากรอกเงินเดือนถือจ่าย</small>
+          }
+        </div>
+
+        <div>
+          <label class="field-label">เงินประจำตำแหน่ง (บาท)</label>
+          <input
+            type="text"
+            [(ngModel)]="personnelData.perPositionMoney"
+            (input)="onDecimalInput($event, 'perPositionMoney', 10)"
+            class="field-input"
+            placeholder="0.00"
           />
         </div>
 
         <div>
-          <label class="field-label">Tax ID</label>
+          <label class="field-label">ค่าตอบแทนเงินประจำตำแหน่ง (บาท)</label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perTaxId"
-            (input)="onNumberInput($event, 'perTaxId', 13)"
+            [(ngModel)]="personnelData.perPositionPay"
+            (input)="onDecimalInput($event, 'perPositionPay', 10)"
             class="field-input"
-            placeholder="เลข 13 หลัก"
-            maxlength="13"
+            placeholder="0.00"
           />
         </div>
 
         <div>
-          <label class="field-label">Prefix (Title) <span class="required-star">*</span></label>
-          <select
-            [ngModel]="getSelectedPrenameText()"
-            (ngModelChange)="onPrenameSelect($event)"
-            [class.field-input-error]="invalidFields['preName']"
+          <label class="field-label">เงินประจำตำแหน่งผู้บริหาร (บาท)</label>
+          <input
+            type="text"
+            [(ngModel)]="personnelData.perPositionMoneyEx"
+            (input)="onDecimalInput($event, 'perPositionMoneyEx', 10)"
+            class="field-input"
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <label class="field-label">ค่าตอบแทนเงินประจำตำแหน่งผู้บริหาร (บาท)</label>
+          <input
+            type="text"
+            [(ngModel)]="personnelData.perPositionPayEx"
+            (input)="onDecimalInput($event, 'perPositionPayEx', 10)"
+            class="field-input"
+            placeholder="0.00"
+          />
+        </div>
+
+        <div>
+          <label class="field-label">แหล่งเงินทุน (Source Money)</label>
+          <app-custom-select
+            [options]="sourceMoneySelectOptions()"
+            [(ngModel)]="personnelData.perSourceMoney"
             [disabled]="isLoadingOptions() || isLoading()"
-            class="field-select"
-          >
-            @if (isLoadingOptions()) {
-              <option value="">-- Loading Titles... --</option>
-            } @else {
-              <option value="">-- Select Title --</option>
-              @for (item of prenameOptions; track item.preCode) {
-                <option [value]="item.preNameEn || item.preName">
-                  {{ item.preNameEn || item.preName }}
-                </option>
-              }
-            }
-          </select>
-          @if (invalidFields['preName']) {
-            <small class="field-error-text">Please select Prefix (Title)</small>
+            placeholder="-- เลือกแหล่งเงินทุน --"
+            [searchable]="true"
+            [allowClear]="true"
+            icon="account_balance_wallet"
+          ></app-custom-select>
+          @if (personnelData.perSourceMoney !== null && personnelData.perSourceMoney !== undefined) {
+            <small class="field-meta-tag">
+              รหัสแหล่งเงิน: <span class="tag-bold">{{ personnelData.perSourceMoney }}</span>
+            </small>
           }
         </div>
 
-        <div style="grid-column: span 2;">
-          <label class="field-label">Full Name (English) <span class="required-star">*</span></label>
+        <div>
+          <label class="field-label">ประเภทโครงการ (Project Type)</label>
+          <app-custom-select
+            [options]="projectTypeSelectOptions()"
+            [ngModel]="personnelData.perProject"
+            (ngModelChange)="onProjectTypeChange($event)"
+            [disabled]="isLoadingOptions() || isLoading()"
+            placeholder="-- เลือกประเภทโครงการ --"
+            [searchable]="true"
+            [allowClear]="true"
+            icon="assignment"
+          ></app-custom-select>
+          @if (personnelData.perProject !== null && personnelData.perProject !== undefined) {
+            <small class="field-meta-tag">
+              รหัสโครงการ: <span class="tag-bold">{{ personnelData.perProject }}</span>
+            </small>
+          }
+        </div>
+
+        <div>
+          <label class="field-label">หมายเลข Slip เงินเดือน</label>
           <input
             type="text"
-            [(ngModel)]="personnelData.perNameEn"
-            [class.field-input-error]="invalidFields['perNameEn']"
+            [(ngModel)]="personnelData.perSlipId"
+            (input)="onNumberInput($event, 'perSlipId', 10)"
             class="field-input"
-            placeholder="First name, middle name (if any), and last name"
+            placeholder="ระบุตัวเลข Slip"
           />
-          @if (invalidFields['perNameEn']) {
-            <small class="field-error-text">Please enter full name in English</small>
-          }
         </div>
       </div>
-    }
-  </fieldset>
 
-  <!-- 2. ข้อมูลโครงสร้างตำแหน่ง -->
-  <fieldset class="form-fieldset-identity">
-    <legend class="form-fieldset-legend">
-      2. ข้อมูลโครงสร้างตำแหน่ง (Position Structure)
-    </legend>
-    <div class="form-grid-33">
-      <div>
-        <label class="field-label">ประเภทบุคลากร <span class="required-star">*</span></label>
-        <select
-          [ngModel]="getSelectedPersonTypeName()"
-          (ngModelChange)="onPersonTypeSelect($event)"
-          [class.field-input-error]="invalidFields['typeName']"
-          [disabled]="isLoadingOptions() || isLoading()"
-          class="field-select"
-        >
-          @if (isLoadingOptions()) {
-            <option value="">-- กำลังโหลดตัวเลือก... --</option>
-          } @else {
-            <option value="">-- เลือกประเภทบุคลากร --</option>
-            @for (typeItem of personTypeOptions; track typeItem.typeCode) {
-              <option [value]="typeItem.typeName">{{ typeItem.typeName }}</option>
-            }
-          }
-        </select>
-        @if (invalidFields['typeName']) {
-          <small class="field-error-text">กรุณาเลือกประเภทบุคลากร</small>
-        }
+      <!-- สถานะการรับเงิน (Y/N Flag Checkboxes) -->
+      <div class="fin-status-section">
+        <div class="fin-status-title">
+          <span class="material-symbols-rounded" style="font-size: 16px;">verified</span>
+          <span>สถานะการรับเงินเดือนและเงินประจำตำแหน่ง</span>
+        </div>
+        <div class="fin-status-grid">
+
+          <!-- F_REV_SALARY -->
+          <label class="fin-flag-card" [class.fin-flag-active]="isFRevSalaryChecked()">
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-f-rev-salary"
+                [checked]="isFRevSalaryChecked()"
+                (change)="personnelData.fRevSalary = $any($event.target).checked ? 'Y' : 'N'"
+              />
+              <span class="fin-flag-label-text">สถานะการรับเงินเดือน</span>
+              @if (isFRevSalaryChecked()) {
+                <span class="fin-flag-dot-yes" title="รับเงิน (Y)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
+          </label>
+
+          <!-- F_REV_POS_MONEY -->
+          <label class="fin-flag-card" [class.fin-flag-active]="isFRevPosMoneyChecked()">
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-f-rev-pos-money"
+                [checked]="isFRevPosMoneyChecked()"
+                (change)="personnelData.fRevPosMoney = $any($event.target).checked ? 'Y' : 'N'"
+              />
+              <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่ง</span>
+              @if (isFRevPosMoneyChecked()) {
+                <span class="fin-flag-dot-yes" title="รับเงิน (Y)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
+          </label>
+
+          <!-- F_REV_PAY_EX -->
+          <label class="fin-flag-card" [class.fin-flag-active]="isFRevPayExChecked()">
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-f-rev-pay-ex"
+                [checked]="isFRevPayExChecked()"
+                (change)="personnelData.fRevPayEx = $any($event.target).checked ? 'Y' : 'N'"
+              />
+              <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่งผู้บริหาร</span>
+              @if (isFRevPayExChecked()) {
+                <span class="fin-flag-dot-yes" title="รับเงิน (Y)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
+          </label>
+
+          <!-- F_TOTAL_INCOME -->
+          <label class="fin-flag-card" [class.fin-flag-active]="isFTotalIncomeChecked()">
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-f-total-income"
+                [checked]="isFTotalIncomeChecked()"
+                (change)="personnelData.fTotalIncome = $any($event.target).checked ? 'Y' : 'N'"
+              />
+              <span class="fin-flag-label-text">สถานะการรับเงินรายได้ทั้งหมด</span>
+              @if (isFTotalIncomeChecked()) {
+                <span class="fin-flag-dot-yes" title="รับเงิน (Y)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
+          </label>
+
+        </div>
       </div>
+    </fieldset>
+  }
 
-      <div>
-        <label class="field-label">คณะ / หน่วยงาน <span class="required-star">*</span></label>
-        <select
-          [ngModel]="getSelectedFacultyName()"
-          (ngModelChange)="onFacultySelect($event)"
-          [class.field-input-error]="invalidFields['facName']"
-          [disabled]="isLoadingOptions() || isLoading()"
-          class="field-select"
-        >
-          @if (isLoadingOptions()) {
-            <option value="">-- กำลังโหลดตัวเลือก... --</option>
-          } @else {
-            <option value="">-- เลือกคณะ / หน่วยงาน --</option>
-            @for (fac of facultyOptions; track fac.facCode) {
-              <option [value]="fac.facName">{{ fac.facName }}</option>
-            }
-          }
-        </select>
-        @if (invalidFields['facName']) {
-          <small class="field-error-text">กรุณาเลือกคณะ / หน่วยงาน</small>
-        }
-      </div>
-
-      <div>
-        <label class="field-label">เลขที่ตำแหน่ง</label>
-        <input
-          type="text"
-          [ngModel]="personnelData.perPosId"
-          (input)="onNumberInput($event, 'perPosId', 10)"
-          class="field-input"
-          placeholder="ระบุตัวเลขตำแหน่ง"
-        />
-      </div>
-
-      <div>
-        <label class="field-label">ชื่อตำแหน่งงาน</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.poscName"
-          class="field-input"
-          placeholder="เช่น อาจารย์, นักวิเคราะห์นโยบายและแผน"
-        />
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- 3. เกี่ยวกับการเงิน -->
-  <fieldset class="form-fieldset-identity">
-    <legend class="form-fieldset-legend">
-      3. การเงิน (Financial Information)
-    </legend>
-    <div class="form-grid-33">
-      <div>
-        <label class="field-label">เงินเดือน (บาท) <span class="required-star">*</span></label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perSalary"
-          (input)="onDecimalInput($event, 'perSalary', 10)"
-          [class.field-input-error]="invalidFields['perSalary']"
-          class="field-input"
-          placeholder="0.00"
-        />
-        @if (invalidFields['perSalary']) {
-          <small class="field-error-text">กรุณากรอกเงินเดือน</small>
-        }
-      </div>
-
-      <div>
-        <label class="field-label">เงินเดือนถือจ่าย (บาท) <span class="required-star">*</span></label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perHoldSalary"
-          (input)="onDecimalInput($event, 'perHoldSalary', 10)"
-          [class.field-input-error]="invalidFields['perHoldSalary']"
-          class="field-input"
-          placeholder="0.00"
-        />
-        @if (invalidFields['perHoldSalary']) {
-          <small class="field-error-text">กรุณากรอกเงินเดือนถือจ่าย</small>
-        }
-      </div>
-
-      <div>
-        <label class="field-label">เงินประจำตำแหน่ง (บาท)</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perPositionMoney"
-          (input)="onDecimalInput($event, 'perPositionMoney', 10)"
-          class="field-input"
-          placeholder="0.00"
-        />
-      </div>
-
-      <div>
-        <label class="field-label">ค่าตอบแทนเงินประจำตำแหน่ง (บาท)</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perPositionPay"
-          (input)="onDecimalInput($event, 'perPositionPay', 10)"
-          class="field-input"
-          placeholder="0.00"
-        />
-      </div>
-
-      <div>
-        <label class="field-label">เงินประจำตำแหน่งผู้บริหาร (บาท)</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perPositionMoneyEx"
-          (input)="onDecimalInput($event, 'perPositionMoneyEx', 10)"
-          class="field-input"
-          placeholder="0.00"
-        />
-      </div>
-
-      <div>
-        <label class="field-label">ค่าตอบแทนเงินประจำตำแหน่งผู้บริหาร (บาท)</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perPositionPayEx"
-          (input)="onDecimalInput($event, 'perPositionPayEx', 10)"
-          class="field-input"
-          placeholder="0.00"
-        />
-      </div>
-
-      <div>
-        <label class="field-label">แหล่งเงินทุน (Source Money)</label>
-        <select
-          [(ngModel)]="personnelData.perSourceMoney"
-          [disabled]="isLoadingOptions() || isLoading()"
-          class="field-select"
-        >
-          @if (isLoadingOptions()) {
-            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
-          } @else {
-            <option [ngValue]="null">-- เลือกแหล่งเงินทุน --</option>
-            @for (sm of sourceMoneyOptions; track sm.smCode) {
-              <option [ngValue]="sm.smCode">{{ sm.smName }}</option>
-            }
-          }
-        </select>
-        @if (personnelData.perSourceMoney !== null && personnelData.perSourceMoney !== undefined) {
-          <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
-            รหัสแหล่งเงิน : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perSourceMoney }}</span>
-          </small>
-        }
-      </div>
-
-      <div>
-        <label class="field-label">ประเภทโครงการ (Project Type)</label>
-        <select
-          [(ngModel)]="personnelData.perProject"
-          (ngModelChange)="onProjectTypeChange($event)"
-          [disabled]="isLoadingOptions() || isLoading()"
-          class="field-select"
-        >
-          @if (isLoadingOptions()) {
-            <option [ngValue]="null">-- กำลังโหลดตัวเลือก... --</option>
-          } @else {
-            <option [ngValue]="null">-- เลือกประเภทโครงการ --</option>
-            @for (proj of projectTypeOptions; track proj.proCode) {
-              <option [ngValue]="proj.proCode">{{ proj.proName }}</option>
-            }
-          }
-        </select>
-        @if (personnelData.perProject !== null && personnelData.perProject !== undefined) {
-          <small style="display: block; margin-top: 4px; color: #4a5568; font-size: 12px; font-weight: 600;">
-            รหัสโครงการ : <span style="color: #2b6cb0; font-weight: 700;">{{ personnelData.perProject }}</span>
-          </small>
-        }
-      </div>
-
-      <div>
-        <label class="field-label">หมายเลข Slip เงินเดือน</label>
-        <input
-          type="text"
-          [(ngModel)]="personnelData.perSlipId"
-          (input)="onNumberInput($event, 'perSlipId', 10)"
-          class="field-input"
-          placeholder="ระบุตัวเลข"
-        />
-      </div>
-    </div>
-
-    <!-- สถานะการรับเงิน (Y/N Flag Checkboxes) -->
-    <div class="fin-status-section">
-      <div class="fin-status-title">สถานะการรับเงิน</div>
-      <div class="fin-status-grid">
-
-        <!-- F_REV_SALARY -->
-        <label class="fin-flag-card" [class.fin-flag-active]="isFRevSalaryChecked()">
-          <div class="fin-flag-check-row">
-            <input
-              type="checkbox"
-              class="fin-flag-checkbox"
-              id="chk-f-rev-salary"
-              [checked]="isFRevSalaryChecked()"
-              (change)="personnelData.fRevSalary = $any($event.target).checked ? 'Y' : 'N'"
-            />
-            <span class="fin-flag-label-text">สถานะการรับเงินเดือน</span>
-            @if (isFRevSalaryChecked()) {
-              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
+  <!-- =========================================================================
+       SECTION 4: กองทุนสำรองเลี้ยงชีพ
+       ========================================================================= -->
+  @if (isEditMode || currentStep() === 4) {
+    <fieldset class="form-fieldset-identity step-animated">
+      <legend class="form-fieldset-legend">
+        <span class="legend-icon material-symbols-rounded">savings</span>
+        <span>4. ข้อมูลกองทุนสำรองเลี้ยงชีพ (Provident Fund - PVD)</span>
+      </legend>
+      
+      <div class="pvd-edit-block">
+        <div class="pvd-status-bar">
+          <div class="status-info">
+            <span class="status-label">สถานะการเป็นสมาชิกกองทุน:</span>
+            @if (isFundActiveMember()) {
+              <span class="pvd-badge-green">
+                <span class="material-symbols-rounded" style="font-size: 16px;">check_circle</span>
+                <span>เป็นสมาชิกกองทุนสำรองเลี้ยงชีพ</span>
+              </span>
+            } @else if (personnelData.perPvdfQuit === 1) {
+              <span class="pvd-badge-red">
+                <span class="material-symbols-rounded" style="font-size: 16px;">cancel</span>
+                <span>ออกจากกองทุนสำรองเลี้ยงชีพแล้ว</span>
+              </span>
             } @else {
-              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
+              <span class="pvd-badge-gray">
+                <span class="material-symbols-rounded" style="font-size: 16px;">remove_circle_outline</span>
+                <span>ไม่ได้เป็นสมาชิกกองทุน</span>
+              </span>
             }
           </div>
-        </label>
 
-        <!-- F_REV_POS_MONEY -->
-        <label class="fin-flag-card" [class.fin-flag-active]="isFRevPosMoneyChecked()">
-          <div class="fin-flag-check-row">
-            <input
-              type="checkbox"
-              class="fin-flag-checkbox"
-              id="chk-f-rev-pos-money"
-              [checked]="isFRevPosMoneyChecked()"
-              (change)="personnelData.fRevPosMoney = $any($event.target).checked ? 'Y' : 'N'"
-            />
-            <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่ง</span>
-            @if (isFRevPosMoneyChecked()) {
-              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
-            } @else {
-              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
-            }
-          </div>
-        </label>
-
-        <!-- F_REV_PAY_EX -->
-        <label class="fin-flag-card" [class.fin-flag-active]="isFRevPayExChecked()">
-          <div class="fin-flag-check-row">
-            <input
-              type="checkbox"
-              class="fin-flag-checkbox"
-              id="chk-f-rev-pay-ex"
-              [checked]="isFRevPayExChecked()"
-              (change)="personnelData.fRevPayEx = $any($event.target).checked ? 'Y' : 'N'"
-            />
-            <span class="fin-flag-label-text">สถานะการรับเงินประจำตำแหน่งผู้บริหาร</span>
-            @if (isFRevPayExChecked()) {
-              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
-            } @else {
-              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
-            }
-          </div>
-        </label>
-
-        <!-- F_TOTAL_INCOME -->
-        <label class="fin-flag-card" [class.fin-flag-active]="isFTotalIncomeChecked()">
-          <div class="fin-flag-check-row">
-            <input
-              type="checkbox"
-              class="fin-flag-checkbox"
-              id="chk-f-total-income"
-              [checked]="isFTotalIncomeChecked()"
-              (change)="personnelData.fTotalIncome = $any($event.target).checked ? 'Y' : 'N'"
-            />
-            <span class="fin-flag-label-text">สถานะการรับเงินรายได้ทั้งหมด</span>
-            @if (isFTotalIncomeChecked()) {
-              <span class="fin-flag-dot-yes" title="รับเงิน (Y)">●</span>
-            } @else {
-              <span class="fin-flag-dot-no" title="ไม่รับเงิน (N)">●</span>
-            }
-          </div>
-        </label>
-
-      </div>
-    </div>
-  </fieldset>
-
-  <!-- 4. ข้อมูลกองทุนสำรองเลี้ยงชีพ -->
-  <fieldset class="form-fieldset-identity">
-    <legend class="form-fieldset-legend">
-      4. ข้อมูลกองทุนสำรองเลี้ยงชีพ (Provident Fund - PVD)
-    </legend>
-    
-    <div class="pvd-edit-block">
-      <div class="pvd-status-bar">
-        <div class="status-info">
-          <span class="status-label">สถานะการเป็นสมาชิกกองทุน:</span>
           @if (isFundActiveMember()) {
-            <span class="pvd-badge-green">● เป็นสมาชิกกองทุนสำรองเลี้ยงชีพ</span>
-          } @else if (personnelData.perPvdfQuit === 1) {
-            <span class="pvd-badge-red">● ออกจากกองทุนสำรองเลี้ยงชีพแล้ว</span>
+            <button type="button" (click)="toggleQuitPvd()" class="btn-quit-pvd">
+              <span class="material-symbols-rounded">logout</span>
+              <span>ออกจากกองทุน</span>
+            </button>
           } @else {
-            <span class="pvd-badge-red">● ไม่ได้เป็นสมาชิกกองทุน</span>
+            <button type="button" (click)="toggleQuitPvd()" class="btn-join-pvd">
+              <span class="material-symbols-rounded">add_circle</span>
+              <span>สมัครเป็นสมาชิกกองทุน</span>
+            </button>
           }
         </div>
 
         @if (isFundActiveMember()) {
-          <button type="button" (click)="toggleQuitPvd()" class="btn-danger-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-            <span>ออกจากกองทุน</span>
+          <div class="form-grid-33" style="margin-top: 18px;">
+            <div>
+              <label class="field-label">วันที่สมัครกองทุนสำรองเลี้ยงชีพ</label>
+              <app-custom-datepicker
+                [(ngModel)]="personnelData.perPvdfAppD"
+                placeholder="เลือกวันที่สมัครกองทุน..."
+              ></app-custom-datepicker>
+            </div>
+            <div>
+              <label class="field-label">ประเภทกองทุน</label>
+              <app-custom-select
+                [options]="fundTypeSelectOptions()"
+                [ngModel]="getFundNameByCode(personnelData.perFundType)"
+                (ngModelChange)="onFundTypeSelect($event)"
+                placeholder="-- เลือกประเภทกองทุน --"
+                [searchable]="true"
+                icon="savings"
+              ></app-custom-select>
+              @if (personnelData.perFundType) {
+                <small class="field-meta-tag">
+                  รหัสกองทุน: <span class="tag-bold">{{ personnelData.perFundType }}</span>
+                </small>
+              }
+            </div>
+            <div>
+              <label class="field-label">อัตราการเพิ่มการออมเงิน (ร้อยละ)</label>
+              <input
+                type="text"
+                [ngModel]="personnelData.perSaveRate"
+                (input)="onNumberInput($event, 'perSaveRate', 2)"
+                class="field-input"
+                placeholder="เช่น 3, 5, 10 (%)"
+                maxlength="2"
+              />
+            </div>
+          </div>
+        } @else {
+          <div class="form-grid-33" style="margin-top: 18px;">
+            <div class="pvd-quit-date-box">
+              <label class="field-label" style="color: #dc2626; font-weight: 700;">วันที่ออกจากกองทุนสำรองเลี้ยงชีพ</label>
+              <app-custom-datepicker
+                [(ngModel)]="personnelData.perPvdfQuitD"
+                placeholder="เลือกวันที่ออกจากกองทุน..."
+                [invalid]="!!invalidFields['perPvdfQuitD']"
+              ></app-custom-datepicker>
+              @if (invalidFields['perPvdfQuitD']) {
+                <small class="field-error-text">กรุณาระบุวันที่ออกจากกองทุน</small>
+              }
+            </div>
+            <div style="grid-column: span 2;">
+              <label class="field-label" style="color: #dc2626; font-weight: 700;">หมายเหตุการออกจากกองทุน</label>
+              <input
+                type="text"
+                [(ngModel)]="personnelData.notePvd"
+                class="field-input field-input-danger"
+                placeholder="ระบุเหตุผลหรือหมายเหตุการออกจากกองทุน"
+              />
+            </div>
+          </div>
+        }
+      </div>
+    </fieldset>
+  }
+
+  <!-- =========================================================================
+       SECTION 5: สวัสดิการสถาบัน และสรุปข้อมูล (ในโหมดเพิ่มบุคลากรใหม่)
+       ========================================================================= -->
+  @if (isEditMode || currentStep() === 5) {
+    <fieldset class="form-fieldset-identity step-animated">
+      <legend class="form-fieldset-legend">
+        <span class="legend-icon material-symbols-rounded">health_and_safety</span>
+        <span>5. สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส.</span>
+      </legend>
+      <div class="welfare-checkbox-list">
+        
+        <!-- การชำระเงินประกันสังคม -->
+        <div class="welfare-checkbox-card" [class.disabled]="isSsoPaymentDisabled()">
+          <label class="welfare-label">
+            <input
+              type="checkbox"
+              [checked]="isSsoPaidChecked()"
+              [disabled]="isSsoPaymentDisabled()"
+              (change)="onSsoPaymentCheckboxChange($any($event.target).checked)"
+            />
+            <span class="welfare-title-text">การชำระเงินประกันสังคม (ชำระประกันสังคม)</span>
+          </label>
+          @if (isSsoPaymentDisabled()) {
+            <span class="welfare-disabled-hint">
+              ⚠️ ล็อกการชำระประกันสังคม เนื่องจากประเภทบุคลากรอายุเกิน 60 ปี (TypeCode: {{ personnelData.typeCode }})
+            </span>
+          }
+        </div>
+
+        <!-- สมาชิก ชพค. -->
+        <div class="welfare-checkbox-card">
+          <label class="welfare-label">
+            <input
+              type="checkbox"
+              [checked]="personnelData.perFundTeacher === 1"
+              (change)="personnelData.perFundTeacher = $any($event.target).checked ? 1 : null"
+            />
+            <span class="welfare-title-text">สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครูและบุคลากรทางการศึกษา)</span>
+          </label>
+        </div>
+
+        <!-- สมาชิก ชพส. -->
+        <div class="welfare-checkbox-card">
+          <label class="welfare-label">
+            <input
+              type="checkbox"
+              [checked]="personnelData.perFundAssteacher === 1"
+              (change)="personnelData.perFundAssteacher = $any($event.target).checked ? 1 : null"
+            />
+            <span class="welfare-title-text">สมาชิก ชพส. (ฌาปนกิจสงเคราะห์ผู้ปฏิบัติงานในสถาบัน)</span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Quick Summary Card ก่อนบันทึกจริงใน Step 5 (เฉพาะโหมด Create) -->
+      @if (!isEditMode) {
+        <div class="step-summary-card">
+          <div class="summary-card-header">
+            <span class="material-symbols-rounded" style="color: #2563eb; font-size: 20px;">task_alt</span>
+            <span class="summary-card-title">สรุปภาพรวมข้อมูลก่อนบันทึกเข้าระบบ</span>
+          </div>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="sum-label">รหัสประจำตัว:</span>
+              <span class="sum-value">{{ nationality() === 'thai' ? personnelData.perCitizenId : personnelData.perPassportNo || '-' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="sum-label">ชื่อ-นามสกุล:</span>
+              <span class="sum-value">{{ personnelData.preName }} {{ nationality() === 'thai' ? personnelData.perNameTh : personnelData.perNameEn }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="sum-label">ประเภทบุคลากร:</span>
+              <span class="sum-value">{{ personnelData.typeName || '-' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="sum-label">คณะ / หน่วยงาน:</span>
+              <span class="sum-value">{{ personnelData.facName || '-' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="sum-label">เงินเดือน:</span>
+              <span class="sum-value sum-highlight">{{ personnelData.perSalary ? (personnelData.perSalary | number:'1.2-2') + ' บาท' : '-' }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="sum-label">สถานะกองทุน PVD:</span>
+              <span class="sum-value">{{ isFundActiveMember() ? 'เป็นสมาชิก' : 'ไม่ได้เป็นสมาชิก' }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </fieldset>
+  }
+
+  <!-- =========================================================================
+       ปุ่มควบคุมล่างฟอร์ม (Action Buttons)
+       - โหมดแก้ไข: แสดง ยกเลิก + บันทึกการแก้ไข
+       - โหมดเพิ่มใหม่: แสดง Stepper Controller (ยกเลิก / ย้อนกลับ / ถัดไป / บันทึกข้อมูล)
+       ========================================================================= -->
+  <div class="form-actions">
+    @if (isEditMode) {
+      <!-- Edit Mode Actions -->
+      <button type="button" (click)="cancelForm()" class="btn-cancel" [disabled]="isLoading()">
+        <span class="material-symbols-rounded">arrow_back</span>
+        <span>ยกเลิก</span>
+      </button>
+      <button type="button" (click)="saveData()" class="btn-save-primary" [disabled]="isLoading()">
+        @if (isLoading()) {
+          <span class="spinner-icon"></span>
+          <span>กำลังบันทึกข้อมูล...</span>
+        } @else {
+          <span class="material-symbols-rounded">check_circle</span>
+          <span>บันทึกการแก้ไขข้อมูล</span>
+        }
+      </button>
+    } @else {
+      <!-- Create Mode Stepper Actions -->
+      <div class="stepper-actions-group">
+        <!-- ปุ่มฝั่งซ้าย: ยกเลิก หรือ ย้อนกลับ -->
+        @if (currentStep() === 1) {
+          <button type="button" (click)="cancelForm()" class="btn-cancel" [disabled]="isLoading()">
+            <span class="material-symbols-rounded">close</span>
+            <span>ยกเลิก</span>
           </button>
         } @else {
-          <button type="button" (click)="toggleQuitPvd()" class="btn-success-outline">
-            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <span>เป็นสมาชิกกองทุน</span>
+          <button type="button" (click)="prevStep()" class="btn-prev-step" [disabled]="isLoading()">
+            <span class="material-symbols-rounded">arrow_back</span>
+            <span>ย้อนกลับ (ขั้นตอนที่ {{ currentStep() - 1 }})</span>
+          </button>
+        }
+
+        <!-- ปุ่มฝั่งขวา: ถัดไป หรือ บันทึกข้อมูล -->
+        @if (currentStep() < 5) {
+          <button type="button" (click)="nextStep()" class="btn-next-step" [disabled]="isLoading()">
+            <span>ขั้นตอนถัดไป ({{ currentStep() + 1 }}/5)</span>
+            <span class="material-symbols-rounded">arrow_forward</span>
+          </button>
+        } @else {
+          <button type="button" (click)="saveData()" class="btn-save-primary btn-save-finish" [disabled]="isLoading()">
+            @if (isLoading()) {
+              <span class="spinner-icon"></span>
+              <span>กำลังบันทึกข้อมูล...</span>
+            } @else {
+              <span class="material-symbols-rounded">check_circle</span>
+              <span>ยืนยันและบันทึกข้อมูลเข้าระบบ</span>
+            }
           </button>
         }
       </div>
-
-      @if (isFundActiveMember()) {
-        <div class="form-grid-33">
-          <div>
-            <label class="field-label">วันที่สมัครกองทุนสำรองเลี้ยงชีพ</label>
-            <input type="date" [(ngModel)]="personnelData.perPvdfAppD" class="field-input" />
-          </div>
-          <div>
-            <label class="field-label">ประเภทกองทุน</label>
-            <select [ngModel]="getFundNameByCode(personnelData.perFundType)" (ngModelChange)="onFundTypeSelect($event)" class="field-select">
-              <option value="">-- เลือกประเภทกองทุน --</option>
-              @for (fund of fundTypeOptions; track fund.fundCode) {
-                <option [value]="fund.fundName">{{ fund.fundName }}</option>
-              }
-            </select>
-            <small class="field-hint">รหัสกองทุน: {{ personnelData.perFundType ?? '-' }}</small>
-          </div>
-          <div>
-            <label class="field-label">อัตราการเพิ่มการออมเงิน (ร้อยละ)</label>
-            <input type="text" [ngModel]="personnelData.perSaveRate" (input)="onNumberInput($event, 'perSaveRate', 2)" class="field-input" placeholder="เช่น 3, 5, 10 เปอร์เซ็นต์" maxlength="2" />
-          </div>
-        </div>
-      } @else {
-        <div class="form-grid-33">
-          <div class="pvd-quit-date-box">
-            <label class="field-label" style="color: #0b0b0b; font-weight: 700;">วันที่ออกจากกองทุนสำรองเลี้ยงชีพ</label>
-            <input type="date" [(ngModel)]="personnelData.perPvdfQuitD" class="field-input field-input-danger" />
-          </div>
-          <div>
-            <label class="field-label" style="color: #030303; font-weight: 700;">หมายเหตุการออกจากกองทุน</label>
-            <input type="text" [(ngModel)]="personnelData.notePvd" class="field-input field-input-danger" placeholder="ระบุเหตุผลหรือหมายเหตุการออกจากกองทุน" />
-          </div>
-        </div>
-      }
-    </div>
-  </fieldset>
-
-  <!-- 5. สวัสดิการสถาบัน และกองทุนอื่นๆ -->
-  <fieldset class="form-fieldset-identity">
-    <legend class="form-fieldset-legend">
-      5. สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส.
-    </legend>
-    <div class="welfare-checkbox-list">
-      
-      <!-- การชำระเงินประกันสังคม -->
-      <div class="welfare-checkbox-card" [class.disabled]="isSsoPaymentDisabled()">
-        <label class="welfare-label">
-          <input
-            type="checkbox"
-            [checked]="isSsoPaidChecked()"
-            [disabled]="isSsoPaymentDisabled()"
-            (change)="onSsoPaymentCheckboxChange($any($event.target).checked)"
-          />
-          <span>การชำระเงินประกันสังคม (ชำระประกันสังคม)</span>
-        </label>
-        @if (isSsoPaymentDisabled()) {
-          <span class="welfare-disabled-hint">
-            ⚠️ ล็อกการชำระประกันสังคม เนื่องจากประเภทบุคลากรอายุเกิน 60 ปี (TypeCode: {{ personnelData.typeCode }})
-          </span>
-        }
-      </div>
-
-      <!-- สมาชิก ชพค. -->
-      <div class="welfare-checkbox-card">
-        <label class="welfare-label">
-          <input
-            type="checkbox"
-            [checked]="personnelData.perFundTeacher === 1"
-            (change)="personnelData.perFundTeacher = $any($event.target).checked ? 1 : null"
-          />
-          <span>สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครูและบุคลากรทางการศึกษา)</span>
-        </label>
-      </div>
-
-      <!-- สมาชิก ชพส. -->
-      <div class="welfare-checkbox-card">
-        <label class="welfare-label">
-          <input
-            type="checkbox"
-            [checked]="personnelData.perFundAssteacher === 1"
-            (change)="personnelData.perFundAssteacher = $any($event.target).checked ? 1 : null"
-          />
-          <span>สมาชิก ชพส. (ฌาปนกิจสงเคราะห์ผู้ปฏิบัติงานในสถาบัน)</span>
-        </label>
-      </div>
-
-    </div>
-  </fieldset>
-
-  <!-- ปุ่มล่างฟอร์ม -->
-  <div class="form-actions">
-    <button type="button" (click)="cancelForm()" class="btn-cancel" [disabled]="isLoading()">ยกเลิก</button>
-    <button type="button" (click)="saveData()" class="btn-save" [disabled]="isLoading()">
-      @if (isLoading()) {
-        <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.6" stroke-opacity="0.25"/>
-          <path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-        </svg>
-        <span>กำลังบันทึกข้อมูล...</span>
-      } @else {
-        <span>{{ isEditMode ? 'บันทึกการแก้ไขข้อมูล' : 'บันทึกข้อมูลเข้าระบบ' }}</span>
-      }
-    </button>
+    }
   </div>
 </div>

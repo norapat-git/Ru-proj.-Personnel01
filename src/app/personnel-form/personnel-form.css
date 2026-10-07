@@ -1,112 +1,511 @@
-/* ช่อง auto-fill แสดงสีพื้นหลังต่างไม่ต้องกรอกเอง */
-.field-input[readonly] {
-  background-color: #f0f4f8;
-  color: #555;
-  cursor: not-allowed;
-  opacity: 0.85;
+/* ==========================================================================
+   Personnel Form - Modern Apple / Linear Style Form System
+   Supports: 
+   1. Full View for Edit Mode
+   2. Progressive Stepper Wizard for Create Mode
+   ========================================================================== */
+
+.form-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 8px 0 36px;
+  overflow: visible;
+  position: relative;
 }
 
-/* ป้ายชื่อฟิลด์ optional */
-.optional-hint {
-  font-size: 0.78em;
-  font-weight: 400;
-  color: #888;
-  margin-left: 4px;
-}
-
-/* ข้อความ error inline ใต้ช่องอินพุต */
-.field-error {
+app-custom-select {
   display: block;
-  margin-top: 4px;
-  font-size: 0.78em;
-  color: #e53e3e;
+}
+
+/* Gentle Micro-Shake Animation for specific unfilled/invalid inputs */
+.field-gentle-shake,
+.field-input.field-gentle-shake,
+.custom-select-container.field-gentle-shake {
+  animation: gentleFieldShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes gentleFieldShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-4px);
+  }
+  40% {
+    transform: translateX(4px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Form Header
+   -------------------------------------------------------------------------- */
+.form-header-top {
+  margin-bottom: 24px;
+}
+
+.form-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.2);
+  color: var(--primary-600, #2563eb);
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  letter-spacing: -0.01em;
+}
+
+.form-header-badge span.material-symbols-rounded {
+  font-size: 17px;
+}
+
+.form-title {
+  color: var(--text-primary, #0f172a);
+  font-size: 1.55rem;
+  font-weight: 700;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.025em;
+  line-height: 1.25;
+}
+
+.form-subtitle {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.88rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.required-star {
+  color: var(--danger-500, #ef4444);
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Alert Notification Box
+   -------------------------------------------------------------------------- */
+.alert-box {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  font-size: 0.92rem;
   font-weight: 500;
-  animation: fadeInError 0.2s ease;
+  margin-bottom: 24px;
+  animation: formAlertSlide 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes fadeInError {
-  from { opacity: 0; transform: translateY(-4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Banner แจ้งผลลัพธ์ save (แทน alert popup) */
-.form-banner {
-  padding: 12px 18px;
-  border-radius: 8px;
-  font-size: 0.92em;
-  font-weight: 500;
-  margin-bottom: 16px;
-  animation: slideDown 0.25s ease;
-}
-
-@keyframes slideDown {
+@keyframes formAlertSlide {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-.form-banner-success {
-  background-color: #f0fff4;
-  color: #276749;
-  border: 1px solid #9ae6b4;
+.alert-success {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+  border: 1.5px solid rgba(16, 185, 129, 0.3);
 }
 
-.form-banner-error {
-  background-color: #fff5f5;
-  color: #c53030;
-  border: 1px solid #feb2b2;
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+  border: 1.5px solid rgba(239, 68, 68, 0.3);
 }
 
-/* ==========================================================================
-   Financial Status Flag Checkboxes (Section 3 - สถานะการรับเงิน)
-   ========================================================================== */
+/* --------------------------------------------------------------------------
+   Modern Linear Stepper Bar (Create Mode Only)
+   -------------------------------------------------------------------------- */
+.stepper-wrapper {
+  position: relative;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 18px;
+  padding: 18px 20px;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+}
 
+.stepper-track {
+  position: absolute;
+  top: 36px;
+  left: 48px;
+  right: 48px;
+  height: 3px;
+  background: var(--border-subtle, #e2e8f0);
+  border-radius: 999px;
+  z-index: 1;
+}
+
+.stepper-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 999px;
+  transition: width 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.stepper-items {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  z-index: 2;
+  gap: 8px;
+}
+
+.stepper-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.stepper-item.disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.stepper-bubble {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--surface-card, #ffffff);
+  border: 2px solid var(--border-subtle, #cbd5e1);
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 8px;
+}
+
+.step-icon-check {
+  font-size: 20px;
+  color: #ffffff;
+}
+
+.stepper-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.step-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  transition: color 0.2s ease;
+}
+
+.step-desc {
+  font-size: 0.72rem;
+  color: var(--text-muted, #94a3b8);
+}
+
+/* Active Step */
+.stepper-item.active .stepper-bubble {
+  border-color: var(--primary-600, #2563eb);
+  background: var(--primary-600, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.18), 0 4px 12px rgba(37, 99, 235, 0.28);
+  transform: scale(1.08);
+}
+
+.stepper-item.active .step-title {
+  color: var(--primary-600, #2563eb);
+  font-weight: 700;
+}
+
+/* Completed Step */
+.stepper-item.completed:not(.active) .stepper-bubble {
+  border-color: #10b981;
+  background: #10b981;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.stepper-item.completed:not(.active) .step-title {
+  color: var(--text-primary, #0f172a);
+}
+
+@media (max-width: 768px) {
+  .step-desc {
+    display: none;
+  }
+  .step-title {
+    font-size: 0.74rem;
+  }
+  .stepper-bubble {
+    width: 32px;
+    height: 32px;
+    font-size: 0.84rem;
+  }
+  .stepper-track {
+    top: 32px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Step Animation Container
+   -------------------------------------------------------------------------- */
+.step-animated {
+  animation: stepSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes stepSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Fieldsets / Section Cards
+   -------------------------------------------------------------------------- */
+.form-fieldset-identity {
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  background: var(--surface-card, #ffffff);
+  border-radius: 18px;
+  padding: 24px 28px 28px;
+  margin-bottom: 28px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 6px 16px -4px rgba(0, 0, 0, 0.04);
+  position: relative;
+  overflow: visible;
+  z-index: 10;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-fieldset-identity:has(.custom-select-container.is-open),
+.form-fieldset-identity:has(.is-open),
+.form-grid-33:has(.is-open),
+.form-grid-33 > div:has(.is-open),
+app-custom-select:has(.is-open) {
+  z-index: 99999 !important;
+  position: relative !important;
+}
+
+.form-fieldset-identity:hover {
+  border-color: rgba(37, 99, 235, 0.3);
+}
+
+.form-fieldset-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #0f172a);
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.legend-icon {
+  font-size: 19px;
+  color: var(--primary-600, #2563eb);
+}
+
+/* --------------------------------------------------------------------------
+   Symmetrical Responsive Form Grid Layout
+   -------------------------------------------------------------------------- */
+.form-grid-33 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px 20px;
+  overflow: visible;
+  margin-top: 12px;
+}
+
+@media (max-width: 992px) {
+  .form-grid-33 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .form-grid-33 {
+    grid-template-columns: 1fr;
+  }
+  .form-grid-33 > div[style*="span"] {
+    grid-column: span 1 !important;
+  }
+}
+
+.form-grid-33 > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  position: relative;
+  overflow: visible;
+}
+
+/* --------------------------------------------------------------------------
+   Field Labels, Inputs, and Errors
+   -------------------------------------------------------------------------- */
+.field-label {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  letter-spacing: -0.01em;
+}
+
+.field-input {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border: 1.5px solid var(--border-subtle, #cbd5e1);
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: var(--text-primary, #0f172a);
+  background-color: var(--surface-input, #ffffff);
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.field-input::placeholder {
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.86rem;
+}
+
+.field-input:hover:not([readonly]):not(:disabled) {
+  border-color: #94a3b8;
+}
+
+.field-input:focus {
+  border-color: var(--primary-600, #2563eb);
+  background-color: var(--surface-input, #ffffff);
+  box-shadow: 0 0 0 3.5px rgba(37, 99, 235, 0.12);
+}
+
+.field-input[readonly] {
+  background-color: var(--surface-pill, #f1f5f9) !important;
+  color: var(--text-secondary, #64748b) !important;
+  cursor: not-allowed;
+  border-color: var(--border-subtle, #e2e8f0);
+}
+
+.field-input-error {
+  border-color: var(--danger-500, #ef4444) !important;
+  background-color: rgba(239, 68, 68, 0.02) !important;
+}
+
+.field-input-error:focus {
+  box-shadow: 0 0 0 3.5px rgba(239, 68, 68, 0.15) !important;
+}
+
+.field-input-danger {
+  border-color: #fca5a5;
+}
+
+.field-error-text {
+  display: block;
+  margin-top: 5px;
+  font-size: 0.77rem;
+  font-weight: 600;
+  color: var(--danger-500, #ef4444);
+  animation: fadeInError 0.2s ease;
+}
+
+@keyframes fadeInError {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.field-meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 5px;
+  font-size: 0.76rem;
+  color: var(--text-secondary, #64748b);
+  font-weight: 500;
+}
+
+.field-meta-tag .tag-bold {
+  color: var(--primary-600, #2563eb);
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+}
+
+/* --------------------------------------------------------------------------
+   Financial Flags Checkboxes (Section 3)
+   -------------------------------------------------------------------------- */
 .fin-status-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed #cbd5e0;
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--border-subtle, #e2e8f0);
 }
 
 .fin-status-title {
-  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.86rem;
   font-weight: 700;
-  color: #4a5568;
-  letter-spacing: 0.4px;
-  text-transform: uppercase;
-  margin-bottom: 12px;
+  color: var(--text-primary, #0f172a);
+  margin-bottom: 14px;
+  letter-spacing: -0.01em;
 }
 
 .fin-status-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 12px;
-  align-items: stretch;
 }
 
 .fin-flag-card {
   display: flex;
   align-items: center;
-  background: #f7fafc;
-  border: 1.5px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 10px 14px;
+  background: var(--surface-card, #ffffff);
+  border: 1.5px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 12px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   user-select: none;
-  height: 100%;
-  min-height: 56px;
+  min-height: 52px;
   box-sizing: border-box;
 }
 
 .fin-flag-card:hover {
-  border-color: #a0aec0;
-  background: #edf2f7;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border-color: rgba(37, 99, 235, 0.4);
+  background: rgba(37, 99, 235, 0.02);
 }
 
 .fin-flag-card.fin-flag-active {
-  border-color: #48bb78;
-  background: #f0fff4;
-  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.12);
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
 }
 
 .fin-flag-check-row {
@@ -117,53 +516,376 @@
 }
 
 .fin-flag-checkbox {
-  width: 17px;
-  height: 17px;
-  accent-color: #38a169;
+  width: 18px;
+  height: 18px;
+  accent-color: #10b981;
   cursor: pointer;
   flex-shrink: 0;
 }
 
 .fin-flag-label-text {
-  font-size: 12.5px;
-  font-weight: 500;
-  color: #2d3748;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
   flex: 1;
   line-height: 1.35;
 }
 
-.fin-flag-dot-yes,
-.fin-flag-dot-no {
-  font-size: 14px;
-  line-height: 1;
-  flex-shrink: 0;
-  margin-left: auto;
+.fin-flag-dot-yes {
+  color: #10b981;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-}
-
-.fin-flag-dot-yes {
-  color: #38a169;
+  margin-left: auto;
   animation: dotPopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .fin-flag-dot-no {
-  color: #cbd5e0;
-  transition: color 0.2s ease;
+  color: var(--text-muted, #cbd5e1);
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
 }
 
 @keyframes dotPopIn {
-  from { transform: scale(0.3); opacity: 0; }
+  from { transform: scale(0.4); opacity: 0; }
   to   { transform: scale(1);   opacity: 1; }
 }
 
-.fin-flag-field-name {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: #a0aec0;
-  font-family: 'Courier New', monospace;
-  letter-spacing: 0.5px;
-  margin-left: 24px;
+/* --------------------------------------------------------------------------
+   PVD (Provident Fund) Section
+   -------------------------------------------------------------------------- */
+.pvd-edit-block {
+  background: var(--surface-pill, #f8fafc);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  border-radius: 14px;
+  padding: 20px;
 }
+
+.pvd-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle, #e2e8f0);
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-secondary, #475569);
+}
+
+.pvd-badge-green,
+.pvd-badge-red,
+.pvd-badge-gray {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.pvd-badge-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.pvd-badge-red {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.pvd-badge-gray {
+  background: rgba(148, 163, 184, 0.15);
+  color: #64748b;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.btn-quit-pvd,
+.btn-join-pvd {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1.5px solid;
+  transition: all 0.2s ease;
+}
+
+.btn-quit-pvd {
+  background: #ffffff;
+  color: #dc2626;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.btn-quit-pvd:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.btn-join-pvd {
+  background: #ffffff;
+  color: #059669;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.btn-join-pvd:hover {
+  background: #ecfdf5;
+  border-color: #059669;
+}
+
+.btn-quit-pvd span.material-symbols-rounded,
+.btn-join-pvd span.material-symbols-rounded {
+  font-size: 17px;
+}
+
+/* --------------------------------------------------------------------------
+   Welfare Checkboxes (Section 5)
+   -------------------------------------------------------------------------- */
+.welfare-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.welfare-checkbox-card {
+  background: var(--surface-card, #ffffff);
+  border: 1.5px solid var(--border-subtle, #e2e8f0);
+  border-radius: 12px;
+  padding: 14px 18px;
+  transition: all 0.2s ease;
+}
+
+.welfare-checkbox-card:not(.disabled):hover {
+  border-color: var(--primary-600, #2563eb);
+  background: rgba(37, 99, 235, 0.02);
+}
+
+.welfare-checkbox-card.disabled {
+  opacity: 0.65;
+  background: var(--surface-pill, #f8fafc);
+  cursor: not-allowed;
+}
+
+.welfare-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.welfare-checkbox-card.disabled .welfare-label {
+  cursor: not-allowed;
+}
+
+.welfare-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary-600, #2563eb);
+  cursor: pointer;
+}
+
+.welfare-title-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.welfare-disabled-hint {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #d97706;
+  font-weight: 500;
+  padding-left: 30px;
+}
+
+/* --------------------------------------------------------------------------
+   Summary Card (Step 5 Review)
+   -------------------------------------------------------------------------- */
+.step-summary-card {
+  margin-top: 24px;
+  padding: 20px;
+  background: var(--surface-pill, #f8fafc);
+  border: 1.5px solid rgba(37, 99, 235, 0.2);
+  border-radius: 14px;
+}
+
+.summary-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.summary-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px 18px;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sum-label {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+}
+
+.sum-value {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.sum-value.sum-highlight {
+  color: #059669;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Form Action Buttons & Stepper Controls
+   -------------------------------------------------------------------------- */
+.form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  margin-top: 36px;
+  padding-top: 20px;
+}
+
+.stepper-actions-group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 16px;
+}
+
+.btn-cancel,
+.btn-prev-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 22px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-subtle, #cbd5e1);
+  background: var(--surface-card, #ffffff);
+  color: var(--text-secondary, #475569);
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-cancel:hover:not(:disabled),
+.btn-prev-step:hover:not(:disabled) {
+  border-color: #94a3b8;
+  background: var(--bg-hover, #f1f5f9);
+  color: var(--text-primary, #0f172a);
+}
+
+.btn-next-step {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary-600, #2563eb);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  margin-left: auto;
+}
+
+.btn-next-step:hover:not(:disabled) {
+  background: var(--primary-700, #1d4ed8);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-save-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 26px;
+  border-radius: 12px;
+  border: none;
+  background: var(--primary-600, #2563eb);
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+  transition: all 0.2s ease;
+}
+
+.btn-save-finish {
+  background: #10b981 !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3) !important;
+  margin-left: auto;
+}
+
+.btn-save-finish:hover:not(:disabled) {
+  background: #059669 !important;
+  box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4) !important;
+}
+
+.btn-save-primary:hover:not(:disabled) {
+  background: var(--primary-700, #1d4ed8);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
+}
+
+.btn-cancel:disabled,
+.btn-prev-step:disabled,
+.btn-next-step:disabled,
+.btn-save-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.spinner-icon {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 

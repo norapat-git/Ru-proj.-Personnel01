@@ -1,12 +1,18 @@
-import { Service, inject, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs'; // fix import firstValueFrom
-import { PersonnelDataResult, PersonnelInsertInput, JwtPayload } from '../models/personnel';
+import {
+  JwtPayload,
+  PersonnelDataResult,
+  PersonnelInsertInput,
+} from '../models/personnel.model';
 import { environment } from '../../environment/environment';
+import { ToastService } from './toast.service';
 
-@Service()
+@Injectable({ providedIn: 'root' })
 export class PersonnelService {
   private http = inject(HttpClient);
+  private toastService = inject(ToastService);
   private apiUrl = environment.apiUrl;
 
   personnelListSignal = signal<PersonnelDataResult[]>([]);
@@ -28,6 +34,7 @@ export class PersonnelService {
 
   // showNotification 3s
   showNotification(type: 'success' | 'error', message: string, durationMs: number = 3000): void {
+    this.toastService.show({ type, message, durationMs });
     this.notificationSignal.set({ type, message });
     if (this.notificationTimer) {
       clearTimeout(this.notificationTimer);

@@ -1,0 +1,8 @@
+@for (item of countArray; track $index) {
+  <div
+    class="skeleton-shimmer-box skeleton-{{ variant }}"
+    [style.width]="variant === 'circle' ? height : width"
+    [style.height]="height"
+    [style.border-radius]="computedRadius"
+  ></div>
+}

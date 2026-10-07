@@ -1,0 +1,123 @@
+<div class="custom-select-container select-size-{{ size }}" [class.is-open]="isOpen()" [class.is-disabled]="disabled" [class.is-invalid]="invalid">
+  <!-- Trigger Button -->
+  <button
+    type="button"
+    class="custom-select-trigger"
+    (click)="toggleDropdown()"
+    [disabled]="disabled"
+    aria-haspopup="listbox"
+    [attr.aria-expanded]="isOpen()"
+  >
+    <!-- Left Icon (if supplied or selected option has icon) -->
+    @if (selectedOption()?.icon || icon) {
+      <span class="material-symbols-rounded select-prefix-icon">
+        {{ selectedOption()?.icon || icon }}
+      </span>
+    }
+
+    <!-- Label / Placeholder -->
+    <span class="select-label-text" [class.is-placeholder]="!selectedOption()">
+      {{ selectedOption() ? selectedOption()!.label : placeholder }}
+    </span>
+
+    <!-- Selected Badge if any -->
+    @if (selectedOption()?.badge) {
+      <span class="select-pill-badge">{{ selectedOption()!.badge }}</span>
+    }
+
+    <!-- Clear button -->
+    @if (allowClear && selectedOption() && !disabled) {
+      <span
+        class="select-clear-btn"
+        (click)="clearValue($event)"
+        title="ล้างค่า"
+        role="button"
+      >
+        <span class="material-symbols-rounded">close</span>
+      </span>
+    }
+
+    <!-- Chevron icon -->
+    <span class="material-symbols-rounded select-chevron" [class.is-flipped]="isOpen()">
+      expand_more
+    </span>
+  </button>
+
+  <!-- Dropdown Menu -->
+  @if (isOpen()) {
+    <div class="custom-select-dropdown" (click)="$event.stopPropagation()">
+      <!-- Search Box inside dropdown -->
+      @if (searchable) {
+        <div class="select-search-bar">
+          <span class="material-symbols-rounded select-search-icon">search</span>
+          <input
+            type="text"
+            [ngModel]="searchTerm()"
+            (ngModelChange)="searchTerm.set($event)"
+            placeholder="ค้นหาตัวเลือก..."
+            class="select-search-input"
+            autofocus
+          />
+          @if (searchTerm()) {
+            <button
+              type="button"
+              class="select-search-clear"
+              (click)="searchTerm.set('')"
+            >
+              ✕
+            </button>
+          }
+        </div>
+      }
+
+      <!-- Options List -->
+      <div class="select-options-list" role="listbox">
+        @for (opt of filteredOptions(); track opt.value) {
+          <div
+            class="select-option-item"
+            [class.is-selected]="selectedValue() === opt.value"
+            (click)="chooseOption(opt)"
+            role="option"
+            [attr.aria-selected]="selectedValue() === opt.value"
+          >
+            @if (opt.icon) {
+              <span class="material-symbols-rounded option-icon">{{ opt.icon }}</span>
+            }
+
+            <div class="option-text-group">
+              <span class="option-main-label">{{ opt.label }}</span>
+              @if (opt.subLabel) {
+                <span class="option-sub-label">{{ opt.subLabel }}</span>
+              }
+            </div>
+
+            @if (opt.badge) {
+              <span class="option-badge">{{ opt.badge }}</span>
+            }
+
+            @if (selectedValue() === opt.value) {
+              <span class="material-symbols-rounded option-check">check</span>
+            }
+          </div>
+        } @empty {
+          <!-- Empty state -->
+          <div class="select-empty-state">
+            @if (allowCustom && searchTerm().trim()) {
+              <button
+                type="button"
+                class="select-custom-btn"
+                (click)="chooseCustomText()"
+              >
+                <span class="material-symbols-rounded">add</span>
+                <span>ใช้ค่า: <strong>"{{ searchTerm().trim() }}"</strong></span>
+              </button>
+            } @else {
+              <span class="empty-icon material-symbols-rounded">search_off</span>
+              <span>ไม่พบข้อมูลที่ตรงกัน</span>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,13 +1,26 @@
-import { Component, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef, signal } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { PersonnelService } from '../services/services';
-import { PersonnelInsertInput, PrenameOption, FacultyOption, PersonTypeOption, FundTypeOption, ProjectTypeOption, SourceMoneyOption } from '../models/personnel';
+import { PersonnelService } from '../services/personnel.service';
+import { ToastService } from '../services/toast.service';
+import {
+  CustomSelectOption,
+  FacultyOption,
+  FundTypeOption,
+  PersonnelInsertInput,
+  PersonTypeOption,
+  PrenameOption,
+  ProjectTypeOption,
+  SourceMoneyOption,
+} from '../models';
+import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
+import { CustomDatePickerComponent } from '../components/common/custom-datepicker/custom-datepicker.component';
 import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-form',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule, CustomSelectComponent, CustomDatePickerComponent],
   templateUrl: './personnel-form.html',
   styleUrl: './personnel-form.css',
 })
@@ -15,6 +28,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   @Output() onCancel = new EventEmitter<void>();
 
   private personnelService = inject(PersonnelService);
+  private toastService = inject(ToastService);
   private cdr = inject(ChangeDetectorRef);
 
   // ดึง nationality value from service
@@ -25,26 +39,98 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // form control logic
   isEditMode: boolean = false;
 
+  // Stepper state for Create Mode (1-5)
+  currentStep = signal<number>(1);
+  maxReachedStep = signal<number>(1);
+  isShaking = signal<boolean>(false);
+
+  readonly steps = [
+    { step: 1, title: 'ข้อมูลส่วนบุคคล', icon: 'badge', desc: 'เลขบัตร & ชื่อ-สกุล' },
+    { step: 2, title: 'โครงสร้างตำแหน่ง', icon: 'domain', desc: 'สังกัดคณะ & ประเภท' },
+    { step: 3, title: 'การเงินและรายได้', icon: 'payments', desc: 'เงินเดือน & สิทธิการรับเงิน' },
+    { step: 4, title: 'กองทุนสำรองเลี้ยงชีพ', icon: 'savings', desc: 'กองทุน PVD' },
+    { step: 5, title: 'สวัสดิการ & ตรวจสอบ', icon: 'health_and_safety', desc: 'ประกันสังคม & สรุป' },
+  ];
+
   // popup result save
   formMessage: { type: 'success' | 'error'; text: string } | null = null;
 
   // โหลดจาก API FACULTY_CODE
-  facultyOptions: FacultyOption[] = [];
+  facultyOptions = signal<FacultyOption[]>([]);
 
   // โหลดจาก API PRENAME_CODE
-  prenameOptions: PrenameOption[] = [];
+  prenameOptions = signal<PrenameOption[]>([]);
 
   // โหลดจาก API PERSONTYPE
-  personTypeOptions: PersonTypeOption[] = [];
+  personTypeOptions = signal<PersonTypeOption[]>([]);
 
   // โหลดจาก API FUND_TYPE
-  fundTypeOptions: FundTypeOption[] = [];
+  fundTypeOptions = signal<FundTypeOption[]>([]);
 
   // โหลดจาก API PROJECT_TYPE
-  projectTypeOptions: ProjectTypeOption[] = [];
+  projectTypeOptions = signal<ProjectTypeOption[]>([]);
 
   // โหลดจาก API SOURCE_MONEY
-  sourceMoneyOptions: SourceMoneyOption[] = [];
+  sourceMoneyOptions = signal<SourceMoneyOption[]>([]);
+
+  // ===================== Custom Select Computed Options =====================
+  prenameSelectOptions = computed<CustomSelectOption[]>(() => {
+    const isInter = this.nationality() === 'inter';
+    return this.prenameOptions().map(p => {
+      const val = isInter ? (p.preNameEn || p.preName) : p.preName;
+      return {
+        value: val,
+        label: val,
+        subLabel: isInter && p.preName ? p.preName : undefined,
+        icon: 'badge'
+      };
+    });
+  });
+
+  facultySelectOptions = computed<CustomSelectOption[]>(() => {
+    return this.facultyOptions().map(f => ({
+      value: f.facName,
+      label: f.facName,
+      subLabel: f.facCode ? `รหัสคณะ: ${f.facCode}` : undefined,
+      icon: 'school'
+    }));
+  });
+
+  personTypeSelectOptions = computed<CustomSelectOption[]>(() => {
+    return this.personTypeOptions().map(t => ({
+      value: t.typeName,
+      label: t.typeName,
+      subLabel: t.typeCode ? `รหัสประเภท: ${t.typeCode}` : undefined,
+      icon: 'group'
+    }));
+  });
+
+  sourceMoneySelectOptions = computed<CustomSelectOption[]>(() => {
+    return this.sourceMoneyOptions().map(sm => ({
+      value: sm.smCode,
+      label: sm.smName,
+      subLabel: sm.smCode ? `รหัสแหล่งเงิน: ${sm.smCode}` : undefined,
+      icon: 'account_balance_wallet'
+    }));
+  });
+
+  projectTypeSelectOptions = computed<CustomSelectOption[]>(() => {
+    return this.projectTypeOptions().map(p => ({
+      value: p.proCode,
+      label: p.proName,
+      subLabel: p.proCode ? `รหัสโครงการ: ${p.proCode}` : undefined,
+      icon: 'assignment'
+    }));
+  });
+
+  fundTypeSelectOptions = computed<CustomSelectOption[]>(() => {
+    return this.fundTypeOptions().map(f => ({
+      value: f.fundName,
+      label: f.fundName,
+      subLabel: f.fundCode ? `รหัสกองทุน: ${f.fundCode}` : undefined,
+      icon: 'savings'
+    }));
+  });
 
   personnelData: PersonnelInsertInput = {
     perCitizenId: '',
@@ -124,68 +210,67 @@ export class PersonnelForm implements OnInit, OnDestroy {
           return null;
         }),
         this.personnelService.getPersonTypes().catch((err: any) => {
-          console.error('Load personTypes failed:', err);
+          console.error('Load person types failed:', err);
           return null;
         }),
         this.personnelService.getFundTypes().catch((err: any) => {
-          console.error('Load fundTypes failed:', err);
+          console.error('Load fund types failed:', err);
           return null;
         }),
         this.personnelService.getProjectTypes().catch((err: any) => {
-          console.error('Load projectTypes failed:', err);
+          console.error('Load project types failed:', err);
           return null;
         }),
         this.personnelService.getSourceMoneyTypes().catch((err: any) => {
-          console.error('Load sourceMoneyTypes failed:', err);
+          console.error('Load source moneys failed:', err);
           return null;
         }),
       ]);
 
       if (facRes?.success && facRes.data) {
-        this.facultyOptions = facRes.data.map((row: any) => ({
+        this.facultyOptions.set(facRes.data.map((row: any) => ({
           facCode: row.FAC_CODE,
           facName: row.FAC_NAME,
           facName2: row.FAC_NAME2,
-        }));
+        })));
       }
 
       if (preRes?.success && preRes.data) {
-        this.prenameOptions = preRes.data.map((row: any) => ({
+        this.prenameOptions.set(preRes.data.map((row: any) => ({
           preCode: row.PRE_CODE,
           preName: row.PRE_NAME,
           preName2: row.PRE_NAME2,
           preNameEn: row.PRE_NAME_EN,
-          preNameIdcard: row.PRE_NAME_IDCARD,
-        }));
+        })));
       }
 
       if (typeRes?.success && typeRes.data) {
-        this.personTypeOptions = typeRes.data.map((row: any) => ({
+        this.personTypeOptions.set(typeRes.data.map((row: any) => ({
           typeCode: row.TYPE_CODE,
           typeName: row.TYPE_NAME,
           typeName2: row.TYPE_NAME2,
-        }));
+        })));
       }
 
       if (fundRes?.success && fundRes.data) {
-        this.fundTypeOptions = fundRes.data.map((row: any) => ({
+        this.fundTypeOptions.set(fundRes.data.map((row: any) => ({
           fundCode: row.FUND_CODE,
           fundName: row.FUND_NAME,
-        }));
+        })));
       }
 
       if (projRes?.success && projRes.data) {
-        this.projectTypeOptions = projRes.data.map((row: any) => ({
+        this.projectTypeOptions.set(projRes.data.map((row: any) => ({
           proCode: row.PRO_CODE,
           proName: row.PRO_NAME,
-        }));
+        })));
       }
 
       if (moneyRes?.success && moneyRes.data) {
-        this.sourceMoneyOptions = moneyRes.data.map((row: any) => ({
+        this.sourceMoneyOptions.set(moneyRes.data.map((row: any) => ({
           smCode: row.SM_CODE,
           smName: row.SM_NAME,
-        }));
+        })));
       }
     } finally {
       this.isLoadingOptions.set(false);
@@ -203,12 +288,15 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // เมื่อเลือกคำนำหน้านามใน dropdown
   onPrenameSelect(preNameText: string) {
     const isInter = this.nationality() === 'inter';
-    const found = this.prenameOptions.find(p => isInter ? (p.preNameEn === preNameText || p.preName === preNameText) : p.preName === preNameText);
+    const found = this.prenameOptions().find(p => isInter ? (p.preNameEn === preNameText || p.preName === preNameText) : p.preName === preNameText);
     if (found) {
       this.personnelData.preCode = found.preCode;
       this.personnelData.preName = found.preName;
     } else {
       this.personnelData.preName = preNameText;
+    }
+    if (this.invalidFields['preName']) {
+      this.invalidFields['preName'] = false;
     }
   }
 
@@ -216,7 +304,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   getSelectedPersonTypeName(): string {
     if (this.personnelData.typeName) return this.personnelData.typeName;
     if (this.personnelData.typeCode) {
-      const found = this.personTypeOptions.find(t => t.typeCode === this.personnelData.typeCode);
+      const found = this.personTypeOptions().find(t => t.typeCode === this.personnelData.typeCode);
       return found ? found.typeName : '';
     }
     return '';
@@ -226,7 +314,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   getSelectedFacultyName(): string {
     if (this.personnelData.facName) return this.personnelData.facName;
     if (this.personnelData.perFacC) {
-      const found = this.facultyOptions.find(f => f.facCode === this.personnelData.perFacC);
+      const found = this.facultyOptions().find(f => f.facCode === this.personnelData.perFacC);
       return found ? found.facName : '';
     }
     return '';
@@ -234,9 +322,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // เมื่อเลือกคณะออโต้ FAC_CODE ลงช่อง perFacC
   onFacultySelect(facName: string) {
-    const found = this.facultyOptions.find(f => f.facName === facName);
+    const found = this.facultyOptions().find(f => f.facName === facName);
     this.personnelData.facName = facName;
     this.personnelData.perFacC = found ? found.facCode : null;
+    if (this.invalidFields['facName']) {
+      this.invalidFields['facName'] = false;
+    }
   }
 
   // drop down(PRENAME_CODE)
@@ -244,7 +335,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     const numCode = code !== null && code !== undefined ? Number(code) : null;
     if (numCode) {
       this.personnelData.preCode = numCode;
-      const found = this.prenameOptions.find(p => p.preCode === numCode);
+      const found = this.prenameOptions().find(p => p.preCode === numCode);
       this.personnelData.preName = found ? found.preName : '';
     } else {
       this.personnelData.preCode = null;
@@ -254,9 +345,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // dropdown PERSONTYPE เมื่อเลือก typeName แล้ว typeCode จะเปลี่ยนอัตโนมัติ
   onPersonTypeSelect(typeName: string) {
-    const found = this.personTypeOptions.find(t => t.typeName === typeName);
+    const found = this.personTypeOptions().find(t => t.typeName === typeName);
     this.personnelData.typeName = typeName;
     this.personnelData.typeCode = found ? found.typeCode : null;
+    if (this.invalidFields['typeName']) {
+      this.invalidFields['typeName'] = false;
+    }
 
     // ถ้า TypeCode เป็น 10 หรือ 11 ช่องประกันสังคมจะล็อกไม่ให้ชำระทันที (อายุเกิน 60 ปี)
     if (this.isSsoPaymentDisabled()) {
@@ -268,7 +362,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // dropdown FUND_TYPE เมื่อเลือก fundName แล้ว perFundType จะเปลี่ยนอัตโนมัติ
   onFundTypeSelect(fundName: string) {
-    const found = this.fundTypeOptions.find(f => f.fundName === fundName);
+    const found = this.fundTypeOptions().find(f => f.fundName === fundName);
     this.personnelData.perFundType = found ? found.fundCode : null;
   }
 
@@ -279,7 +373,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
     // ถ้าเลือกเป็นอะไรสักอย่างที่ไม่เว้นว่าง แหล่งเงินทุน (Source Money) จะเปลี่ยนเป็น เงินรายได้โครงการอัตโนมัติ
     if (code !== null) {
-      const targetSource = this.sourceMoneyOptions.find((sm) => {
+      const targetSource = this.sourceMoneyOptions().find((sm) => {
         const name = sm.smName?.trim() || '';
         return (
           name === 'เงินรายได้โครงการ' ||
@@ -298,7 +392,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // helper: แปลง fundCode เป็น fundName สำหรับ [ngModel]
   getFundNameByCode(code: number | null): string {
     if (!code) return '';
-    const found = this.fundTypeOptions.find(f => f.fundCode === code);
+    const found = this.fundTypeOptions().find(f => f.fundCode === code);
     return found ? found.fundName : '';
   }
 
@@ -452,7 +546,191 @@ export class PersonnelForm implements OnInit, OnDestroy {
     return this.personnelData.fTotalIncome === 'Y';
   }
 
-  // ฟังก์ชันสแกนข้อมูลและตรวจสอบฟิลด์บังคับ
+  // ===================== Multi-Step Wizard Controller (For Create Mode) =====================
+
+  /** ตรวจสอบความถูกต้องของแต่ละ Step */
+  validateStep(step: number): boolean {
+    let isValid = true;
+    const isThai = this.nationality() === 'thai';
+
+    if (step === 1) {
+      if (isThai) {
+        if (!this.personnelData.perCitizenId || this.personnelData.perCitizenId.trim().length !== 13) {
+          this.invalidFields['perCitizenId'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['perCitizenId'];
+        }
+        if (!this.personnelData.preName) {
+          this.invalidFields['preName'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['preName'];
+        }
+        if (!this.personnelData.perNameTh || !this.personnelData.perNameTh.trim()) {
+          this.invalidFields['perNameTh'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['perNameTh'];
+        }
+      } else {
+        if (!this.personnelData.perPassportNo || !this.personnelData.perPassportNo.trim()) {
+          this.invalidFields['perPassportNo'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['perPassportNo'];
+        }
+        if (!this.personnelData.preName || !this.personnelData.preName.trim()) {
+          this.invalidFields['preName'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['preName'];
+        }
+        if (!this.personnelData.perNameEn || !this.personnelData.perNameEn.trim()) {
+          this.invalidFields['perNameEn'] = true;
+          isValid = false;
+        } else {
+          delete this.invalidFields['perNameEn'];
+        }
+      }
+    } else if (step === 2) {
+      if (!this.personnelData.typeName || !this.personnelData.typeName.trim()) {
+        this.invalidFields['typeName'] = true;
+        isValid = false;
+      } else {
+        delete this.invalidFields['typeName'];
+      }
+      if (!this.personnelData.facName || !this.personnelData.facName.trim()) {
+        this.invalidFields['facName'] = true;
+        isValid = false;
+      } else {
+        delete this.invalidFields['facName'];
+      }
+    } else if (step === 3) {
+      if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || (this.personnelData.perSalary as any) === '' || Number(this.personnelData.perSalary) < 0) {
+        this.invalidFields['perSalary'] = true;
+        isValid = false;
+      } else {
+        delete this.invalidFields['perSalary'];
+      }
+      if (this.personnelData.perHoldSalary === null || this.personnelData.perHoldSalary === undefined || (this.personnelData.perHoldSalary as any) === '' || Number(this.personnelData.perHoldSalary) < 0) {
+        this.invalidFields['perHoldSalary'] = true;
+        isValid = false;
+      } else {
+        delete this.invalidFields['perHoldSalary'];
+      }
+    } else if (step === 4) {
+      // Step 4 (PVD) Validation
+      if (!this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
+        this.invalidFields['perPvdfQuitD'] = true;
+        isValid = false;
+      } else {
+        delete this.invalidFields['perPvdfQuitD'];
+      }
+    }
+
+    return isValid;
+  }
+
+  /** ไปขั้นตอนถัดไป */
+  nextStep(): void {
+    const current = this.currentStep();
+    if (this.validateStep(current)) {
+      this.formMessage = null;
+      const next = Math.min(5, current + 1);
+      this.currentStep.set(next);
+      if (next > this.maxReachedStep()) {
+        this.maxReachedStep.set(next);
+      }
+      this.scrollToTop();
+    } else {
+      this.triggerShake();
+      this.showMessage('error', `กรุณากรอกข้อมูลที่จำเป็น (*) ในขั้นตอนที่ ${current} ให้ครบถ้วนก่อนไปต่อ`);
+      this.focusFirstError();
+    }
+  }
+
+  /** ย้อนกลับขั้นตอนก่อนหน้า */
+  prevStep(): void {
+    this.formMessage = null;
+    this.currentStep.update(s => Math.max(1, s - 1));
+    this.scrollToTop();
+  }
+
+  /** คลิกเลือก Step จาก Stepper Bar ด้านบน */
+  goToStep(step: number): void {
+    if (step === this.currentStep()) return;
+    
+    // หากย้อนกลับ อนุญาตเสมอ
+    if (step < this.currentStep()) {
+      this.formMessage = null;
+      this.currentStep.set(step);
+      this.scrollToTop();
+      return;
+    }
+
+    // หากจะกระโดดไปข้างหน้า ต้องตรวจขั้นตอนก่อนหน้าทั้งหมดก่อน
+    for (let s = this.currentStep(); s < step; s++) {
+      if (!this.validateStep(s)) {
+        this.triggerShake();
+        this.showMessage('error', `กรุณากรอกข้อมูลในขั้นตอนที่ ${s} ให้ครบถ้วนก่อน`);
+        this.focusFirstError();
+        return;
+      }
+    }
+
+    this.formMessage = null;
+    this.currentStep.set(step);
+    if (step > this.maxReachedStep()) {
+      this.maxReachedStep.set(step);
+    }
+    this.scrollToTop();
+  }
+
+  /** Trigger Subtle Error Notice */
+  triggerShake(): void {
+    this.focusFirstError();
+  }
+
+  /** เลื่อนหน้าจอไปยังช่องที่ยังไม่กรอก แล้วสั่นช่องนั้นเบาๆ */
+  focusFirstError(): void {
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      const invalidEls = document.querySelectorAll(
+        '.field-input-error, .custom-select-container.is-invalid, .field-input-danger'
+      );
+      if (invalidEls.length > 0) {
+        const firstEl = invalidEls[0];
+        // เลื่อนจอไปที่ช่องแรกที่ยังไม่กรอกอย่างนุ่มนวล
+        firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // สั่นเฉพาะช่องที่ยังไม่กรอกเบาๆ
+        invalidEls.forEach((el) => {
+          el.classList.remove('field-gentle-shake');
+          // Trigger reflow
+          void (el as HTMLElement).offsetWidth;
+          el.classList.add('field-gentle-shake');
+          setTimeout(() => el.classList.remove('field-gentle-shake'), 650);
+        });
+
+        if (firstEl instanceof HTMLElement) {
+          firstEl.focus();
+        }
+      }
+    }, 100);
+  }
+
+  /** เลื่อนหน้าจอกลับมาหัวฟอร์ม */
+  scrollToTop(): void {
+    setTimeout(() => {
+      const container = document.querySelector('.form-container');
+      if (container) {
+        container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 50);
+  }
+
+  // ฟังก์ชันสแกนข้อมูลและตรวจสอบฟิลด์บังคับทั้งหมด (Final Full Check)
   validateForm(): boolean {
     this.invalidFields = {};
     this.formMessage = null;
@@ -507,23 +785,19 @@ export class PersonnelForm implements OnInit, OnDestroy {
     return isValid;
   }
 
-  // แสดงข้อความแจ้งเตือนแบบ banner
+  // แสดงข้อความแจ้งเตือน Toast และ Banner
   private showMessage(type: 'success' | 'error', text: string) {
     if (type === 'success') {
-      // ตั้งค่า global toast notification และปิดฟอร์มทันที signal ผ่าน services
-      this.personnelService.notificationSignal.set({ type, message: text });
+      const title = this.isEditMode ? 'แก้ไขข้อมูลสำเร็จ' : 'เพิ่มบุคลากรใหม่สำเร็จ';
+      this.toastService.success(text, title);
+
       this.personnelService.hasSearchedSignal.set(true);
       this.personnelService.editingPersonnel.set(null);
       this.personnelService.currentModeSignal.set('result');
       this.onCancel.emit();
-      
-      // ซ่อนข้อความแจ้งเตือน 3 วินาที
-      setTimeout(() => {
-        this.personnelService.notificationSignal.set(null);
-      }, 3000);
     } else {
-      // error ตรง banner ในฟอร์ม
       this.formMessage = { type, text };
+      this.toastService.error(text, 'เกิดข้อผิดพลาด');
     }
   }
 
@@ -633,7 +907,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
       } else {
         const response = await this.personnelService.insertPersonnel(payload);
         if (response && response.success) {
-          this.showMessage('success', response.message || 'บันทึกข้อมูลเข้าระบบเรียบร้อยแล้ว');
+          this.showMessage('success', response.message || 'เพิ่มข้อมูลบุคลากรใหม่เข้าระบบเรียบร้อยแล้ว');
         }
       }
     } catch (err: any) {

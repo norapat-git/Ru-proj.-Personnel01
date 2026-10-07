@@ -1,14 +1,14 @@
 <div class="result-container">
   
   @if (isLoading()) {
-    <!-- Skeleton Table Loading State -->
+    <!-- Modern Shimmer Skeleton Table State -->
     <div class="skeleton-table-wrapper">
-      <div class="skeleton-toolbar">
-        <div class="skeleton-shimmer skeleton-input-box"></div>
-        <div class="skeleton-shimmer skeleton-count-box"></div>
+      <div class="skeleton-toolbar" style="padding: 12px 18px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+        <app-skeleton width="280px" height="38px" borderRadius="10px"></app-skeleton>
+        <app-skeleton width="140px" height="24px" borderRadius="9999px"></app-skeleton>
       </div>
       <div class="table-responsive">
-        <table class="personnel-table skeleton-table-content">
+        <table class="personnel-table">
           <thead>
             <tr>
               <th style="width: 50px;" class="text-center">#</th>
@@ -16,18 +16,18 @@
               <th>ชื่อ - นามสกุล</th>
               <th>ประเภทบุคลากร</th>
               <th>คณะ / หน่วยงาน</th>
-              <th class="text-center" style="min-width: 200px;">การจัดการ</th>
+              <th class="text-center" style="min-width: 160px;">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
-            @for (row of [1, 2, 3, 4, 5]; track row) {
-              <tr class="skeleton-row-item">
-                <td class="text-center"><div class="skeleton-cell skeleton-cell-sm"></div></td>
-                <td><div class="skeleton-cell skeleton-cell-badge"></div></td>
-                <td><div class="skeleton-cell skeleton-cell-name"></div></td>
-                <td><div class="skeleton-cell skeleton-cell-type"></div></td>
-                <td><div class="skeleton-cell skeleton-cell-fac"></div></td>
-                <td class="text-center"><div class="skeleton-cell skeleton-cell-actions"></div></td>
+            @for (row of [1, 2, 3, 4, 5, 6]; track row) {
+              <tr>
+                <td class="text-center"><app-skeleton width="20px" height="16px"></app-skeleton></td>
+                <td><app-skeleton width="60px" height="24px" borderRadius="9999px"></app-skeleton></td>
+                <td><app-skeleton width="75%" height="18px"></app-skeleton></td>
+                <td><app-skeleton width="90px" height="24px" borderRadius="9999px"></app-skeleton></td>
+                <td><app-skeleton width="65%" height="18px"></app-skeleton></td>
+                <td class="text-center"><app-skeleton width="110px" height="32px" borderRadius="8px"></app-skeleton></td>
               </tr>
             }
           </tbody>
@@ -39,7 +39,7 @@
     <div class="result-header-toolbar">
       <div class="result-toolbar-left">
         <div class="live-search-input-box">
-          <svg class="live-search-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <span class="material-symbols-rounded live-search-icon">search</span>
           <input
             type="text"
             [ngModel]="nameFilter()"
@@ -57,7 +57,7 @@
 
       <div class="result-toolbar-right">
         <div class="result-count-text">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4a5568" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span class="material-symbols-rounded count-icon">badge</span>
           @if (nameFilter().trim()) {
             <span>ผลการค้นหา: <strong>{{ filteredPersonnelList().length | number }}</strong> / {{ personnelList().length | number }} รายการ</span>
             @if (filteredPersonnelList().length > 0) {
@@ -82,12 +82,12 @@
               <th>ชื่อ - นามสกุล</th>
               <th>ประเภทบุคลากร</th>
               <th>คณะ / หน่วยงาน</th>
-              <th class="text-center" style="min-width: 200px;">การจัดการ</th>
+              <th class="text-center" style="min-width: 180px;">การจัดการ</th>
             </tr>
           </thead>
           <tbody>
             @for (person of paginatedPersonnelList(); track (person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || $index)) {
-              <tr>
+              <tr (contextmenu)="onRowContextMenu($event, person)" title="คลิกขวาเพื่อเปิดเมนูด่วน">
                 <td class="text-center bold-num">{{ (currentPage() - 1) * pageSize + $index + 1 }}</td>
                 <td>
                   <span class="pre-badge">
@@ -106,22 +106,26 @@
                     {{ person.TYPE_NAME || person.TYPE_CODE || '-' }}
                   </span>
                 </td>
-                <td>{{ person.FAC_NAME || person.PER_FAC_C || '-' }}</td>
+                <td>
+                  <span class="fac-badge">
+                    {{ person.FAC_NAME || person.PER_FAC_C || '-' }}
+                  </span>
+                </td>
                 <td class="text-center action-cells">
-                  <button type="button" (click)="openDetailModal(person)" class="btn-action-view">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                    <span>รายละเอียด</span>
+                  <button type="button" (click)="openDetailModal(person)" class="btn-action-view" title="ดูรายละเอียดประวัติ" aria-label="ดูรายละเอียดประวัติ">
+                    <span class="material-symbols-rounded">visibility</span>
                   </button>
                   @if (isFilteredSearch()) {
-                    <button type="button" (click)="triggerEditMode(person)" class="btn-action-edit-sm" title="แก้ไข">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
-                      <span>แก้ไข</span>
+                    <button type="button" (click)="triggerEditMode(person)" class="btn-action-edit-sm" title="แก้ไขประวัติ" aria-label="แก้ไขประวัติ">
+                      <span class="material-symbols-rounded">edit</span>
                     </button>
-                    <button type="button" (click)="triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-action-delete-sm" title="ลบ">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
-                      <span>ลบ</span>
+                    <button type="button" (click)="triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-action-delete-sm" title="ลบข้อมูล" aria-label="ลบข้อมูล">
+                      <span class="material-symbols-rounded">delete</span>
                     </button>
                   }
+                  <button type="button" class="btn-row-menu" (click)="openRowMenu($event, person)" title="ตัวเลือกเพิ่มเติม" aria-label="ตัวเลือกเพิ่มเติม">
+                    <span class="material-symbols-rounded">more_vert</span>
+                  </button>
                 </td>
               </tr>
             }
@@ -129,25 +133,44 @@
         </table>
       </div>
 
-      <!-- แถบปุ่มเปลี่ยนหน้า (Pagination Bar ด้านล่าง) -->
+      <!-- แถบปุ่มเปลี่ยนหน้า สไตล์ Apple Pill Pagination -->
       @if (totalPages() > 1) {
-        <div class="pagination-bar pagination-bar-bottom">
-          <button type="button" class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(1)">
-            « หน้าแรก
+        <div class="apple-pill-pagination">
+          <button
+            type="button"
+            class="apple-pill-btn"
+            [disabled]="currentPage() === 1"
+            (click)="goToPage(currentPage() - 1)"
+            aria-label="Previous Page"
+            title="หน้าก่อนหน้า"
+          >
+            <span class="material-symbols-rounded" style="font-size: 18px;">chevron_left</span>
           </button>
-          <button type="button" class="btn-page" [disabled]="currentPage() === 1" (click)="goToPage(currentPage() - 1)">
-            ‹ ก่อนหน้า
-          </button>
-          
-          <span class="page-current-indicator">
-            หน้า <strong>{{ currentPage() }}</strong> จาก <strong>{{ totalPages() }}</strong>
-          </span>
 
-          <button type="button" class="btn-page" [disabled]="currentPage() === totalPages()" (click)="goToPage(currentPage() + 1)">
-            ถัดไป ›
-          </button>
-          <button type="button" class="btn-page" [disabled]="currentPage() === totalPages()" (click)="goToPage(totalPages())">
-            หน้าสุดท้าย »
+          @for (p of paginationPages(); track $index) {
+            @if (p === '...') {
+              <span class="apple-pill-dots">&hellip;</span>
+            } @else {
+              <button
+                type="button"
+                class="apple-pill-btn"
+                [class.is-active]="p === currentPage()"
+                (click)="goToPage(+p)"
+              >
+                {{ p }}
+              </button>
+            }
+          }
+
+          <button
+            type="button"
+            class="apple-pill-btn"
+            [disabled]="currentPage() === totalPages()"
+            (click)="goToPage(currentPage() + 1)"
+            aria-label="Next Page"
+            title="หน้าถัดไป"
+          >
+            <span class="material-symbols-rounded" style="font-size: 18px;">chevron_right</span>
           </button>
         </div>
       }
@@ -176,16 +199,20 @@
         
         <!-- Header ของ Modal -->
         <div class="personnel-modal-header">
-          <div class="modal-header-title">
-            <h3>
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
-              <span>รายละเอียดประวัติบุคลากร:</span> 
-              <span class="highlight-title">
+          <div class="modal-header-brand">
+            <div class="modal-header-icon">
+              <span class="material-symbols-rounded">person_pin</span>
+            </div>
+            <div class="modal-header-titles">
+              <span class="modal-header-badge">รายละเอียดประวัติบุคลากร</span>
+              <h3 class="modal-header-name">
                 {{ nationality() === 'thai' ? (person['FULL_NAME_TH'] || ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH)) : person.PER_NAME_EN }}
-              </span>
-            </h3>
+              </h3>
+            </div>
           </div>
-          <button type="button" class="btn-close-modal" (click)="closeDetailModal()">✕</button>
+          <button type="button" class="btn-close-modal" (click)="closeDetailModal()" title="ปิดหน้าต่าง">
+            <span class="material-symbols-rounded">close</span>
+          </button>
         </div>
 
         <!-- Body ของ Modal: การ์ด 5 บล็อก -->
@@ -193,37 +220,33 @@
           <div class="profile-card-grid">
             
             <!-- บล็อก 1: ข้อมูลประจำตัวบุคคล -->
-            <div class="profile-card-box box-blue">
+            <div class="profile-card-box card-identity">
               <div class="box-header">
-                <span class="box-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
+                <span class="box-header-icon material-symbols-rounded">badge</span>
                 <span class="box-title">ข้อมูลประจำตัวบุคคล</span>
               </div>
               <div class="box-body">
                 @if (nationality() === 'thai') {
-                  <div class="info-row"><span class="info-label">เลขประจำตัวประชาชน:</span> <span class="info-val bold">{{ person.PER_CITIZEN_ID }}</span></div>
+                  <div class="info-row"><span class="info-label">เลขประจำตัวประชาชน:</span> <span class="info-val bold text-primary-val">{{ person.PER_CITIZEN_ID }}</span></div>
                   <div class="info-row"><span class="info-label">คำนำหน้านาม:</span> <span class="info-val">{{ person.PRE_NAME || person.PRE_CODE || '-' }}</span></div>
                   <div class="info-row"><span class="info-label">ชื่อ - นามสกุล:</span> <span class="info-val bold">{{ person.PER_NAME_TH }}</span></div>
                   <div class="info-row"><span class="info-label">เลขผู้เสียภาษีอากร:</span> <span class="info-val">{{ person.PER_TAX_ID || '-' }}</span></div>
                   <div class="info-row"><span class="info-label">หมายเลขประกันสังคม:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
                 } @else {
-                  <div class="info-row"><span class="info-label">Social Security Number:</span> <span class="info-val bold">{{ person.PER_SSO_ID || '-' }}</span></div>
-                  <div class="info-row"><span class="info-label">Passport ID:</span> <span class="info-val bold">{{ person.PER_PASSPORT_NO || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">Passport ID:</span> <span class="info-val bold text-primary-val">{{ person.PER_PASSPORT_NO || '-' }}</span></div>
                   <div class="info-row"><span class="info-label">English Name:</span> <span class="info-val bold">{{ person.PER_NAME_EN }}</span></div>
-                  <div class="info-row"><span class="info-label">Passport Start Date:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_START_D) }}</span></div>
-                  <div class="info-row"><span class="info-label">Passport Expire Date:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_EXPIRE_D) }}</span></div>
+                  <div class="info-row"><span class="info-label">Social Security:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">Passport Start:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_START_D) }}</span></div>
+                  <div class="info-row"><span class="info-label">Passport Expire:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_EXPIRE_D) }}</span></div>
                   <div class="info-row"><span class="info-label">Tax ID:</span> <span class="info-val">{{ person.PER_TAX_ID || '-' }}</span></div>
                 }
               </div>
             </div>
 
             <!-- บล็อก 2: ข้อมูลโครงสร้างตำแหน่ง -->
-            <div class="profile-card-box box-teal">
+            <div class="profile-card-box card-position">
               <div class="box-header">
-                <span class="box-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="7" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                </span>
+                <span class="box-header-icon material-symbols-rounded">domain</span>
                 <span class="box-title">ข้อมูลโครงสร้างตำแหน่ง</span>
               </div>
               <div class="box-body">
@@ -235,11 +258,9 @@
             </div>
 
             <!-- บล็อก 3: ข้อมูลสังกัดและการเงิน -->
-            <div class="profile-card-box box-purple">
+            <div class="profile-card-box card-finance">
               <div class="box-header">
-                <span class="box-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7 12 2"/></svg>
-                </span>
+                <span class="box-header-icon material-symbols-rounded">payments</span>
                 <span class="box-title">ข้อมูลสังกัดและการเงิน</span>
               </div>
               <div class="box-body">
@@ -262,56 +283,32 @@
                 <div class="info-row"><span class="info-label">ประเภทโครงการ:</span> <span class="info-val">{{ person.PRO_NAME ? (person.PRO_NAME + ' (รหัส: ' + person.PER_PROJECT + ')') : (person.PER_PROJECT != null ? person.PER_PROJECT : '-') }}</span></div>
                 <div class="info-row"><span class="info-label">แหล่งเงินทุน:</span> <span class="info-val">{{ person.SM_NAME ? (person.SM_NAME + ' (รหัส: ' + person.PER_SOURCE_MONEY + ')') : (person.PER_SOURCE_MONEY != null ? person.PER_SOURCE_MONEY : '-') }}</span></div>
                 
-                <!-- แสดงสถานะการรับเงิน 4 columns -->
-                <div class="info-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e2e8f0;">
-                  <span class="info-label">สถานะการรับเงินเดือน:</span>
-                  <span class="info-val">
-                    @if (person.F_REV_SALARY === 'Y') {
-                      <span class="tag-status-green">Y</span>
-                    } @else {
-                      <span class="tag-status-gray">N</span>
-                    }
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">สถานะการรับเงินประจำตำแหน่ง:</span>
-                  <span class="info-val">
-                    @if (person.F_REV_POS_MONEY === 'Y') {
-                      <span class="tag-status-green">Y</span>
-                    } @else {
-                      <span class="tag-status-gray">N</span>
-                    }
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">สถานะการรับเงินประจำตำแหน่งผู้บริหาร:</span>
-                  <span class="info-val">
-                    @if (person.F_REV_PAY_EX === 'Y') {
-                      <span class="tag-status-green">Y</span>
-                    } @else {
-                      <span class="tag-status-gray">N</span>
-                    }
-                  </span>
-                </div>
-                <div class="info-row">
-                  <span class="info-label">สถานะการรับเงินรายได้ทั้งหมด:</span>
-                  <span class="info-val">
-                    @if (person.F_TOTAL_INCOME === 'Y') {
-                      <span class="tag-status-green">Y</span>
-                    } @else {
-                      <span class="tag-status-gray">N</span>
-                    }
-                  </span>
+                <!-- แสดงสถานะการรับเงิน 4 flags -->
+                <div class="info-flags-block">
+                  <div class="info-flag-pill">
+                    <span class="flag-label">รับเงินเดือน</span>
+                    <span [class]="person.F_REV_SALARY === 'Y' ? 'tag-status-green' : 'tag-status-gray'">{{ person.F_REV_SALARY === 'Y' ? 'รับ (Y)' : 'ไม่รับ (N)' }}</span>
+                  </div>
+                  <div class="info-flag-pill">
+                    <span class="flag-label">รับเงินประจำตำแหน่ง</span>
+                    <span [class]="person.F_REV_POS_MONEY === 'Y' ? 'tag-status-green' : 'tag-status-gray'">{{ person.F_REV_POS_MONEY === 'Y' ? 'รับ (Y)' : 'ไม่รับ (N)' }}</span>
+                  </div>
+                  <div class="info-flag-pill">
+                    <span class="flag-label">รับเงินบริหาร</span>
+                    <span [class]="person.F_REV_PAY_EX === 'Y' ? 'tag-status-green' : 'tag-status-gray'">{{ person.F_REV_PAY_EX === 'Y' ? 'รับ (Y)' : 'ไม่รับ (N)' }}</span>
+                  </div>
+                  <div class="info-flag-pill">
+                    <span class="flag-label">รับรายได้ทั้งหมด</span>
+                    <span [class]="person.F_TOTAL_INCOME === 'Y' ? 'tag-status-green' : 'tag-status-gray'">{{ person.F_TOTAL_INCOME === 'Y' ? 'รับ (Y)' : 'ไม่รับ (N)' }}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- บล็อก 4: ข้อมูลสวัสดิการและกองทุน -->
-            <div class="profile-card-box box-gold">
+            <div class="profile-card-box card-welfare">
               <div class="box-header">
-                <span class="box-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </span>
+                <span class="box-header-icon material-symbols-rounded">savings</span>
                 <span class="box-title">ข้อมูลสวัสดิการและกองทุน</span>
               </div>
               <div class="box-body">
@@ -320,7 +317,7 @@
                   <span class="info-val bold">{{ person.FUND_NAME || (person.PER_FUND_TYPE ? ('กองทุนประเภทที่ ' + person.PER_FUND_TYPE) : '-') }}</span>
                 </div>
                 <div class="info-row">
-                  <span class="info-label">สมาชิกกองทุนสำรองเลี้ยงชีพ:</span> 
+                  <span class="info-label">สมาชิกกองทุน PVD:</span> 
                   <span class="info-val">
                     @if (person.PER_PVDF_QUIT == 1) {
                       <span class="tag-status-red">ออกจากกองทุนแล้ว</span>
@@ -333,13 +330,13 @@
                 </div>
                 @if (person.PER_PVDF_QUIT != 1 && (person.PER_PVDF_APP === 'Y' || person.PER_PVDF_APP === '1')) {
                   <div class="info-row"><span class="info-label">วันที่สมัครกองทุน:</span> <span class="info-val">{{ formatDate(person.PER_PVDF_APP_D) }}</span></div>
-                  <div class="info-row"><span class="info-label">อัตราการออมเงิน:</span> <span class="info-val bold">{{ person.PER_SAVE_RATE ?? '-' }} %</span></div>
+                  <div class="info-row"><span class="info-label">อัตราการออมเงิน:</span> <span class="info-val bold text-primary-val">{{ person.PER_SAVE_RATE ?? '-' }} %</span></div>
                 }
                 @if (person.PER_PVDF_QUIT == 1) {
                   <div class="info-row"><span class="info-label">วันที่ออกจากกองทุน:</span> <span class="info-val">{{ formatDate(person.PER_PVDF_QUIT_D) }}</span></div>
                 }
                 <div class="info-row">
-                  <span class="info-label">การชำระเงินประกันสังคม:</span> 
+                  <span class="info-label">การชำระประกันสังคม:</span> 
                   <span class="info-val">{{ person.PER_SSO_PAYMENT == 1 ? 'ชำระประกันสังคม' : 'ไม่ชำระ' }}</span>
                 </div>
                 <div class="info-row">
@@ -354,11 +351,9 @@
             </div>
 
             <!-- บล็อก 5: ข้อมูลบันทึกระบบ -->
-            <div class="profile-card-box box-gray">
+            <div class="profile-card-box card-system">
               <div class="box-header">
-                <span class="box-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-                </span>
+                <span class="box-header-icon material-symbols-rounded">history</span>
                 <span class="box-title">ข้อมูลบันทึกระบบ</span>
               </div>
               <div class="box-body">
@@ -376,74 +371,33 @@
         <div class="personnel-modal-footer">
           @if (isFilteredSearch()) {
             <button type="button" (click)="closeDetailModal(); triggerEditMode(person)" class="btn-action-edit">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+              <span class="material-symbols-rounded">edit_square</span>
               <span>แก้ไขประวัติข้อมูล</span>
             </button>
             <button type="button" (click)="closeDetailModal(); triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-action-delete">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+              <span class="material-symbols-rounded">delete</span>
               <span>ลบข้อมูลบุคลากร</span>
             </button>
           }
-          <button type="button" class="btn-modal-cancel" (click)="closeDetailModal()">ปิดหน้าต่าง</button>
-        </div>
-
-      </div>
-    </div>
-  }
-
-  <!-- Custom Delete Confirmation Modal -->
-  @if (deleteTargetId) {
-    <div class="confirm-modal-overlay">
-      <div class="confirm-modal-box">
-        <div class="confirm-modal-header">
-          <h3 style="display: flex; align-items: center; gap: 8px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e53e3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span>ยืนยันการลบข้อมูล</span>
-          </h3>
-        </div>
-        <div class="confirm-modal-body">
-          <p>คุณต้องการลบข้อมูลบุคลากรรายนี้ใช่หรือไม่?</p>
-          <p class="confirm-modal-subtext">การดำเนินการนี้จะไม่สามารถกู้คืนข้อมูลกลับมาได้</p>
-          
-          <div style="margin-top: 15px; text-align: left;">
-            <label style="display: block; font-weight: 700; margin-bottom: 6px; color: #c53030;">
-              สาเหตุ / หมายเหตุการลบข้อมูล <span style="color: #e53e3e;">* (บังคับกรอก)</span>:
-            </label>
-            <textarea
-              [(ngModel)]="deleteNote"
-              rows="3"
-              placeholder="กรุณาระบุหมายเหตุการลบข้อมูลก่อนยืนยัน..."
-              style="width: 100%; box-sizing: border-box; padding: 10px; border: 1.5px solid #feb2b2; border-radius: 6px; font-size: 13.5px; outline: none;"
-            ></textarea>
-            @if (deleteNoteError) {
-              <small style="color: #e53e3e; display: flex; align-items: center; gap: 4px; margin-top: 6px; font-weight: 700;">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <span>กรุณาระบุหมายเหตุการลบข้อมูลก่อนกดยืนยันการลบ</span>
-              </small>
-            }
-          </div>
-        </div>
-        <div class="confirm-modal-footer">
-          <button type="button" class="btn-modal-cancel" (click)="cancelDelete()" [disabled]="isLoading()">ยกเลิก</button>
-          <button 
-            type="button" 
-            class="btn-modal-confirm" 
-            [disabled]="!deleteNote || !deleteNote.trim() || isLoading()"
-            (click)="confirmDelete()"
-          >
-            @if (isLoading()) {
-              <svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="9.5" stroke="currentColor" stroke-width="2.6" stroke-opacity="0.25"/>
-                <path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
-              </svg>
-              <span>กำลังลบข้อมูล...</span>
-            } @else {
-              <span>ยืนยันการลบ</span>
-            }
+          <button type="button" class="btn-modal-cancel" (click)="closeDetailModal()">
+            <span class="material-symbols-rounded">close</span>
+            <span>ปิดหน้าต่าง</span>
           </button>
         </div>
+
       </div>
     </div>
   }
+
+  <!-- Apple Frosted Glass Context Menu -->
+  <app-custom-context-menu
+    [items]="contextMenuItems()"
+    [x]="contextMenuX()"
+    [y]="contextMenuY()"
+    [visible]="contextMenuVisible()"
+    headerTitle="จัดการข้อมูลบุคลากร"
+    (itemClick)="onContextMenuItemClick($event)"
+    (close)="closeContextMenu()"
+  ></app-custom-context-menu>
 
 </div>

@@ -1,14 +1,24 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { PersonnelSearch } from './personnel-search/personnel-search';
 import { PersonnelForm } from './personnel-form/personnel-form';
 import { PersonnelResult } from './personnel-result/personnel-result';
-import { PersonnelService } from './services/services';
+import { PersonnelService } from './services/personnel.service';
+import { ToastComponent } from './components/common/toast/toast.component';
+import { ConfirmDialogComponent } from './components/common/confirm-dialog/confirm-dialog.component';
 import { environment } from '../environment/environment';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [PersonnelSearch, PersonnelForm, PersonnelResult],
+  imports: [
+    CommonModule,
+    PersonnelSearch,
+    PersonnelForm,
+    PersonnelResult,
+    ToastComponent,
+    ConfirmDialogComponent
+  ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })

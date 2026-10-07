@@ -1,0 +1,49 @@
+@if (isVisible()) {
+  <div
+    #menuRef
+    class="custom-context-menu"
+    [style.top]="adjustedPosition().top"
+    [style.left]="adjustedPosition().left"
+    role="menu"
+    (click)="$event.stopPropagation()"
+  >
+    <!-- Header Section (Optional title and badge) -->
+    @if (headerTitle || headerBadge) {
+      <div class="menu-header">
+        @if (headerTitle) {
+          <span class="menu-header-title">{{ headerTitle }}</span>
+        }
+        @if (headerBadge) {
+          <span class="menu-header-badge">{{ headerBadge }}</span>
+        }
+      </div>
+      <div class="menu-divider"></div>
+    }
+
+    <!-- Menu Items -->
+    <div class="menu-items-container">
+      @for (item of items; track item.id) {
+        <button
+          type="button"
+          class="menu-item menu-item-{{ item.variant || 'default' }}"
+          [class.is-disabled]="item.disabled"
+          [disabled]="item.disabled"
+          (click)="onItemClick(item, $event)"
+          role="menuitem"
+        >
+          @if (item.icon) {
+            <span class="material-symbols-rounded menu-item-icon">{{ item.icon }}</span>
+          }
+          <span class="menu-item-label">{{ item.label }}</span>
+          @if (item.badge) {
+            <span class="menu-item-badge">{{ item.badge }}</span>
+          }
+        </button>
+
+        @if (item.dividerAfter) {
+          <div class="menu-divider"></div>
+        }
+      }
+    </div>
+  </div>
+}

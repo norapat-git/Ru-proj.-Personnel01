@@ -47,7 +47,8 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 8px 20px;
+  padding: 6px 18px;
+  height: 36px;
   border: none;
   background: transparent;
   color: var(--text-muted, #64748b);
@@ -58,6 +59,52 @@
   transition: color 0.25s ease, background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
   white-space: nowrap;
   position: relative;
+  line-height: 1;
+}
+
+.nat-btn-content {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.nat-badge-th {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 1px 5px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.toggle-btn.active .nat-badge-th {
+  background: rgba(37, 99, 235, 0.16);
+  color: #1d4ed8;
+}
+
+.nat-icon-inter {
+  font-size: 17px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  color: #64748b;
+}
+
+.toggle-btn.active .nat-icon-inter {
+  color: #2563eb;
+}
+
+.nat-text {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.2;
 }
 
 .toggle-btn:hover:not(:disabled) {

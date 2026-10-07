@@ -9,7 +9,10 @@
         [disabled]="isLoading() || isLocked()"
         (click)="setNationality('thai')"
       >
-        <span>🇹🇭 บุคลากรชาวไทย</span>
+        <span class="nat-btn-content">
+          <span class="nat-badge-th">TH</span>
+          <span class="nat-text">บุคลากรชาวไทย</span>
+        </span>
       </button>
       <button 
         type="button" 
@@ -18,7 +21,10 @@
         [disabled]="isLoading() || isLocked()"
         (click)="setNationality('inter')"
       >
-        <span>🌐 บุคลากรต่างชาติ</span>
+        <span class="nat-btn-content">
+          <span class="material-symbols-rounded nat-icon-inter">public</span>
+          <span class="nat-text">บุคลากรต่างชาติ</span>
+        </span>
       </button>
     </div>
 

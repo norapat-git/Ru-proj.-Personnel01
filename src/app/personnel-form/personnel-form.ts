@@ -644,7 +644,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
       }
       this.scrollToTop();
     } else {
-      this.triggerShake();
+      // focusFirstError scrolls to invalid field smoothly
       this.showMessage('error', `กรุณากรอกข้อมูลที่จำเป็น (*) ในขั้นตอนที่ ${current} ให้ครบถ้วนก่อนไปต่อ`);
       this.focusFirstError();
     }
@@ -672,7 +672,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     // หากจะกระโดดไปข้างหน้า ต้องตรวจขั้นตอนก่อนหน้าทั้งหมดก่อน
     for (let s = this.currentStep(); s < step; s++) {
       if (!this.validateStep(s)) {
-        this.triggerShake();
+        // focus error field smoothly
         this.showMessage('error', `กรุณากรอกข้อมูลในขั้นตอนที่ ${s} ให้ครบถ้วนก่อน`);
         this.focusFirstError();
         return;
@@ -697,7 +697,7 @@ export class PersonnelForm implements OnInit, OnDestroy {
     this.cdr.detectChanges();
     setTimeout(() => {
       const invalidEls = document.querySelectorAll(
-        '.field-input-error, .custom-select-container.is-invalid, .field-input-danger'
+        '.field-input-error, .custom-select-container.is-invalid, .custom-datepicker-container.is-invalid, .field-input-danger'
       );
       if (invalidEls.length > 0) {
         const firstEl = invalidEls[0];

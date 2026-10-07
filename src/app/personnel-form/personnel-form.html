@@ -664,50 +664,102 @@
         <span class="legend-icon material-symbols-rounded">health_and_safety</span>
         <span>5. สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส.</span>
       </legend>
-      <div class="welfare-checkbox-list">
-        
-        <!-- การชำระเงินประกันสังคม -->
-        <div class="welfare-checkbox-card" [class.disabled]="isSsoPaymentDisabled()">
-          <label class="welfare-label">
-            <input
-              type="checkbox"
-              [checked]="isSsoPaidChecked()"
-              [disabled]="isSsoPaymentDisabled()"
-              (change)="onSsoPaymentCheckboxChange($any($event.target).checked)"
-            />
-            <span class="welfare-title-text">การชำระเงินประกันสังคม (ชำระประกันสังคม)</span>
+      <!-- สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส. -->
+      <div class="fin-status-section" style="margin-top: 8px; padding-top: 0; border-top: none;">
+        <div class="fin-status-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+          
+          <!-- การชำระเงินประกันสังคม -->
+          <label 
+            class="fin-flag-card" 
+            [class.fin-flag-active]="isSsoPaidChecked()"
+            [class.is-disabled-card]="isSsoPaymentDisabled()"
+          >
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-sso-paid"
+                [checked]="isSsoPaidChecked()"
+                [disabled]="isSsoPaymentDisabled()"
+                (change)="onSsoPaymentCheckboxChange($any($event.target).checked)"
+              />
+              <div class="fin-flag-label-col">
+                <span class="fin-flag-label-text">การชำระเงินประกันสังคม (ชำระประกันสังคม)</span>
+                @if (isSsoPaymentDisabled()) {
+                  <small class="welfare-disabled-hint">
+                    ⚠️ ล็อกการชำระ เนื่องจากอายุเกิน 60 ปี (TypeCode: {{ personnelData.typeCode }})
+                  </small>
+                }
+              </div>
+              @if (isSsoPaymentDisabled()) {
+                <span class="fin-flag-dot-locked" title="ล็อกการชำระ (อายุเกิน 60 ปี)">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">lock</span>
+                </span>
+              } @else if (isSsoPaidChecked()) {
+                <span class="fin-flag-dot-yes" title="ชำระประกันสังคม">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่ชำระประกันสังคม">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
           </label>
-          @if (isSsoPaymentDisabled()) {
-            <span class="welfare-disabled-hint">
-              ⚠️ ล็อกการชำระประกันสังคม เนื่องจากประเภทบุคลากรอายุเกิน 60 ปี (TypeCode: {{ personnelData.typeCode }})
-            </span>
-          }
-        </div>
 
-        <!-- สมาชิก ชพค. -->
-        <div class="welfare-checkbox-card">
-          <label class="welfare-label">
-            <input
-              type="checkbox"
-              [checked]="personnelData.perFundTeacher === 1"
-              (change)="personnelData.perFundTeacher = $any($event.target).checked ? 1 : null"
-            />
-            <span class="welfare-title-text">สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครูและบุคลากรทางการศึกษา)</span>
+          <!-- สมาชิก ชพค. -->
+          <label 
+            class="fin-flag-card" 
+            [class.fin-flag-active]="personnelData.perFundTeacher === 1"
+          >
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-fund-teacher"
+                [checked]="personnelData.perFundTeacher === 1"
+                (change)="personnelData.perFundTeacher = $any($event.target).checked ? 1 : null"
+              />
+              <span class="fin-flag-label-text">สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครูและบุคลากรทางการศึกษา)</span>
+              @if (personnelData.perFundTeacher === 1) {
+                <span class="fin-flag-dot-yes" title="เป็นสมาชิก ชพค.">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่เป็นสมาชิก">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
           </label>
-        </div>
 
-        <!-- สมาชิก ชพส. -->
-        <div class="welfare-checkbox-card">
-          <label class="welfare-label">
-            <input
-              type="checkbox"
-              [checked]="personnelData.perFundAssteacher === 1"
-              (change)="personnelData.perFundAssteacher = $any($event.target).checked ? 1 : null"
-            />
-            <span class="welfare-title-text">สมาชิก ชพส. (ฌาปนกิจสงเคราะห์ผู้ปฏิบัติงานในสถาบัน)</span>
+          <!-- สมาชิก ชพส. -->
+          <label 
+            class="fin-flag-card" 
+            [class.fin-flag-active]="personnelData.perFundAssteacher === 1"
+          >
+            <div class="fin-flag-check-row">
+              <input
+                type="checkbox"
+                class="fin-flag-checkbox"
+                id="chk-fund-assteacher"
+                [checked]="personnelData.perFundAssteacher === 1"
+                (change)="personnelData.perFundAssteacher = $any($event.target).checked ? 1 : null"
+              />
+              <span class="fin-flag-label-text">สมาชิก ชพส. (ฌาปนกิจสงเคราะห์ผู้ปฏิบัติงานในสถาบัน)</span>
+              @if (personnelData.perFundAssteacher === 1) {
+                <span class="fin-flag-dot-yes" title="เป็นสมาชิก ชพส.">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
+                </span>
+              } @else {
+                <span class="fin-flag-dot-no" title="ไม่เป็นสมาชิก">
+                  <span class="material-symbols-rounded" style="font-size: 18px;">cancel</span>
+                </span>
+              }
+            </div>
           </label>
-        </div>
 
+        </div>
       </div>
 
       <!-- Quick Summary Card ก่อนบันทึกจริงใน Step 5 (เฉพาะโหมด Create) -->

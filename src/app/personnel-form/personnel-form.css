@@ -17,30 +17,7 @@ app-custom-select {
   display: block;
 }
 
-/* Gentle Micro-Shake Animation for specific unfilled/invalid inputs */
-.field-gentle-shake,
-.field-input.field-gentle-shake,
-.custom-select-container.field-gentle-shake {
-  animation: gentleFieldShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-}
 
-@keyframes gentleFieldShake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  20% {
-    transform: translateX(-4px);
-  }
-  40% {
-    transform: translateX(4px);
-  }
-  60% {
-    transform: translateX(-3px);
-  }
-  80% {
-    transform: translateX(2px);
-  }
-}
 
 /* --------------------------------------------------------------------------
    Form Header
@@ -327,6 +304,10 @@ app-custom-select:has(.is-open) {
 .legend-icon {
   font-size: 19px;
   color: var(--primary-600, #2563eb);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 /* --------------------------------------------------------------------------
@@ -544,6 +525,39 @@ app-custom-select:has(.is-open) {
   display: inline-flex;
   align-items: center;
   margin-left: auto;
+}
+
+.fin-flag-dot-locked {
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.fin-flag-card.is-disabled-card {
+  opacity: 0.65;
+  cursor: not-allowed;
+  background: var(--surface-pill, #f8fafc);
+  border-color: var(--border-subtle, #e2e8f0);
+}
+
+.fin-flag-card.is-disabled-card:hover {
+  border-color: var(--border-subtle, #e2e8f0);
+  background: var(--surface-pill, #f8fafc);
+}
+
+.fin-flag-label-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.welfare-disabled-hint {
+  font-size: 0.72rem;
+  color: #d97706;
+  font-weight: 500;
+  line-height: 1.25;
 }
 
 @keyframes dotPopIn {

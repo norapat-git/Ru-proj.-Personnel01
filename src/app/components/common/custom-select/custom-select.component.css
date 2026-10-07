@@ -81,6 +81,10 @@
   font-size: 20px;
   color: var(--text-muted, #64748b);
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
 }
 
 .select-label-text {
@@ -89,6 +93,9 @@
   overflow: hidden;
   text-overflow: ellipsis;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1.25;
 }
 
 .select-label-text.is-placeholder {
@@ -110,21 +117,29 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  min-height: 22px;
   color: #94a3b8;
-  padding: 2px;
+  padding: 0;
   border-radius: 50%;
+  border: none;
+  background: transparent;
   cursor: pointer;
   transition: all 0.15s ease;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .select-clear-btn:hover {
-  background: rgba(0, 0, 0, 0.08);
+  background: rgba(239, 68, 68, 0.12);
   color: #ef4444;
 }
 
 .select-clear-btn span {
-  font-size: 16px;
+  font-size: 15px;
+  line-height: 1;
 }
 
 .select-chevron {

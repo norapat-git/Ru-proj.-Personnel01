@@ -86,6 +86,41 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ==========================================================================
+   Prevent background scrolling when any modal, dialog, or popup is open
+   ========================================================================== */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  touch-action: none !important;
+  overscroll-behavior: none !important;
+}
+
+/* Contain overscroll inside all modal overlays and scrollable containers */
+.settings-modal-overlay,
+.summary-modal-overlay,
+.personnel-modal-overlay,
+.confirm-dialog-overlay,
+.tour-backdrop,
+.context-menu-backdrop {
+  overscroll-behavior: contain !important;
+}
+
+.settings-modal-container,
+.summary-modal-container,
+.personnel-modal-container,
+.confirm-dialog-card {
+  overscroll-behavior: contain !important;
+}
+
+.settings-modal-body,
+.summary-modal-body,
+.personnel-modal-body,
+.confirm-dialog-body {
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* --------------------------------------------------------------------------
    Headings, Form Titles, Section Titles, Buttons, Navigation, Stepper, Badges
    (Using Modern Non-loop Font: Prompt / Inter)
@@ -274,6 +309,110 @@ td,
 
 .btn-header-icon span.material-symbols-rounded {
   font-size: 24px;
+}
+
+.btn-help-tour {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.08);
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  color: #2563eb;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.btn-help-tour span.material-symbols-rounded {
+  font-size: 16px;
+  color: #2563eb;
+  transition: transform 0.2s ease;
+}
+
+.btn-help-tour:hover {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(37, 99, 235, 0.45);
+  color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.18);
+}
+
+.btn-help-tour:hover span.material-symbols-rounded {
+  transform: scale(1.12);
+}
+
+.btn-help-tour:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 640px) {
+  .btn-help-tour {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border-radius: 50%;
+    justify-content: center;
+  }
+  .tour-btn-label {
+    display: none;
+  }
+}
+
+.btn-settings-gear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface-card, #ffffff);
+  border: 1px solid var(--border-subtle, #e2e8f0);
+  color: #64748b;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.btn-settings-gear span.material-symbols-rounded {
+  font-size: 18px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-settings-gear:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.btn-settings-gear:hover span.material-symbols-rounded {
+  transform: rotate(45deg);
+}
+
+.btn-settings-gear:active {
+  transform: translateY(0);
+}
+
+/* Accessibility Modes (Controlled by SettingsService via Cookies) */
+html.large-font-mode {
+  font-size: 17.5px;
+}
+
+html.reduce-motion-mode *,
+html.reduce-motion-mode *::before,
+html.reduce-motion-mode *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
 }
 
 /* Page Content Sections */
@@ -2039,6 +2178,8 @@ button:disabled,
   padding: 24px;
   box-sizing: border-box;
   animation: fadeInModal 0.22s ease-out;
+  overscroll-behavior: contain !important;
+  touch-action: none;
 }
 
 @keyframes fadeInModal {
@@ -2064,6 +2205,7 @@ button:disabled,
     0 8px 20px -4px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   animation: slideUpModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  overscroll-behavior: contain !important;
 }
 
 @keyframes slideUpModal {
@@ -2164,6 +2306,8 @@ button:disabled,
   overflow-y: auto;
   flex: 1;
   background-color: var(--bg-page, #f8fafc);
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
 }
 
 .personnel-modal-footer {

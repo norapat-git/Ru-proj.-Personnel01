@@ -1,9 +1,10 @@
-import { Component, inject, signal, computed, effect } from '@angular/core';
+import { Component, inject, signal, computed, effect, OnDestroy } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common'; //ฟอร์แมตตัวเลขและเงินเดือน
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/personnel.service';
 import { ToastService } from '../services/toast.service';
 import { ConfirmDialogService } from '../services/confirm-dialog.service';
+import { ModalScrollLockService } from '../services/modal-scroll-lock.service';
 import { SkeletonComponent } from '../components/common/skeleton/skeleton.component';
 import { ContextMenuItem } from '../models';
 import { CustomContextMenuComponent } from '../components/common/custom-context-menu/custom-context-menu.component';
@@ -14,10 +15,11 @@ import { CustomContextMenuComponent } from '../components/common/custom-context-
   imports: [CommonModule, DecimalPipe, FormsModule, SkeletonComponent, CustomContextMenuComponent],
   templateUrl: './personnel-result.html',
 })
-export class PersonnelResult {
+export class PersonnelResult implements OnDestroy {
   private personnelService = inject(PersonnelService);
   private toastService = inject(ToastService);
   private confirmDialogService = inject(ConfirmDialogService);
+  private scrollLock = inject(ModalScrollLockService);
 
   personnelList = this.personnelService.personnelListSignal;
   isFilteredSearch = this.personnelService.isFilteredSearchSignal;
@@ -38,6 +40,10 @@ export class PersonnelResult {
   contextMenuX = signal<number>(0);
   contextMenuY = signal<number>(0);
   contextMenuPerson = signal<any>(null);
+
+  // Modal แสดงรายละเอียดบุคลากร
+  selectedDetailPerson = signal<any>(null);
+  private isDetailModalLocked = false;
 
   contextMenuItems = computed<ContextMenuItem[]>(() => {
     const isFiltered = this.isFilteredSearch();
@@ -78,6 +84,18 @@ export class PersonnelResult {
       this.nameFilter();
       this.currentPage.set(1);
     }, { allowSignalWrites: true });
+
+    // จัดการล็อก Body Scroll เมื่อเปิด Modal รายละเอียดบุคลากร
+    effect(() => {
+      const detail = this.selectedDetailPerson();
+      if (detail && !this.isDetailModalLocked) {
+        this.scrollLock.lock();
+        this.isDetailModalLocked = true;
+      } else if (!detail && this.isDetailModalLocked) {
+        this.scrollLock.unlock();
+        this.isDetailModalLocked = false;
+      }
+    });
   }
 
   // รายการบุคลากรที่ผ่านการกรองชื่อ-นามสกุลแบบ Real-time
@@ -138,9 +156,6 @@ export class PersonnelResult {
   clearNameFilter(): void {
     this.nameFilter.set('');
   }
-
-  // Modal แสดงรายละเอียดบุคลากร
-  selectedDetailPerson = signal<any>(null);
 
   openDetailModal(person: any): void {
     this.selectedDetailPerson.set(person);
@@ -322,8 +337,13 @@ export class PersonnelResult {
         this.toastService.success(res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว');
         // ลบแถวข้อมูลออกจากหน้าจอแสดงผล
         const currentList = this.personnelService.personnelListSignal();
+        const targetClean = String(targetCitizenId || '').trim().toUpperCase();
         this.personnelService.personnelListSignal.set(
-          currentList.filter(item => (item.PER_CITIZEN_ID || item.PER_PASSPORT_NO) !== targetCitizenId)
+          currentList.filter(item => {
+            const citizen = String(item.PER_CITIZEN_ID || '').trim().toUpperCase();
+            const passport = String(item.PER_PASSPORT_NO || '').trim().toUpperCase();
+            return citizen !== targetClean && passport !== targetClean;
+          })
         );
         this.closeDetailModal();
       }
@@ -334,5 +354,11 @@ export class PersonnelResult {
       this.personnelService.isLoadingSignal.set(false);
     }
   }
-}
 
+  ngOnDestroy(): void {
+    if (this.isDetailModalLocked) {
+      this.scrollLock.unlock();
+      this.isDetailModalLocked = false;
+    }
+  }
+}

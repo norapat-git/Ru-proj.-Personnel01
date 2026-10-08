@@ -4,6 +4,12 @@
 <!-- Global Confirm Dialog Modal -->
 <app-confirm-dialog></app-confirm-dialog>
 
+<!-- Onboarding Tour System -->
+<app-onboard-tour></app-onboard-tour>
+
+<!-- User Settings Preferences Modal -->
+<app-settings-dialog></app-settings-dialog>
+
 <div class="container">
   <!-- Minimal Top Loading Pill Indicator -->
   @if (isLoading()) {
@@ -84,11 +90,34 @@
 
     <!-- Actions Controls -->
     <div class="header-actions">
-      @if (currentMode() === 'result') {
-        <button class="btn-primary btn-header-icon" (click)="openNationalityPicker()" [disabled]="isLoading()" title="เพิ่มข้อมูลบุคลากร" aria-label="เพิ่มข้อมูลบุคลากร">
-          <span class="material-symbols-rounded">person_add</span>
-        </button>
-      } @else {
+      <!-- ปุ่มแนะนำการใช้งาน (Onboarding Tour) -->
+      <button 
+        type="button" 
+        class="btn-help-tour" 
+        id="tour-help-btn"
+        (click)="startTour()" 
+        [disabled]="isLoading()" 
+        title="แนะนำการใช้งานระบบ" 
+        aria-label="แนะนำการใช้งานระบบ"
+      >
+        <span class="material-symbols-rounded">help_outline</span>
+        <span class="tour-btn-label">แนะนำการใช้งาน</span>
+      </button>
+
+      <!-- ปุ่มตั้งค่าระบบ (Settings) -->
+      <button 
+        type="button" 
+        class="btn-settings-gear" 
+        id="header-settings-btn"
+        (click)="openSettings()" 
+        [disabled]="isLoading()" 
+        title="การตั้งค่าระบบ (User Preferences)" 
+        aria-label="การตั้งค่าระบบ"
+      >
+        <span class="material-symbols-rounded">settings</span>
+      </button>
+
+      @if (currentMode() !== 'result') {
         <button class="btn-cancel btn-header-icon" (click)="switchMode('result')" [disabled]="isLoading()" title="กลับหน้าค้นหา" aria-label="กลับหน้าค้นหา">
           <span class="material-symbols-rounded">arrow_back</span>
         </button>
@@ -100,7 +129,7 @@
   <main class="content-area">
     @if (currentMode() === 'result') {
       <section class="search-section">
-        <app-personnel-search></app-personnel-search>
+        <app-personnel-search (onOpenAdd)="openNationalityPicker()"></app-personnel-search>
       </section>
       @if (hasSearched()) {
         <section class="result-section">
@@ -114,4 +143,3 @@
     }
   </main>
 </div>
-

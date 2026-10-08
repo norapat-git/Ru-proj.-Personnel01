@@ -1,38 +1,89 @@
-<div class="toast-viewport" aria-live="polite" aria-atomic="true">
+<div 
+  class="toast-viewport" 
+  [class.pos-top-right]="position() === 'top-right'"
+  [class.pos-top-center]="position() === 'top-center'"
+  [class.pos-bottom-right]="position() === 'bottom-right'"
+  aria-live="polite" 
+  aria-atomic="true"
+>
   @for (toast of toasts(); track toast.id) {
-    <div class="toast-card toast-{{ toast.type }}" role="alert">
-      <!-- Icon indicator -->
-      <div class="toast-icon-wrapper">
-        @if (toast.type === 'success') {
-          <span class="material-symbols-rounded toast-icon">check_circle</span>
-        } @else if (toast.type === 'error') {
-          <span class="material-symbols-rounded toast-icon">error</span>
-        } @else if (toast.type === 'warning') {
-          <span class="material-symbols-rounded toast-icon">warning</span>
-        } @else {
-          <span class="material-symbols-rounded toast-icon">info</span>
-        }
-      </div>
-
-      <!-- Content text -->
-      <div class="toast-content">
-        @if (toast.title) {
-          <h4 class="toast-title">{{ toast.title }}</h4>
-        }
-        <p class="toast-message">{{ toast.message }}</p>
-      </div>
-
-      <!-- Dismiss button -->
-      <button type="button" class="toast-close-btn" (click)="dismiss(toast.id)" aria-label="Close notification">
-        <span class="material-symbols-rounded">close</span>
+    <div 
+      class="toast-card toast-{{ toast.type }}" 
+      [class.is-dismissing]="toast.isDismissing"
+      [class.has-badge]="toast.badge || toast.type === 'news'"
+      role="alert"
+      (click)="dismiss(toast.id)"
+      title="คลิกเพื่อปิดการแจ้งเตือน"
+    >
+      <!-- Close button (Top Right) -->
+      <button 
+        type="button" 
+        class="toast-close-btn" 
+        (click)="dismiss(toast.id)" 
+        aria-label="Close notification"
+      >
+        <svg class="toast-close-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
       </button>
 
-      <!-- Countdown progress bar -->
-      @if (toast.durationMs > 0) {
-        <div class="toast-progress-track">
-          <div class="toast-progress-bar" [style.animationDuration]="toast.durationMs + 'ms'"></div>
+      @if (toast.type === 'news' || toast.badge) {
+        <!-- News / Announcement Card Layout -->
+        <div class="toast-news-body">
+          <div class="toast-badge">{{ toast.badge || 'NEWS' }}</div>
+          @if (toast.title) {
+            <h4 class="toast-title">{{ toast.title }}</h4>
+          }
+          <p class="toast-message">{{ toast.message }}</p>
+          @if (toast.timestamp) {
+            <div class="toast-timestamp">{{ toast.timestamp }}</div>
+          }
+        </div>
+      } @else {
+        <!-- Standard Status Toast Layout (Success, Warning, Error, Info) -->
+        <div class="toast-status-body">
+          <!-- Icon indicator -->
+          <div class="toast-icon-wrapper">
+            @if (toast.type === 'success') {
+              <svg class="toast-svg toast-svg-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="8.5 12.5 11 15 16 9"></polyline>
+              </svg>
+            } @else if (toast.type === 'error') {
+              <svg class="toast-svg toast-svg-error" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+            } @else if (toast.type === 'warning') {
+              <svg class="toast-svg toast-svg-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            } @else {
+              <svg class="toast-svg toast-svg-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            }
+          </div>
+
+          <!-- Content text -->
+          <div class="toast-content">
+            @if (toast.title) {
+              <h4 class="toast-title">{{ toast.title }}</h4>
+            }
+            <p class="toast-message" [class.is-standalone]="!toast.title">{{ toast.message }}</p>
+            @if (toast.timestamp) {
+              <div class="toast-timestamp">{{ toast.timestamp }}</div>
+            }
+          </div>
         </div>
       }
+
     </div>
   }
 </div>

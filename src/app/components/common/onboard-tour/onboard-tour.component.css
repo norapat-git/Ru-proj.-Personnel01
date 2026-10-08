@@ -1,0 +1,299 @@
+/* ==========================================================================
+   Onboarding Tour Component (60 FPS Smooth Spotlight & Card)
+   ========================================================================== */
+
+.tour-backdrop-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 999980;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: tourOverlayFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  overflow: hidden;
+}
+
+@keyframes tourOverlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Fullscreen SVG for dynamic spotlight cutout */
+.tour-spotlight-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.tour-spotlight-svg rect {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Target Spotlight Ring with Glow */
+.tour-target-ring {
+  position: absolute;
+  pointer-events: none;
+  box-shadow: 
+    0 0 0 4px rgba(37, 99, 235, 0.4),
+    0 0 32px 4px rgba(37, 99, 235, 0.35);
+  border: 2px solid #3b82f6;
+  transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: tourRingPulse 2s infinite ease-in-out;
+  z-index: 999981;
+}
+
+@keyframes tourRingPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4), 0 0 24px 2px rgba(37, 99, 235, 0.25);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2), 0 0 36px 6px rgba(37, 99, 235, 0.45);
+  }
+}
+
+/* ==========================================================================
+   Tour Popover Card
+   ========================================================================== */
+.tour-popover-card {
+  position: absolute;
+  z-index: 999990;
+  width: 380px;
+  max-width: calc(100vw - 32px);
+  background: #ffffff;
+  border-radius: 20px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 
+    0 24px 48px -8px rgba(15, 23, 42, 0.22),
+    0 8px 16px -4px rgba(15, 23, 42, 0.08);
+  padding: 20px 22px 18px;
+  box-sizing: border-box;
+  
+  /* 60 FPS GPU Acceleration */
+  will-change: top, left, transform, opacity;
+  transform: translate3d(0, 0, 0);
+  transition: 
+    top 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    left 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: tourCardPopIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes tourCardPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+/* Card Header */
+.tour-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.tour-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px 4px 8px;
+  border-radius: 9999px;
+  background: rgba(37, 99, 235, 0.08);
+  color: #2563eb;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.tour-badge-icon {
+  font-size: 16px;
+}
+
+.tour-close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.18s ease;
+}
+
+.tour-close-btn span {
+  font-size: 18px;
+}
+
+.tour-close-btn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Card Body */
+.tour-card-body {
+  margin-bottom: 18px;
+}
+
+.tour-title {
+  margin: 0 0 6px 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.tour-description {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: #475569;
+  word-break: break-word;
+}
+
+/* Card Footer */
+.tour-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* Progress Dots */
+.tour-progress-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
+  background: #cbd5e1;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tour-dot.active {
+  width: 22px;
+  background: #2563eb;
+}
+
+.tour-dot:hover:not(.active) {
+  background: #94a3b8;
+}
+
+/* Action Buttons */
+.tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-tour-ghost {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-tour-ghost:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.btn-tour-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.btn-tour-secondary span.material-symbols-rounded {
+  font-size: 15px;
+}
+
+.btn-tour-secondary:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.btn-tour-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border: none;
+  color: #ffffff;
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 7px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+  transition: all 0.18s ease;
+}
+
+.btn-tour-primary span.material-symbols-rounded {
+  font-size: 16px;
+}
+
+.btn-tour-primary:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.36);
+}
+
+.btn-tour-primary:active {
+  transform: translateY(0);
+}
+
+/* ==========================================================================
+   Mobile Responsiveness
+   ========================================================================== */
+@media (max-width: 640px) {
+  .tour-popover-card {
+    padding: 16px 18px;
+    border-radius: 18px;
+  }
+
+  .tour-title {
+    font-size: 0.98rem;
+  }
+
+  .tour-description {
+    font-size: 0.82rem;
+  }
+}

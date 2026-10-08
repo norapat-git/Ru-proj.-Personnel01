@@ -1,4 +1,4 @@
-import { Component, inject, effect, OnInit, computed } from '@angular/core';
+import { Component, inject, effect, OnInit, computed, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -23,9 +23,15 @@ export class PersonnelSearch implements OnInit {
   nationality = this.personnelService.staffNationalitySignal;
   isLoading = this.personnelService.isLoadingSignal;
   hasSearched = this.personnelService.hasSearchedSignal;
+  onOpenAdd = output<void>();
 
   filterType: string = 'idCard';
   singleKeyword: string = '';
+
+  openAdd(): void {
+    if (this.isLoading()) return;
+    this.onOpenAdd.emit();
+  }
 
   // ล็อค toggle เมื่อกำลังแสดงผลการค้นหา หรือ ดึงข้อมูลทั้งหมด
   isLocked = computed<boolean>(() => {

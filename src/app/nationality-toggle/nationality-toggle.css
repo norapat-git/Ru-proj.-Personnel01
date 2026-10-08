@@ -1,5 +1,10 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
 /* ===================================================
-   NATIONALITY TOGGLE — Apple Pill Segmented Control
+   NATIONALITY TOGGLE — 60 FPS Apple Sliding Pill Control
    =================================================== */
 .nationality-toggle-wrapper {
   display: inline-flex;
@@ -27,11 +32,12 @@
   box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
 }
 
-/* Track holding the two buttons */
+/* Track holding the buttons and sliding indicator */
 .toggle-buttons-track {
-  display: inline-flex;
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   align-items: center;
-  gap: 4px;
   transition: filter 0.25s ease, opacity 0.25s ease;
 }
 
@@ -42,7 +48,38 @@
   pointer-events: none;
 }
 
+/* Smooth 60 FPS Hardware-Accelerated Sliding Indicator */
+.pill-slider-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background-color: var(--surface-card, #ffffff);
+  border-radius: 9999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
+  z-index: 1;
+  pointer-events: none;
+  
+  /* 60 FPS Hardware Acceleration */
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+.pill-slider-indicator.pos-thai {
+  transform: translate3d(0, 0, 0);
+}
+
+.pill-slider-indicator.pos-inter {
+  transform: translate3d(100%, 0, 0);
+}
+
+/* Individual Buttons */
 .toggle-btn {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -50,16 +87,17 @@
   padding: 6px 18px;
   height: 36px;
   border: none;
-  background: transparent;
+  background: transparent !important;
   color: var(--text-muted, #64748b);
   font-size: 0.88rem;
   font-weight: 500;
   border-radius: 9999px;
   cursor: pointer;
-  transition: color 0.25s ease, background-color 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease;
+  transition: color 0.22s ease;
   white-space: nowrap;
-  position: relative;
   line-height: 1;
+  box-shadow: none !important;
+  animation: none !important;
 }
 
 .nat-btn-content {
@@ -73,18 +111,19 @@
 .nat-badge-th {
   font-size: 0.7rem;
   font-weight: 700;
-  color: #2563eb;
-  background: rgba(37, 99, 235, 0.1);
+  color: #64748b;
+  background: rgba(100, 116, 139, 0.1);
   padding: 1px 5px;
   border-radius: 4px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   line-height: 1;
+  transition: all 0.22s ease;
 }
 
 .toggle-btn.active .nat-badge-th {
-  background: rgba(37, 99, 235, 0.16);
+  background: rgba(37, 99, 235, 0.15);
   color: #1d4ed8;
 }
 
@@ -95,6 +134,7 @@
   justify-content: center;
   line-height: 1;
   color: #64748b;
+  transition: color 0.22s ease;
 }
 
 .toggle-btn.active .nat-icon-inter {
@@ -105,6 +145,7 @@
   display: inline-flex;
   align-items: center;
   line-height: 1.2;
+  transition: color 0.22s ease;
 }
 
 .toggle-btn:hover:not(:disabled) {
@@ -112,25 +153,8 @@
 }
 
 .toggle-btn.active {
-  background-color: var(--surface-card, #ffffff);
   color: var(--primary-600, #2563eb);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
-  animation: tabSwitchPop 0.24s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes tabSwitchPop {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.85;
-  }
-  50% {
-    transform: scale(1.02);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
 }
 
 .toggle-btn:disabled {
@@ -226,4 +250,3 @@
 .pill-lock-overlay.is-visible .pill-center-lock-btn:active:not(:disabled) {
   transform: scale(0.95);
 }
-

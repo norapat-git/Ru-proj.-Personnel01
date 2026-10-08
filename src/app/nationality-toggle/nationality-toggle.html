@@ -2,6 +2,14 @@
   <div class="nationality-toggle-container" [class.is-locked]="isLocked()">
     <!-- Buttons Track (Blurred when locked) -->
     <div class="toggle-buttons-track" [class.is-blurred]="isLocked()">
+      <!-- Smooth 60 FPS Hardware-Accelerated Sliding Pill Indicator -->
+      <div 
+        class="pill-slider-indicator" 
+        [class.pos-thai]="nationality() === 'thai'"
+        [class.pos-inter]="nationality() === 'inter'"
+        aria-hidden="true"
+      ></div>
+
       <button 
         type="button" 
         class="toggle-btn" 
@@ -14,6 +22,7 @@
           <span class="nat-text">บุคลากรชาวไทย</span>
         </span>
       </button>
+
       <button 
         type="button" 
         class="toggle-btn" 

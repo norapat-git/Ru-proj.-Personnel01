@@ -1,0 +1,124 @@
+@if (isActive() && currentStep()) {
+  <div class="tour-backdrop-overlay" (click)="next()" title="คลิกที่ใดก็ได้บนหน้าจอเพื่อไปยังขั้นตอนถัดไป">
+    <!-- Dynamic SVG Spotlight Mask for Hardware Accelerated 60 FPS Cutout -->
+    <svg class="tour-spotlight-svg" aria-hidden="true">
+      <defs>
+        <mask id="tour-spotlight-mask">
+          <!-- White fills the whole screen (opaque overlay) -->
+          <rect x="0" y="0" width="100%" height="100%" fill="#ffffff" />
+          <!-- Black cuts out the spotlight hole -->
+          @if (targetRect(); as rect) {
+            <rect
+              [attr.x]="rect.left"
+              [attr.y]="rect.top"
+              [attr.width]="rect.width"
+              [attr.height]="rect.height"
+              [attr.rx]="rect.radius"
+              [attr.ry]="rect.radius"
+              fill="#000000"
+            />
+          }
+        </mask>
+      </defs>
+
+      <!-- Masked overlay layer -->
+      <rect
+        x="0"
+        y="0"
+        width="100%"
+        height="100%"
+        fill="rgba(15, 23, 42, 0.72)"
+        mask="url(#tour-spotlight-mask)"
+      />
+    </svg>
+
+    <!-- Glowing Accent Ring on the Highlighted Target Element -->
+    @if (targetRect(); as rect) {
+      <div
+        class="tour-target-ring"
+        [style.top.px]="rect.top"
+        [style.left.px]="rect.left"
+        [style.width.px]="rect.width"
+        [style.height.px]="rect.height"
+        [style.border-radius.px]="rect.radius"
+      ></div>
+    }
+
+    <!-- Tour Popover Card -->
+    <div
+      #popoverCard
+      class="tour-popover-card"
+      [class.arrow-top]="popoverPos().arrowPosition === 'top'"
+      [class.arrow-bottom]="popoverPos().arrowPosition === 'bottom'"
+      [style.top.px]="popoverPos().top"
+      [style.left.px]="popoverPos().left"
+      (click)="$event.stopPropagation()"
+      role="dialog"
+      aria-modal="true"
+    >
+      <!-- Header Row -->
+      <div class="tour-card-header">
+        <div class="tour-step-badge">
+          @if (currentStep()?.icon) {
+            <span class="material-symbols-rounded tour-badge-icon">{{ currentStep()?.icon }}</span>
+          }
+          <span>{{ currentStep()?.badge || 'คำแนะนำ' }} &bull; {{ currentStepIndex() + 1 }}/{{ totalSteps() }}</span>
+        </div>
+
+        <button
+          type="button"
+          class="tour-close-btn"
+          (click)="skip()"
+          title="ปิดคำแนะนำ (Esc)"
+          aria-label="ปิดคำแนะนำ"
+        >
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <!-- Body Content -->
+      <div class="tour-card-body">
+        <h3 class="tour-title">{{ currentStep()?.title }}</h3>
+        <p class="tour-description">{{ currentStep()?.description }}</p>
+      </div>
+
+      <!-- Footer with Progress Dots and Actions -->
+      <div class="tour-card-footer">
+        <div class="tour-progress-dots">
+          @for (step of steps; track step.id; let idx = $index) {
+            <button
+              type="button"
+              class="tour-dot"
+              [class.active]="idx === currentStepIndex()"
+              (click)="goTo(idx)"
+              [attr.aria-label]="'ไปขั้นตอนที่ ' + (idx + 1)"
+            ></button>
+          }
+        </div>
+
+        <div class="tour-actions">
+          @if (!isFirstStep()) {
+            <button type="button" class="btn-tour-secondary" (click)="prev()">
+              <span class="material-symbols-rounded">arrow_back</span>
+              <span>ย้อนกลับ</span>
+            </button>
+          } @else {
+            <button type="button" class="btn-tour-ghost" (click)="skip()">
+              <span>ข้าม</span>
+            </button>
+          }
+
+          <button type="button" class="btn-tour-primary" (click)="next()">
+            @if (isLastStep()) {
+              <span class="material-symbols-rounded">check</span>
+              <span>เริ่มต้นใช้งาน</span>
+            } @else {
+              <span>ถัดไป</span>
+              <span class="material-symbols-rounded">arrow_forward</span>
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

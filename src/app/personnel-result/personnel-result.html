@@ -96,9 +96,9 @@
                 </td>
                 <td class="bold-name">
                   @if (nationality() === 'thai') {
-                    {{ person['FULL_NAME_TH'] || ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH) }}
+                    {{ person['FULL_NAME_TH'] || (person.PER_NAME_TH ? ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH).trim() : '') || person.PER_NAME_EN || '-' }}
                   } @else {
-                    {{ person.PER_NAME_EN }}
+                    {{ person.PER_NAME_EN || person['FULL_NAME_TH'] || (person.PER_NAME_TH ? ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH).trim() : '') || '-' }}
                   }
                 </td>
                 <td>
@@ -203,7 +203,11 @@
             <div class="modal-header-titles">
               <span class="modal-header-badge">รายละเอียดประวัติบุคลากร</span>
               <h3 class="modal-header-name">
-                {{ nationality() === 'thai' ? (person['FULL_NAME_TH'] || ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH)) : person.PER_NAME_EN }}
+                @if (person.PER_PASSPORT_NO && !person.PER_CITIZEN_ID) {
+                  {{ person.PER_NAME_EN || person.PER_NAME_TH || '-' }}
+                } @else {
+                  {{ person['FULL_NAME_TH'] || (person.PER_NAME_TH ? ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH).trim() : '') || person.PER_NAME_EN || '-' }}
+                }
               </h3>
             </div>
           </div>
@@ -223,19 +227,22 @@
                 <span class="box-title">ข้อมูลประจำตัวบุคคล</span>
               </div>
               <div class="box-body">
-                @if (nationality() === 'thai') {
-                  <div class="info-row"><span class="info-label">เลขประจำตัวประชาชน:</span> <span class="info-val bold text-primary-val">{{ person.PER_CITIZEN_ID }}</span></div>
-                  <div class="info-row"><span class="info-label">คำนำหน้านาม:</span> <span class="info-val">{{ person.PRE_NAME || person.PRE_CODE || '-' }}</span></div>
-                  <div class="info-row"><span class="info-label">ชื่อ - นามสกุล:</span> <span class="info-val bold">{{ person.PER_NAME_TH }}</span></div>
-                  <div class="info-row"><span class="info-label">เลขผู้เสียภาษีอากร:</span> <span class="info-val">{{ person.PER_TAX_ID || '-' }}</span></div>
-                  <div class="info-row"><span class="info-label">หมายเลขประกันสังคม:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
-                } @else {
+                @if (!person.PER_CITIZEN_ID && person.PER_PASSPORT_NO) {
                   <div class="info-row"><span class="info-label">Passport ID:</span> <span class="info-val bold text-primary-val">{{ person.PER_PASSPORT_NO || '-' }}</span></div>
-                  <div class="info-row"><span class="info-label">English Name:</span> <span class="info-val bold">{{ person.PER_NAME_EN }}</span></div>
-                  <div class="info-row"><span class="info-label">Social Security:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">English Name:</span> <span class="info-val bold">{{ person.PER_NAME_EN || '-' }}</span></div>
                   <div class="info-row"><span class="info-label">Passport Start:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_START_D) }}</span></div>
                   <div class="info-row"><span class="info-label">Passport Expire:</span> <span class="info-val">{{ formatDate(person.PER_PASSPORT_EXPIRE_D) }}</span></div>
                   <div class="info-row"><span class="info-label">Tax ID:</span> <span class="info-val">{{ person.PER_TAX_ID || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">Social Security:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
+                } @else {
+                  <div class="info-row"><span class="info-label">เลขประจำตัวประชาชน:</span> <span class="info-val bold text-primary-val">{{ person.PER_CITIZEN_ID || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">คำนำหน้านาม:</span> <span class="info-val">{{ person.PRE_NAME || person.PRE_CODE || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">ชื่อ - นามสกุล:</span> <span class="info-val bold">{{ person.PER_NAME_TH || person.PER_NAME_EN || '-' }}</span></div>
+                  @if (person.PER_PASSPORT_NO) {
+                    <div class="info-row"><span class="info-label">Passport ID:</span> <span class="info-val bold">{{ person.PER_PASSPORT_NO }}</span></div>
+                  }
+                  <div class="info-row"><span class="info-label">เลขผู้เสียภาษีอากร:</span> <span class="info-val">{{ person.PER_TAX_ID || '-' }}</span></div>
+                  <div class="info-row"><span class="info-label">หมายเลขประกันสังคม:</span> <span class="info-val">{{ person.PER_SSO_ID || '-' }}</span></div>
                 }
               </div>
             </div>

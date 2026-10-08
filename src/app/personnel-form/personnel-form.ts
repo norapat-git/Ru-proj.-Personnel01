@@ -1,8 +1,10 @@
-import { Component, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { Component, Output, EventEmitter, inject, OnInit, OnDestroy, ChangeDetectorRef, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PersonnelService } from '../services/personnel.service';
 import { ToastService } from '../services/toast.service';
+import { SettingsService } from '../services/settings.service';
+import { ModalScrollLockService } from '../services/modal-scroll-lock.service';
 import {
   CustomSelectOption,
   FacultyOption,
@@ -29,6 +31,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   private personnelService = inject(PersonnelService);
   private toastService = inject(ToastService);
+  private settingsService = inject(SettingsService);
+  private scrollLock = inject(ModalScrollLockService);
   private cdr = inject(ChangeDetectorRef);
 
   // ดึง nationality value from service
@@ -39,10 +43,18 @@ export class PersonnelForm implements OnInit, OnDestroy {
   // form control logic
   isEditMode: boolean = false;
 
+  // Form Layout Mode from User Settings: 'stepper' (ทีละหัวข้อ - default) vs 'single-page' (หน้าเดียวทั้งหมด)
+  readonly formLayoutMode = computed(() => this.settingsService.settings().formLayoutMode || 'stepper');
+  readonly isSinglePageMode = computed(() => this.isEditMode || this.formLayoutMode() === 'single-page');
+
   // Stepper state for Create Mode (1-5)
   currentStep = signal<number>(1);
   maxReachedStep = signal<number>(1);
   isShaking = signal<boolean>(false);
+
+  // Summary Review Popup Modal state before final save
+  showSummaryModal = signal<boolean>(false);
+  private isSummaryModalLocked = false;
 
   readonly steps = [
     { step: 1, title: 'ข้อมูลส่วนบุคคล', icon: 'badge', desc: 'เลขบัตร & ชื่อ-สกุล' },
@@ -175,6 +187,20 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // ตรวจสอบข้อผิดพลาด input form
   invalidFields: { [key: string]: boolean } = {};
+
+  constructor() {
+    // จัดการล็อก Body Scroll เมื่อเปิด Summary Modal
+    effect(() => {
+      const open = this.showSummaryModal();
+      if (open && !this.isSummaryModalLocked) {
+        this.scrollLock.lock();
+        this.isSummaryModalLocked = true;
+      } else if (!open && this.isSummaryModalLocked) {
+        this.scrollLock.unlock();
+        this.isSummaryModalLocked = false;
+      }
+    });
+  }
 
   // ตรวจสอบสถานะและหยอดข้อมูลเดิมเข้าช่องอินพุตอัตโนมัติเมื่อหน้าจอแบบฟอร์มเปิดตัวทำงาน
   async ngOnInit(): Promise<void> {
@@ -394,6 +420,30 @@ export class PersonnelForm implements OnInit, OnDestroy {
     if (!code) return '';
     const found = this.fundTypeOptions().find(f => f.fundCode === code);
     return found ? found.fundName : '';
+  }
+
+  // helper: ค้นหาชื่อแหล่งเงินทุนตามรหัส
+  getSourceMoneyName(smCode: number | null | undefined): string {
+    if (smCode === null || smCode === undefined) return '-';
+    const found = this.sourceMoneyOptions().find(sm => sm.smCode === smCode);
+    return found ? `${found.smName} (รหัส: ${smCode})` : `รหัส: ${smCode}`;
+  }
+
+  // helper: ค้นหาชื่อประเภทโครงการตามรหัส
+  getProjectTypeName(proCode: number | null | undefined): string {
+    if (proCode === null || proCode === undefined) return '-';
+    const found = this.projectTypeOptions().find(p => p.proCode === proCode);
+    return found ? `${found.proName} (รหัส: ${proCode})` : `รหัส: ${proCode}`;
+  }
+
+  // helper: คำนวณรวมเงินได้หลัก (เงินเดือน + เงินประจำตำแหน่ง + เงินประจำตำแหน่งผู้บริหาร)
+  getTotalIncomeEstimate(): number {
+    const sal = Number(this.personnelData.perSalary) || 0;
+    const pos = Number(this.personnelData.perPositionMoney) || 0;
+    const posPay = Number(this.personnelData.perPositionPay) || 0;
+    const posEx = Number(this.personnelData.perPositionMoneyEx) || 0;
+    const posPayEx = Number(this.personnelData.perPositionPayEx) || 0;
+    return sal + pos + posPay + posEx + posPayEx;
   }
 
   // บังคับกรอกเฉพาะตัวเลข
@@ -644,7 +694,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
       }
       this.scrollToTop();
     } else {
-      // focusFirstError scrolls to invalid field smoothly
       this.showMessage('error', `กรุณากรอกข้อมูลที่จำเป็น (*) ในขั้นตอนที่ ${current} ให้ครบถ้วนก่อนไปต่อ`);
       this.focusFirstError();
     }
@@ -672,7 +721,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
     // หากจะกระโดดไปข้างหน้า ต้องตรวจขั้นตอนก่อนหน้าทั้งหมดก่อน
     for (let s = this.currentStep(); s < step; s++) {
       if (!this.validateStep(s)) {
-        // focus error field smoothly
         this.showMessage('error', `กรุณากรอกข้อมูลในขั้นตอนที่ ${s} ให้ครบถ้วนก่อน`);
         this.focusFirstError();
         return;
@@ -737,13 +785,14 @@ export class PersonnelForm implements OnInit, OnDestroy {
     let isValid = true;
     const isThai = this.nationality() === 'thai';
 
+    // ขั้นตอนที่ 1: ข้อมูลส่วนบุคคล
     if (isThai) {
       if (!this.personnelData.perCitizenId || this.personnelData.perCitizenId.trim().length !== 13) {
         this.invalidFields['perCitizenId'] = true;
         isValid = false;
       }
-      if (!this.personnelData.preCode) {
-        this.invalidFields['preCode'] = true;
+      if (!this.personnelData.preName || !this.personnelData.preName.trim()) {
+        this.invalidFields['preName'] = true;
         isValid = false;
       }
       if (!this.personnelData.perNameTh || !this.personnelData.perNameTh.trim()) {
@@ -765,14 +814,17 @@ export class PersonnelForm implements OnInit, OnDestroy {
       }
     }
 
-    if (!this.personnelData.typeCode) {
-      this.invalidFields['typeCode'] = true;
-      isValid = false;
-    }
-    if (!this.personnelData.typeName || !this.personnelData.typeName.trim()) {
+    // ขั้นตอนที่ 2: โครงสร้างตำแหน่ง
+    if (!this.personnelData.typeCode || !this.personnelData.typeName || !this.personnelData.typeName.trim()) {
       this.invalidFields['typeName'] = true;
       isValid = false;
     }
+    if (!this.personnelData.facName || !this.personnelData.facName.trim()) {
+      this.invalidFields['facName'] = true;
+      isValid = false;
+    }
+
+    // ขั้นตอนที่ 3: การเงินและรายได้
     if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || (this.personnelData.perSalary as any) === '' || Number(this.personnelData.perSalary) < 0) {
       this.invalidFields['perSalary'] = true;
       isValid = false;
@@ -782,7 +834,30 @@ export class PersonnelForm implements OnInit, OnDestroy {
       isValid = false;
     }
 
+    // ขั้นตอนที่ 4: กองทุน PVD (กรณีระบุว่าออกจากกองทุน ต้องมีวันที่ออก)
+    if (!this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
+      this.invalidFields['perPvdfQuitD'] = true;
+      isValid = false;
+    }
+
     return isValid;
+  }
+
+  /** ค้นหาขั้นตอนแรกที่มีข้อผิดพลาด เพื่อสลับหน้าจอไปหาจุดที่ผิดโดยอัตโนมัติ */
+  getFirstFailedStep(): number {
+    if (this.invalidFields['perCitizenId'] || this.invalidFields['perPassportNo'] || this.invalidFields['preName'] || this.invalidFields['perNameTh'] || this.invalidFields['perNameEn']) {
+      return 1;
+    }
+    if (this.invalidFields['typeName'] || this.invalidFields['facName']) {
+      return 2;
+    }
+    if (this.invalidFields['perSalary'] || this.invalidFields['perHoldSalary']) {
+      return 3;
+    }
+    if (this.invalidFields['perPvdfQuitD']) {
+      return 4;
+    }
+    return 1;
   }
 
   // แสดงข้อความแจ้งเตือน Toast และ Banner
@@ -801,6 +876,40 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
   }
 
+  /**
+   * เปิดหน้าต่าง Popup สรุปภาพรวมข้อมูลก่อนบันทึกจริง
+   */
+  openSummaryModal(): void {
+    if (this.isLoading()) return;
+
+    if (!this.validateForm()) {
+      if (!this.isSinglePageMode()) {
+        const failedStep = this.getFirstFailedStep();
+        this.currentStep.set(failedStep);
+      }
+      this.showMessage('error', 'กรุณากรอกข้อมูลในช่องบังคับ (*) ให้ครบถ้วนก่อนตรวจสอบและบันทึก');
+      this.focusFirstError();
+      return;
+    }
+
+    this.showSummaryModal.set(true);
+  }
+
+  /**
+   * ปิดหน้าต่าง Popup สรุปข้อมูล
+   */
+  closeSummaryModal(): void {
+    this.showSummaryModal.set(false);
+  }
+
+  /**
+   * กดยืนยันจากหน้าต่าง Summary Modal เพื่อดำเนินการบันทึกข้อมูลเข้าฐานข้อมูล
+   */
+  async confirmAndSave(): Promise<void> {
+    this.showSummaryModal.set(false);
+    await this.saveData();
+  }
+
   // บันทึกข้อมูล
   async saveData() {
     if (this.isLoading()) {
@@ -814,15 +923,12 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
 
     if (!this.validateForm()) {
+      if (!this.isSinglePageMode()) {
+        const failedStep = this.getFirstFailedStep();
+        this.currentStep.set(failedStep);
+      }
       this.showMessage('error', 'กรุณากรอกข้อมูลในช่องบังคับ (*) ให้ครบถ้วน');
-      this.cdr.detectChanges();
-      setTimeout(() => {
-        const firstErrorEl = document.querySelector('.field-input-error');
-        if (firstErrorEl) {
-          firstErrorEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          (firstErrorEl as HTMLElement).focus();
-        }
-      }, 100);
+      this.focusFirstError();
       return;
     }
 
@@ -928,6 +1034,10 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
   // ปิดโปรแกรมล้างค่าในจำสัญญาณ
   ngOnDestroy(): void {
+    if (this.isSummaryModalLocked) {
+      this.scrollLock.unlock();
+      this.isSummaryModalLocked = false;
+    }
     this.personnelService.editingPersonnel.set(null);
   }
 }

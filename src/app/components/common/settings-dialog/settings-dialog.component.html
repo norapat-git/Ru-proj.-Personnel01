@@ -1,0 +1,350 @@
+@if (isOpen()) {
+  <div class="settings-modal-overlay" (click)="close()">
+    <div class="settings-modal-container" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      <!-- Modal Header -->
+      <div class="settings-modal-header">
+        <div class="settings-header-title-box">
+          <div class="settings-header-icon">
+            <span class="material-symbols-rounded">settings</span>
+          </div>
+          <div>
+            <h3 class="settings-title">การตั้งค่าระบบ</h3>
+            <p class="settings-subtitle">ปรับแต่งรูปแบบการแสดงผลและการแจ้งเตือนตามความถนัดของคุณ (บันทึกลง Cookie อัตโนมัติ)</p>
+          </div>
+        </div>
+        <button type="button" class="settings-close-btn" (click)="close()" title="ปิดหน้าต่าง (Esc)" aria-label="ปิดหน้าต่าง">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="settings-nav-tabs">
+        <button 
+          type="button" 
+          class="settings-tab-btn" 
+          [class.active]="activeTab === 'general'"
+          (click)="setTab('general')"
+        >
+          <span class="material-symbols-rounded">tune</span>
+          <span>ทั่วไป & การทำงาน</span>
+        </button>
+        <button 
+          type="button" 
+          class="settings-tab-btn" 
+          [class.active]="activeTab === 'notifications'"
+          (click)="setTab('notifications')"
+        >
+          <span class="material-symbols-rounded">notifications</span>
+          <span>การแจ้งเตือน (Toast)</span>
+        </button>
+        <button 
+          type="button" 
+          class="settings-tab-btn" 
+          [class.active]="activeTab === 'accessibility'"
+          (click)="setTab('accessibility')"
+        >
+          <span class="material-symbols-rounded">accessibility_new</span>
+          <span>การแสดงผล & อักษร</span>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="settings-modal-body">
+        <!-- Tab 1: General & Workflow -->
+        @if (activeTab === 'general') {
+          <div class="settings-section-card">
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">สัญชาติเริ่มต้นเมื่อเข้าสู่ระบบ</label>
+                <span class="settings-row-desc">เลือกประเภทบุคลากรที่จะถูกตั้งเป็นค่าเริ่มต้นทุกครั้งที่เปิดใช้งาน</span>
+              </div>
+              <div class="settings-segmented seg-2">
+                <div 
+                  class="seg-slider-indicator" 
+                  [class.pos-0]="settings().defaultNationality === 'thai'"
+                  [class.pos-1]="settings().defaultNationality === 'inter'"
+                  aria-hidden="true"
+                ></div>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().defaultNationality === 'thai'"
+                  (click)="update('defaultNationality', 'thai')"
+                >
+                  <span>🇹🇭 ชาวไทย</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().defaultNationality === 'inter'"
+                  (click)="update('defaultNationality', 'inter')"
+                >
+                  <span>🌐 ต่างชาติ</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">รูปแบบฟอร์มเพิ่มข้อมูลบุคลากร</label>
+                <span class="settings-row-desc">เลือกรูปแบบการกรอกข้อมูลเมื่อลงทะเบียนบุคลากรใหม่ (ทีละขั้นตอน หรือ รวมหน้าเดียวเหมือนโหมดแก้ไข)</span>
+              </div>
+              <div class="settings-segmented seg-2">
+                <div 
+                  class="seg-slider-indicator" 
+                  [class.pos-0]="settings().formLayoutMode === 'stepper'"
+                  [class.pos-1]="settings().formLayoutMode === 'single-page'"
+                  aria-hidden="true"
+                ></div>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().formLayoutMode === 'stepper'"
+                  (click)="update('formLayoutMode', 'stepper')"
+                >
+                  <span class="material-symbols-rounded seg-icon">linear_scale</span>
+                  <span>ทีละหัวข้อ (เริ่มต้น)</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().formLayoutMode === 'single-page'"
+                  (click)="update('formLayoutMode', 'single-page')"
+                >
+                  <span class="material-symbols-rounded seg-icon">splitscreen</span>
+                  <span>หน้าเดียวทั้งหมด</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ถามยืนยันก่อนลบข้อมูล</label>
+                <span class="settings-row-desc">แสดงหน้าต่างยืนยันทุกครั้งก่อนลบข้อมูลบุคลากรเพื่อป้องกันการลบผิดพลาด</span>
+              </div>
+              <label class="custom-switch">
+                <input 
+                  type="checkbox" 
+                  [checked]="settings().confirmBeforeDelete"
+                  (change)="update('confirmBeforeDelete', !settings().confirmBeforeDelete)"
+                />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">คู่มือแนะนำการใช้งาน (Onboarding Tour)</label>
+                <span class="settings-row-desc">เริ่มดูทัวร์แนะนำหน้าจอและการใช้งานระบบตั้งแต่ขั้นตอนแรกใหม่อีกครั้ง</span>
+              </div>
+              <button type="button" class="btn-action-outline" (click)="replayTour()">
+                <span class="material-symbols-rounded">replay</span>
+                <span>เริ่มดูทัวร์ใหม่</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Tab 2: Notifications & Toast -->
+        @if (activeTab === 'notifications') {
+          <div class="settings-section-card">
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">แสดง Toast แจ้งเตือนเมื่อสำเร็จ</label>
+                <span class="settings-row-desc">เปิดหรือปิดการแจ้งเตือนความสำเร็จ (ข้อความ Error/Warning จะยังคงแสดงเสมอ)</span>
+              </div>
+              <label class="custom-switch">
+                <input 
+                  type="checkbox" 
+                  [checked]="settings().enableSuccessToast"
+                  (change)="update('enableSuccessToast', !settings().enableSuccessToast)"
+                />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ตำแหน่งการแสดง Toast</label>
+                <span class="settings-row-desc">เลือกมุมหน้าจอที่ต้องการให้การ์ดแจ้งเตือนแสดงผล</span>
+              </div>
+              <div class="settings-segmented seg-3">
+                <div 
+                  class="seg-slider-indicator" 
+                  [class.pos-0]="settings().toastPosition === 'bottom-right'"
+                  [class.pos-1]="settings().toastPosition === 'top-center'"
+                  [class.pos-2]="settings().toastPosition === 'top-right'"
+                  aria-hidden="true"
+                ></div>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastPosition === 'bottom-right'"
+                  (click)="update('toastPosition', 'bottom-right')"
+                >
+                  <span class="material-symbols-rounded seg-icon">call_to_action</span>
+                  <span>ขวาล่าง</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastPosition === 'top-center'"
+                  (click)="update('toastPosition', 'top-center')"
+                >
+                  <span class="material-symbols-rounded seg-icon">align_horizontal_center</span>
+                  <span>กลางบน</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastPosition === 'top-right'"
+                  (click)="update('toastPosition', 'top-right')"
+                >
+                  <span class="material-symbols-rounded seg-icon">vertical_align_top</span>
+                  <span>ขวาบน</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ระยะเวลาแสดงผล (Toast Duration)</label>
+                <span class="settings-row-desc">กำหนดระยะเวลาที่การ์ดแจ้งเตือนจะคงอยู่ก่อนปิดอัตโนมัติ</span>
+              </div>
+              <div class="settings-segmented duration-seg seg-4">
+                <div 
+                  class="seg-slider-indicator" 
+                  [class.pos-0]="settings().toastDurationMs === 2500"
+                  [class.pos-1]="settings().toastDurationMs === 4000"
+                  [class.pos-2]="settings().toastDurationMs === 6000"
+                  [class.pos-3]="settings().toastDurationMs === 0"
+                  aria-hidden="true"
+                ></div>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastDurationMs === 2500"
+                  (click)="update('toastDurationMs', 2500)"
+                >
+                  <span>2.5 วิ</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastDurationMs === 4000"
+                  (click)="update('toastDurationMs', 4000)"
+                >
+                  <span>4 วิ (ปกติ)</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastDurationMs === 6000"
+                  (click)="update('toastDurationMs', 6000)"
+                >
+                  <span>6 วิ</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().toastDurationMs === 0"
+                  (click)="update('toastDurationMs', 0)"
+                >
+                  <span>ไม่ปิดเอง</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ทดสอบการแจ้งเตือน</label>
+                <span class="settings-row-desc">คลิกเพื่อทดสอบว่า Toast แสดงผลตามตำแหน่งและความเร็วที่ตั้งไว้ถูกต้องหรือไม่</span>
+              </div>
+              <button type="button" class="btn-action-primary" (click)="testToast()">
+                <span class="material-symbols-rounded">notifications_active</span>
+                <span>ยิงแจ้งเตือนทดสอบ</span>
+              </button>
+            </div>
+          </div>
+        }
+
+        <!-- Tab 3: Display & Accessibility -->
+        @if (activeTab === 'accessibility') {
+          <div class="settings-section-card">
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ขนาดตัวอักษรของระบบ (Font Scale)</label>
+                <span class="settings-row-desc">ปรับขนาดตัวอักษรให้ใหญ่ขึ้นเพื่อความสบายตาและอ่านง่ายสำหรับเจ้าหน้าที่</span>
+              </div>
+              <div class="settings-segmented seg-2">
+                <div 
+                  class="seg-slider-indicator" 
+                  [class.pos-0]="settings().fontSizeScale === 'normal'"
+                  [class.pos-1]="settings().fontSizeScale === 'large'"
+                  aria-hidden="true"
+                ></div>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().fontSizeScale === 'normal'"
+                  (click)="update('fontSizeScale', 'normal')"
+                >
+                  <span>ปกติ (100%)</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="seg-btn" 
+                  [class.active]="settings().fontSizeScale === 'large'"
+                  (click)="update('fontSizeScale', 'large')"
+                >
+                  <span>ตัวใหญ่ขึ้น (112%)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="settings-divider"></div>
+
+            <div class="settings-row">
+              <div class="settings-row-text">
+                <label class="settings-row-label">ลดการเคลื่อนไหว (Reduce Motion)</label>
+                <span class="settings-row-desc">ปิดอนิเมชันการสไลด์/ขยาย เพื่อการแสดงผลที่กระชับและเหมาะกับคอมพิวเตอร์ทั่วไป</span>
+              </div>
+              <label class="custom-switch">
+                <input 
+                  type="checkbox" 
+                  [checked]="settings().reduceMotion"
+                  (change)="update('reduceMotion', !settings().reduceMotion)"
+                />
+                <span class="switch-slider"></span>
+              </label>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="settings-modal-footer">
+        <button type="button" class="btn-settings-ghost" (click)="resetDefaults()">
+          <span class="material-symbols-rounded">restart_alt</span>
+          <span>คืนค่าเริ่มต้นทั้งหมด</span>
+        </button>
+        <button type="button" class="btn-settings-done" (click)="close()">
+          <span class="material-symbols-rounded">check</span>
+          <span>บันทึก & เสร็จสิ้น</span>
+        </button>
+      </div>
+    </div>
+  </div>
+}

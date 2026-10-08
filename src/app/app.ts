@@ -6,6 +6,10 @@ import { PersonnelResult } from './personnel-result/personnel-result';
 import { PersonnelService } from './services/personnel.service';
 import { ToastComponent } from './components/common/toast/toast.component';
 import { ConfirmDialogComponent } from './components/common/confirm-dialog/confirm-dialog.component';
+import { OnboardTourComponent } from './components/common/onboard-tour/onboard-tour.component';
+import { SettingsDialogComponent } from './components/common/settings-dialog/settings-dialog.component';
+import { TourService } from './services/tour.service';
+import { SettingsService } from './services/settings.service';
 import { environment } from '../environment/environment';
 
 @Component({
@@ -17,13 +21,17 @@ import { environment } from '../environment/environment';
     PersonnelForm,
     PersonnelResult,
     ToastComponent,
-    ConfirmDialogComponent
+    ConfirmDialogComponent,
+    OnboardTourComponent,
+    SettingsDialogComponent
   ],
   templateUrl: './app.html',
   styleUrls: ['./app.css'],
 })
 export class App implements OnInit {
   private personnelService = inject(PersonnelService);
+  private tourService = inject(TourService);
+  private settingsService = inject(SettingsService);
   
   currentMode = this.personnelService.currentModeSignal;
   hasSearched = this.personnelService.hasSearchedSignal;
@@ -35,10 +43,40 @@ export class App implements OnInit {
   showNationalityPicker = signal<boolean>(false);
 
   ngOnInit(): void {
-    //ขอ JWT Token เฉพาะขั้นตอนการพัฒนา (Development Mode)
+    // ขอ JWT Token เฉพาะขั้นตอนการพัฒนา (Development Mode)
     if (!environment.production) {
       const testCitizenId = '1234567890123';
       this.personnelService.acquireToken(testCitizenId);
+    }
+
+    // ตั้งค่าสัญชาติเริ่มต้นตามความถนัดของผู้ใช้จาก Cookie
+    const defaultNat = this.settingsService.settings().defaultNationality;
+    if (defaultNat) {
+      this.personnelService.staffNationalitySignal.set(defaultNat);
+    }
+
+    // เริ่มต้น Onboarding Tour อัตโนมัติสำหรับผู้ใช้ที่เข้าใช้งานครั้งแรก
+    setTimeout(() => {
+      if (this.currentMode() === 'result') {
+        this.tourService.startTour(false);
+      }
+    }, 600);
+  }
+
+  // เรียกเปิดหน้าต่างการตั้งค่า
+  openSettings(): void {
+    this.settingsService.open();
+  }
+
+  // เรียกเปิด Onboarding Tour ด้วยตนเอง (เมื่อกดปุ่มแนะนำการใช้งาน)
+  startTour(): void {
+    if (this.currentMode() !== 'result') {
+      this.switchMode('result');
+      setTimeout(() => {
+        this.tourService.startTour(true);
+      }, 300);
+    } else {
+      this.tourService.startTour(true);
     }
   }
 

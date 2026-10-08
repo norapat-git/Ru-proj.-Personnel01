@@ -1,9 +1,66 @@
-<!-- Nationality Toggle — Apple Segmented Control (มีระบบล็อคอัตโนมัติขณะดูข้อมูล) -->
-<div class="search-nationality-bar">
-  <app-nationality-toggle
-    [isLocked]="isLocked()"
-    (onUnlock)="unlockSearch()"
-  ></app-nationality-toggle>
+<!-- Top Bar: 3-Column Grid for True Mathematical Center & Right Margin Alignment -->
+<div class="search-top-bar">
+  <div class="search-top-spacer" aria-hidden="true"></div>
+
+  <div class="search-top-center">
+    <app-nationality-toggle
+      [isLocked]="isLocked()"
+      (onUnlock)="unlockSearch()"
+    ></app-nationality-toggle>
+  </div>
+
+  <div class="search-top-right">
+    <!-- Compact Hanging Blue Tag Action Button (Hanging from behind card) -->
+    <div class="hanging-tag-container">
+      <!-- Hanging Cord / String SVG (Reaching all the way to the Top Border) -->
+      <svg class="tag-string-svg" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <defs>
+          <filter id="cord-shadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0.8" dy="1.2" stdDeviation="1" flood-opacity="0.22"/>
+          </filter>
+          <linearGradient id="navy-cord" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#0f172a"/>
+            <stop offset="35%" stop-color="#1e3a8a"/>
+            <stop offset="70%" stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+          </linearGradient>
+          <linearGradient id="clip-silver" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#64748b"/>
+            <stop offset="30%" stop-color="#ffffff"/>
+            <stop offset="60%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#475569"/>
+          </linearGradient>
+        </defs>
+
+        <g filter="url(#cord-shadow)">
+          <!-- Left strand of navy cord connecting flush to the top card border -->
+          <path d="M 16 0 L 20.5 44" stroke="url(#navy-cord)" stroke-width="1.8" stroke-linecap="square"/>
+          <!-- Right strand of navy cord connecting flush to the top card border -->
+          <path d="M 28 0 L 23.5 44" stroke="url(#navy-cord)" stroke-width="1.8" stroke-linecap="square"/>
+          <!-- Top Silver Ring Clamp Loop -->
+          <ellipse cx="22" cy="44" rx="3.5" ry="2.8" fill="none" stroke="url(#clip-silver)" stroke-width="1.6"/>
+        </g>
+      </svg>
+
+      <!-- Suspended Compact Blue Tag Button -->
+      <button 
+        type="button" 
+        class="hanging-tag-btn" 
+        id="tour-add-btn" 
+        (click)="openAdd()" 
+        [disabled]="isLoading()" 
+        title="เพิ่มข้อมูลบุคลากรใหม่" 
+        aria-label="เพิ่มข้อมูลบุคลากรใหม่"
+      >
+        <!-- Top Metallic Clamp Band -->
+        <span class="tag-metal-clamp" aria-hidden="true"></span>
+
+        <!-- Tag Content -->
+        <span class="material-symbols-rounded tag-action-icon">person_add</span>
+        <span class="tag-badge-text">เพิ่ม</span>
+      </button>
+    </div>
+  </div>
 </div>
 
 <div class="search-bar-container">
@@ -72,16 +129,20 @@
     </div>
   </div>
 
-  <!-- แถวปุ่มกดค้นหา และปุ่มแสดงทุกคน (Search Actions Row) -->
+  <!-- แถวปุ่มกดด้านล่าง: ปุ่มแสดงทุกคน (ซ้าย) & ปุ่มค้นหาข้อมูล (ขวา) -->
   <div class="search-actions-row">
-    <button (click)="onSearchSubmit()" class="btn-primary btn-search" [disabled]="isLoading()">
-      <span class="material-symbols-rounded">search</span>
-      <span>ค้นหาข้อมูล</span>
-    </button>
-    <button (click)="loadAllPersonnel()" class="btn-secondary btn-show-all" [disabled]="isLoading()">
-      <span class="material-symbols-rounded">group</span>
-      <span>แสดงข้อมูลบุคลากรทุกคน</span>
-    </button>
+    <div class="search-actions-left">
+      <button (click)="loadAllPersonnel()" class="btn-secondary btn-show-all" [disabled]="isLoading()">
+        <span class="material-symbols-rounded">group</span>
+        <span>แสดงข้อมูลบุคลากรทุกคน</span>
+      </button>
+    </div>
+
+    <div class="search-actions-right">
+      <button (click)="onSearchSubmit()" class="btn-primary btn-search" [disabled]="isLoading()">
+        <span class="material-symbols-rounded">search</span>
+        <span>ค้นหาข้อมูล</span>
+      </button>
+    </div>
   </div>
 </div>
-

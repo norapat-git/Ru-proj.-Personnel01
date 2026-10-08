@@ -13,7 +13,7 @@
   <div class="form-header-top">
     <div class="form-header-badge">
       <span class="material-symbols-rounded">{{ isEditMode ? 'edit_note' : 'person_add' }}</span>
-      <span>{{ isEditMode ? 'โหมดแก้ไขประวัติข้อมูลบุคลากร' : 'โหมดลงทะเบียนบุคลากรใหม่ (ขั้นตอนที่ ' + currentStep() + '/5)' }}</span>
+      <span>{{ isEditMode ? 'โหมดแก้ไขประวัติข้อมูลบุคลากร' : (isSinglePageMode() ? 'โหมดลงทะเบียนบุคลากรใหม่ (หน้าเดียวทั้งหมด)' : 'โหมดลงทะเบียนบุคลากรใหม่ (ขั้นตอนที่ ' + currentStep() + '/5)') }}</span>
     </div>
     <h2 class="form-title">
       {{ isEditMode ? 'แบบฟอร์มแก้ไขประวัติข้อมูลบุคลากร' : 'แบบฟอร์มเพิ่มข้อมูลบุคลากรใหม่' }}
@@ -21,13 +21,15 @@
     <p class="form-subtitle">
       {{ isEditMode 
         ? 'แก้ไขข้อมูลบุคลากรในแต่ละส่วน และกดบันทึกเพื่ออัปเดตข้อมูลเข้าระบบ' 
-        : 'กรอกข้อมูลทีละขั้นตอน (1-5) ให้ครบถ้วนตามเครื่องหมาย * เพื่อไปยังขั้นตอนถัดไป' 
+        : (isSinglePageMode()
+          ? 'กรอกข้อมูลบุคลากรในแต่ละส่วนให้ครบถ้วนตามเครื่องหมาย * และกดบันทึกเพื่อเพิ่มข้อมูลเข้าระบบ'
+          : 'กรอกข้อมูลทีละขั้นตอน (1-5) ให้ครบถ้วนตามเครื่องหมาย * เพื่อไปยังขั้นตอนถัดไป') 
       }}
     </p>
   </div>
 
-  <!-- Stepper Bar (แสดงเฉพาะโหมดเพิ่มบุคลากรใหม่) -->
-  @if (!isEditMode) {
+  <!-- Stepper Bar (แสดงเฉพาะโหมดทีละหัวข้อ Stepper) -->
+  @if (!isSinglePageMode()) {
     <div class="stepper-wrapper">
       <div class="stepper-track">
         <div 
@@ -66,7 +68,7 @@
   <!-- =========================================================================
        SECTION 1: ข้อมูลส่วนบุคคลพื้นฐาน
        ========================================================================= -->
-  @if (isEditMode || currentStep() === 1) {
+  @if (isSinglePageMode() || currentStep() === 1) {
     <fieldset class="form-fieldset-identity step-animated">
       <legend class="form-fieldset-legend">
         <span class="legend-icon material-symbols-rounded">badge</span>
@@ -242,7 +244,7 @@
   <!-- =========================================================================
        SECTION 2: โครงสร้างตำแหน่ง
        ========================================================================= -->
-  @if (isEditMode || currentStep() === 2) {
+  @if (isSinglePageMode() || currentStep() === 2) {
     <fieldset class="form-fieldset-identity step-animated">
       <legend class="form-fieldset-legend">
         <span class="legend-icon material-symbols-rounded">domain</span>
@@ -310,7 +312,7 @@
   <!-- =========================================================================
        SECTION 3: การเงินและรายได้
        ========================================================================= -->
-  @if (isEditMode || currentStep() === 3) {
+  @if (isSinglePageMode() || currentStep() === 3) {
     <fieldset class="form-fieldset-identity step-animated">
       <legend class="form-fieldset-legend">
         <span class="legend-icon material-symbols-rounded">payments</span>
@@ -548,7 +550,7 @@
   <!-- =========================================================================
        SECTION 4: กองทุนสำรองเลี้ยงชีพ
        ========================================================================= -->
-  @if (isEditMode || currentStep() === 4) {
+  @if (isSinglePageMode() || currentStep() === 4) {
     <fieldset class="form-fieldset-identity step-animated">
       <legend class="form-fieldset-legend">
         <span class="legend-icon material-symbols-rounded">savings</span>
@@ -656,15 +658,14 @@
   }
 
   <!-- =========================================================================
-       SECTION 5: สวัสดิการสถาบัน และสรุปข้อมูล (ในโหมดเพิ่มบุคลากรใหม่)
+       SECTION 5: สวัสดิการสถาบัน และการประกันสังคม
        ========================================================================= -->
-  @if (isEditMode || currentStep() === 5) {
+  @if (isSinglePageMode() || currentStep() === 5) {
     <fieldset class="form-fieldset-identity step-animated">
       <legend class="form-fieldset-legend">
         <span class="legend-icon material-symbols-rounded">health_and_safety</span>
         <span>5. สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส.</span>
       </legend>
-      <!-- สวัสดิการสถาบัน การชำระเงินประกันสังคม สมาชิก ชพค. ชพส. -->
       <div class="fin-status-section" style="margin-top: 8px; padding-top: 0; border-top: none;">
         <div class="fin-status-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
           
@@ -720,7 +721,7 @@
                 [checked]="personnelData.perFundTeacher === 1"
                 (change)="personnelData.perFundTeacher = $any($event.target).checked ? 1 : null"
               />
-              <span class="fin-flag-label-text">สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครูและบุคลากรทางการศึกษา)</span>
+              <span class="fin-flag-label-text">สมาชิก ชพค. (ฌาปนกิจสงเคราะห์ช่วยเพื่อนครู)</span>
               @if (personnelData.perFundTeacher === 1) {
                 <span class="fin-flag-dot-yes" title="เป็นสมาชิก ชพค.">
                   <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span>
@@ -761,68 +762,32 @@
 
         </div>
       </div>
-
-      <!-- Quick Summary Card ก่อนบันทึกจริงใน Step 5 (เฉพาะโหมด Create) -->
-      @if (!isEditMode) {
-        <div class="step-summary-card">
-          <div class="summary-card-header">
-            <span class="material-symbols-rounded" style="color: #2563eb; font-size: 20px;">task_alt</span>
-            <span class="summary-card-title">สรุปภาพรวมข้อมูลก่อนบันทึกเข้าระบบ</span>
-          </div>
-          <div class="summary-grid">
-            <div class="summary-item">
-              <span class="sum-label">รหัสประจำตัว:</span>
-              <span class="sum-value">{{ nationality() === 'thai' ? personnelData.perCitizenId : personnelData.perPassportNo || '-' }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="sum-label">ชื่อ-นามสกุล:</span>
-              <span class="sum-value">{{ personnelData.preName }} {{ nationality() === 'thai' ? personnelData.perNameTh : personnelData.perNameEn }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="sum-label">ประเภทบุคลากร:</span>
-              <span class="sum-value">{{ personnelData.typeName || '-' }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="sum-label">คณะ / หน่วยงาน:</span>
-              <span class="sum-value">{{ personnelData.facName || '-' }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="sum-label">เงินเดือน:</span>
-              <span class="sum-value sum-highlight">{{ personnelData.perSalary ? (personnelData.perSalary | number:'1.2-2') + ' บาท' : '-' }}</span>
-            </div>
-            <div class="summary-item">
-              <span class="sum-label">สถานะกองทุน PVD:</span>
-              <span class="sum-value">{{ isFundActiveMember() ? 'เป็นสมาชิก' : 'ไม่ได้เป็นสมาชิก' }}</span>
-            </div>
-          </div>
-        </div>
-      }
     </fieldset>
   }
 
   <!-- =========================================================================
        ปุ่มควบคุมล่างฟอร์ม (Action Buttons)
-       - โหมดแก้ไข: แสดง ยกเลิก + บันทึกการแก้ไข
-       - โหมดเพิ่มใหม่: แสดง Stepper Controller (ยกเลิก / ย้อนกลับ / ถัดไป / บันทึกข้อมูล)
+       - โหมดหน้าเดียว (isSinglePageMode): แสดง ยกเลิก + ตรวจสอบและบันทึกข้อมูล
+       - โหมดทีละหัวข้อ (Stepper): แสดง Stepper Controller (ยกเลิก / ย้อนกลับ / ถัดไป / ตรวจสอบและบันทึกข้อมูล)
        ========================================================================= -->
   <div class="form-actions">
-    @if (isEditMode) {
-      <!-- Edit Mode Actions -->
+    @if (isSinglePageMode()) {
+      <!-- Single-Page Actions (Edit Mode หรือ โหมดหน้าเดียว) -->
       <button type="button" (click)="cancelForm()" class="btn-cancel" [disabled]="isLoading()">
         <span class="material-symbols-rounded">arrow_back</span>
         <span>ยกเลิก</span>
       </button>
-      <button type="button" (click)="saveData()" class="btn-save-primary" [disabled]="isLoading()">
+      <button type="button" (click)="openSummaryModal()" class="btn-save-primary" [disabled]="isLoading()">
         @if (isLoading()) {
           <span class="spinner-icon"></span>
           <span>กำลังบันทึกข้อมูล...</span>
         } @else {
-          <span class="material-symbols-rounded">check_circle</span>
-          <span>บันทึกการแก้ไขข้อมูล</span>
+          <span class="material-symbols-rounded">fact_check</span>
+          <span>{{ isEditMode ? 'ตรวจสอบสรุปและบันทึกการแก้ไข' : 'ตรวจสอบสรุปและบันทึกข้อมูล' }}</span>
         }
       </button>
     } @else {
-      <!-- Create Mode Stepper Actions -->
+      <!-- Create Mode Stepper Actions (ทีละหัวข้อ 1-5) -->
       <div class="stepper-actions-group">
         <!-- ปุ่มฝั่งซ้าย: ยกเลิก หรือ ย้อนกลับ -->
         @if (currentStep() === 1) {
@@ -837,20 +802,20 @@
           </button>
         }
 
-        <!-- ปุ่มฝั่งขวา: ถัดไป หรือ บันทึกข้อมูล -->
+        <!-- ปุ่มฝั่งขวา: ถัดไป หรือ ตรวจสอบสรุปและบันทึกข้อมูล -->
         @if (currentStep() < 5) {
           <button type="button" (click)="nextStep()" class="btn-next-step" [disabled]="isLoading()">
             <span>ขั้นตอนถัดไป ({{ currentStep() + 1 }}/5)</span>
             <span class="material-symbols-rounded">arrow_forward</span>
           </button>
         } @else {
-          <button type="button" (click)="saveData()" class="btn-save-primary btn-save-finish" [disabled]="isLoading()">
+          <button type="button" (click)="openSummaryModal()" class="btn-save-primary btn-save-finish" [disabled]="isLoading()">
             @if (isLoading()) {
               <span class="spinner-icon"></span>
               <span>กำลังบันทึกข้อมูล...</span>
             } @else {
-              <span class="material-symbols-rounded">check_circle</span>
-              <span>ยืนยันและบันทึกข้อมูลเข้าระบบ</span>
+              <span class="material-symbols-rounded">fact_check</span>
+              <span>ตรวจสอบสรุปและบันทึกข้อมูลเข้าระบบ</span>
             }
           </button>
         }
@@ -858,3 +823,378 @@
     }
   </div>
 </div>
+
+<!-- =========================================================================
+     SUMMARY REVIEW POPUP MODAL (สรุปภาพรวมข้อมูลก่อนบันทึกเข้าระบบ)
+     ========================================================================= -->
+@if (showSummaryModal()) {
+  <div class="summary-modal-overlay" (click)="closeSummaryModal()">
+    <div class="summary-modal-container" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+      
+      <!-- Modal Header -->
+      <div class="summary-modal-header">
+        <div class="summary-header-title-box">
+          <div class="summary-header-icon">
+            <span class="material-symbols-rounded">fact_check</span>
+          </div>
+          <div>
+            <div class="summary-modal-title-row">
+              <h3 class="summary-modal-title">สรุปภาพรวมข้อมูลก่อนบันทึกเข้าระบบ</h3>
+              <span class="summary-mode-badge" [class.edit-mode-badge]="isEditMode">
+                <span class="material-symbols-rounded" style="font-size: 14px;">
+                  {{ isEditMode ? 'edit_note' : 'person_add' }}
+                </span>
+                <span>{{ isEditMode ? 'โหมดแก้ไขประวัติ' : 'โหมดลงทะเบียนใหม่' }}</span>
+              </span>
+            </div>
+            <p class="summary-modal-subtitle">
+              กรุณาตรวจสอบความถูกต้องของข้อมูลบุคลากรทั้ง 5 หมวดหมู่อย่างละเอียดก่อนกดยืนยันบันทึกเข้าระบบ
+            </p>
+          </div>
+        </div>
+        <button type="button" class="summary-modal-close-btn" (click)="closeSummaryModal()" title="ปิดหน้าต่าง (Esc)" aria-label="ปิดหน้าต่าง">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+
+      <!-- Modal Body (Scrollable Review Content) -->
+      <div class="summary-modal-body">
+
+        <!-- Top Profile Banner -->
+        <div class="summary-profile-banner">
+          <div class="profile-avatar-box">
+            <span class="material-symbols-rounded avatar-icon">account_circle</span>
+          </div>
+          <div class="profile-banner-info">
+            <div class="profile-name-row">
+              <h4 class="profile-fullname">
+                {{ personnelData.preName }} {{ nationality() === 'thai' ? personnelData.perNameTh : personnelData.perNameEn }}
+              </h4>
+              <span class="nat-tag" [class.inter-tag]="nationality() === 'inter'">
+                {{ nationality() === 'thai' ? '🇹🇭 บุคลากรชาวไทย' : '🌐 บุคลากรต่างชาติ' }}
+              </span>
+            </div>
+            <div class="profile-id-sub">
+              <span>{{ nationality() === 'thai' ? 'เลขบัตรประชาชน: ' : 'Passport No: ' }}</span>
+              <span class="mono-code">{{ nationality() === 'thai' ? personnelData.perCitizenId : personnelData.perPassportNo }}</span>
+              @if (personnelData.typeName) {
+                <span class="dot-separator">•</span>
+                <span>{{ personnelData.typeName }}</span>
+              }
+              @if (personnelData.facName) {
+                <span class="dot-separator">•</span>
+                <span>{{ personnelData.facName }}</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 1: ข้อมูลส่วนบุคคล & อัตลักษณ์ -->
+        <div class="summary-section-card">
+          <div class="summary-sec-header">
+            <span class="material-symbols-rounded sec-icon">badge</span>
+            <h5 class="sec-title">1. ข้อมูลส่วนบุคคลและอัตลักษณ์ (Identity)</h5>
+          </div>
+          <div class="summary-grid-2cols">
+            <div class="sum-field-item">
+              <span class="field-name">สัญชาติ / กลุ่มบุคลากร:</span>
+              <span class="field-val">{{ nationality() === 'thai' ? 'ชาวไทย (Thai)' : 'ต่างชาติ (International)' }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">{{ nationality() === 'thai' ? 'เลขประจำตัวประชาชน (13 หลัก):' : 'หนังสือเดินทาง (Passport No):' }}</span>
+              <span class="field-val font-mono-bold">{{ nationality() === 'thai' ? personnelData.perCitizenId : personnelData.perPassportNo }}</span>
+            </div>
+            @if (nationality() === 'inter') {
+              <div class="sum-field-item">
+                <span class="field-name">วันที่ออกหนังสือเดินทาง:</span>
+                <span class="field-val">{{ personnelData.perPassportStartD || 'ไม่ได้ระบุ' }}</span>
+              </div>
+              <div class="sum-field-item">
+                <span class="field-name">วันหมดอายุหนังสือเดินทาง:</span>
+                <span class="field-val">{{ personnelData.perPassportExpireD || 'ไม่ได้ระบุ' }}</span>
+              </div>
+            }
+            <div class="sum-field-item">
+              <span class="field-name">คำนำหน้านาม:</span>
+              <span class="field-val">{{ personnelData.preName || '-' }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">{{ nationality() === 'thai' ? 'ชื่อ-นามสกุล (ภาษาไทย):' : 'Full Name (English):' }}</span>
+              <span class="field-val val-strong">{{ nationality() === 'thai' ? personnelData.perNameTh : personnelData.perNameEn }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">เลขประจำตัวผู้เสียภาษีอากร:</span>
+              <span class="field-val">{{ personnelData.perTaxId || 'ไม่ได้ระบุ' }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">เลขประจำตัวประกันสังคม (SSO ID):</span>
+              <span class="field-val">{{ personnelData.perSsoId || 'ไม่ได้ระบุ' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: โครงสร้างตำแหน่งและสังกัด -->
+        <div class="summary-section-card">
+          <div class="summary-sec-header">
+            <span class="material-symbols-rounded sec-icon">domain</span>
+            <h5 class="sec-title">2. โครงสร้างตำแหน่งและหน่วยงาน (Position Structure)</h5>
+          </div>
+          <div class="summary-grid-2cols">
+            <div class="sum-field-item">
+              <span class="field-name">ประเภทบุคลากร:</span>
+              <span class="field-val val-strong">
+                {{ personnelData.typeName || '-' }}
+                @if (personnelData.typeCode) {
+                  <span class="sub-code">(รหัส: {{ personnelData.typeCode }})</span>
+                }
+              </span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">คณะ / ส่วนงาน / สำนัก:</span>
+              <span class="field-val val-strong">
+                {{ personnelData.facName || '-' }}
+                @if (personnelData.perFacC) {
+                  <span class="sub-code">(รหัสคณะ: {{ personnelData.perFacC }})</span>
+                }
+              </span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">เลขที่ตำแหน่ง:</span>
+              <span class="field-val">{{ personnelData.perPosId || 'ไม่ได้ระบุ' }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">ชื่อตำแหน่งงาน:</span>
+              <span class="field-val">{{ personnelData.poscName || 'ไม่ได้ระบุ' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: การเงิน รายได้ และสิทธิการรับเงิน -->
+        <div class="summary-section-card">
+          <div class="summary-sec-header">
+            <span class="material-symbols-rounded sec-icon">payments</span>
+            <h5 class="sec-title">3. การเงิน รายได้ และสิทธิการรับเงิน (Financials)</h5>
+          </div>
+
+          <!-- Total Income Highlight Box -->
+          <div class="summary-income-box">
+            <div class="income-box-left">
+              <span class="inc-title">ประมาณการยอดเงินได้หลักรวม</span>
+              <span class="inc-subtitle">เงินเดือน + เงินประจำตำแหน่ง + เงินประจำตำแหน่งผู้บริหาร</span>
+            </div>
+            <div class="income-box-right">
+              <span class="inc-amount">{{ getTotalIncomeEstimate() | number:'1.2-2' }}</span>
+              <span class="inc-unit">บาท/เดือน</span>
+            </div>
+          </div>
+
+          <div class="summary-grid-3cols" style="margin-top: 14px;">
+            <div class="sum-money-card">
+              <span class="money-label">เงินเดือน</span>
+              <span class="money-val text-primary-highlight">{{ personnelData.perSalary ? (personnelData.perSalary | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+            <div class="sum-money-card">
+              <span class="money-label">เงินเดือนถือจ่าย</span>
+              <span class="money-val">{{ personnelData.perHoldSalary ? (personnelData.perHoldSalary | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+            <div class="sum-money-card">
+              <span class="money-label">เงินประจำตำแหน่ง</span>
+              <span class="money-val">{{ personnelData.perPositionMoney ? (personnelData.perPositionMoney | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+            <div class="sum-money-card">
+              <span class="money-label">ค่าตอบแทนเงินประจำตำแหน่ง</span>
+              <span class="money-val">{{ personnelData.perPositionPay ? (personnelData.perPositionPay | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+            <div class="sum-money-card">
+              <span class="money-label">เงินประจำตำแหน่งผู้บริหาร</span>
+              <span class="money-val">{{ personnelData.perPositionMoneyEx ? (personnelData.perPositionMoneyEx | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+            <div class="sum-money-card">
+              <span class="money-label">ค่าตอบแทนผู้บริหาร</span>
+              <span class="money-val">{{ personnelData.perPositionPayEx ? (personnelData.perPositionPayEx | number:'1.2-2') : '0.00' }} ฿</span>
+            </div>
+          </div>
+
+          <div class="summary-grid-2cols" style="margin-top: 14px;">
+            <div class="sum-field-item">
+              <span class="field-name">แหล่งเงินทุน (Source Money):</span>
+              <span class="field-val">{{ getSourceMoneyName(personnelData.perSourceMoney) }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">ประเภทโครงการ (Project Type):</span>
+              <span class="field-val">{{ getProjectTypeName(personnelData.perProject) }}</span>
+            </div>
+            <div class="sum-field-item">
+              <span class="field-name">หมายเลข Slip เงินเดือน:</span>
+              <span class="field-val">{{ personnelData.perSlipId || 'ไม่ได้ระบุ' }}</span>
+            </div>
+          </div>
+
+          <!-- สถานะ Flag การรับเงิน 4 รายการ -->
+          <div class="sum-flags-row">
+            <span class="flags-title">สถานะการรับเงิน:</span>
+            <div class="flags-tags-list">
+              <span class="flag-pill" [class.flag-yes]="isFRevSalaryChecked()" [class.flag-no]="!isFRevSalaryChecked()">
+                <span class="material-symbols-rounded">{{ isFRevSalaryChecked() ? 'check' : 'close' }}</span>
+                <span>รับเงินเดือน</span>
+              </span>
+              <span class="flag-pill" [class.flag-yes]="isFRevPosMoneyChecked()" [class.flag-no]="!isFRevPosMoneyChecked()">
+                <span class="material-symbols-rounded">{{ isFRevPosMoneyChecked() ? 'check' : 'close' }}</span>
+                <span>รับเงินประจำตำแหน่ง</span>
+              </span>
+              <span class="flag-pill" [class.flag-yes]="isFRevPayExChecked()" [class.flag-no]="!isFRevPayExChecked()">
+                <span class="material-symbols-rounded">{{ isFRevPayExChecked() ? 'check' : 'close' }}</span>
+                <span>รับค่าตอบแทนผู้บริหาร</span>
+              </span>
+              <span class="flag-pill" [class.flag-yes]="isFTotalIncomeChecked()" [class.flag-no]="!isFTotalIncomeChecked()">
+                <span class="material-symbols-rounded">{{ isFTotalIncomeChecked() ? 'check' : 'close' }}</span>
+                <span>รวมเงินได้ทั้งหมด</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: กองทุนสำรองเลี้ยงชีพ (PVD) -->
+        <div class="summary-section-card">
+          <div class="summary-sec-header">
+            <span class="material-symbols-rounded sec-icon">savings</span>
+            <h5 class="sec-title">4. ข้อมูลกองทุนสำรองเลี้ยงชีพ (Provident Fund - PVD)</h5>
+          </div>
+          <div class="pvd-summary-content">
+            <div class="pvd-status-line">
+              <span class="field-name">สถานะการเป็นสมาชิก:</span>
+              @if (isFundActiveMember()) {
+                <span class="pvd-badge-green">
+                  <span class="material-symbols-rounded" style="font-size: 15px;">check_circle</span>
+                  <span>เป็นสมาชิกกองทุนสำรองเลี้ยงชีพ</span>
+                </span>
+              } @else if (personnelData.perPvdfQuit === 1) {
+                <span class="pvd-badge-red">
+                  <span class="material-symbols-rounded" style="font-size: 15px;">cancel</span>
+                  <span>ออกจากกองทุนสำรองเลี้ยงชีพแล้ว</span>
+                </span>
+              } @else {
+                <span class="pvd-badge-gray">
+                  <span class="material-symbols-rounded" style="font-size: 15px;">remove_circle_outline</span>
+                  <span>ไม่ได้เป็นสมาชิกกองทุน</span>
+                </span>
+              }
+            </div>
+
+            @if (isFundActiveMember()) {
+              <div class="summary-grid-3cols" style="margin-top: 12px;">
+                <div class="sum-field-item">
+                  <span class="field-name">วันที่สมัครกองทุน:</span>
+                  <span class="field-val">{{ personnelData.perPvdfAppD || 'ไม่ได้ระบุ' }}</span>
+                </div>
+                <div class="sum-field-item">
+                  <span class="field-name">ประเภทกองทุน:</span>
+                  <span class="field-val">{{ getFundNameByCode(personnelData.perFundType) || 'ไม่ได้ระบุ' }}</span>
+                </div>
+                <div class="sum-field-item">
+                  <span class="field-name">อัตราการสะสมออมเงิน:</span>
+                  <span class="field-val">{{ personnelData.perSaveRate ? personnelData.perSaveRate + ' %' : 'ไม่ได้ระบุ' }}</span>
+                </div>
+              </div>
+            } @else if (personnelData.perPvdfQuit === 1) {
+              <div class="summary-grid-2cols" style="margin-top: 12px;">
+                <div class="sum-field-item">
+                  <span class="field-name">วันที่ออกจากกองทุน:</span>
+                  <span class="field-val text-danger-highlight">{{ personnelData.perPvdfQuitD || 'ไม่ได้ระบุ' }}</span>
+                </div>
+                <div class="sum-field-item">
+                  <span class="field-name">หมายเหตุการออกจากกองทุน:</span>
+                  <span class="field-val">{{ personnelData.notePvd || '-' }}</span>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+
+        <!-- Section 5: สวัสดิการสถาบันและประกันสังคม -->
+        <div class="summary-section-card">
+          <div class="summary-sec-header">
+            <span class="material-symbols-rounded sec-icon">health_and_safety</span>
+            <h5 class="sec-title">5. สวัสดิการสถาบันและการประกันสังคม (Welfare)</h5>
+          </div>
+          <div class="welfare-summary-grid">
+            <div class="welfare-card-item" [class.welfare-active]="isSsoPaidChecked()">
+              <div class="welfare-icon-box">
+                <span class="material-symbols-rounded">
+                  {{ isSsoPaymentDisabled() ? 'lock' : (isSsoPaidChecked() ? 'check_circle' : 'cancel') }}
+                </span>
+              </div>
+              <div class="welfare-details">
+                <span class="welfare-name">การชำระเงินประกันสังคม</span>
+                <span class="welfare-status-text">
+                  @if (isSsoPaymentDisabled()) {
+                    <span style="color: #d97706; font-weight: 600;">ล็อกการชำระ (อายุเกิน 60 ปี)</span>
+                  } @else if (isSsoPaidChecked()) {
+                    <span style="color: #059669; font-weight: 600;">ชำระเงินประกันสังคม</span>
+                  } @else {
+                    <span style="color: #64748b;">ไม่ชำระประกันสังคม</span>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="welfare-card-item" [class.welfare-active]="personnelData.perFundTeacher === 1">
+              <div class="welfare-icon-box">
+                <span class="material-symbols-rounded">
+                  {{ personnelData.perFundTeacher === 1 ? 'check_circle' : 'cancel' }}
+                </span>
+              </div>
+              <div class="welfare-details">
+                <span class="welfare-name">สมาชิก ชพค. (เพื่อนครู)</span>
+                <span class="welfare-status-text">
+                  @if (personnelData.perFundTeacher === 1) {
+                    <span style="color: #059669; font-weight: 600;">เป็นสมาชิก ชพค.</span>
+                  } @else {
+                    <span style="color: #64748b;">ไม่ได้เป็นสมาชิก</span>
+                  }
+                </span>
+              </div>
+            </div>
+
+            <div class="welfare-card-item" [class.welfare-active]="personnelData.perFundAssteacher === 1">
+              <div class="welfare-icon-box">
+                <span class="material-symbols-rounded">
+                  {{ personnelData.perFundAssteacher === 1 ? 'check_circle' : 'cancel' }}
+                </span>
+              </div>
+              <div class="welfare-details">
+                <span class="welfare-name">สมาชิก ชพส. (ผู้ปฏิบัติงานสถาบัน)</span>
+                <span class="welfare-status-text">
+                  @if (personnelData.perFundAssteacher === 1) {
+                    <span style="color: #059669; font-weight: 600;">เป็นสมาชิก ชพส.</span>
+                  } @else {
+                    <span style="color: #64748b;">ไม่ได้เป็นสมาชิก</span>
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer Action Buttons -->
+      <div class="summary-modal-footer">
+        <button type="button" class="btn-summary-back" (click)="closeSummaryModal()">
+          <span class="material-symbols-rounded">edit</span>
+          <span>ย้อนกลับไปแก้ไขข้อมูล</span>
+        </button>
+        <button type="button" class="btn-summary-confirm" (click)="confirmAndSave()" [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="spinner-icon"></span>
+            <span>กำลังบันทึกข้อมูล...</span>
+          } @else {
+            <span class="material-symbols-rounded">check_circle</span>
+            <span>ยืนยันและบันทึกข้อมูลเข้าระบบ</span>
+          }
+        </button>
+      </div>
+
+    </div>
+  </div>
+}

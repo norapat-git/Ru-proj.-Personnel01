@@ -1,10 +1,141 @@
-/* Nationality toggle bar — centered above search inputs */
-.search-nationality-bar {
-  display: flex;
-  justify-content: center;
+/* Search Top Bar: Mathematically Centered 3-Column Grid (1fr auto 1fr) */
+.search-top-bar {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
   margin-bottom: 24px;
+  width: 100%;
 }
 
+.search-top-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.search-top-center app-nationality-toggle {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+}
+
+.search-top-right {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+/* ==========================================================================
+   Compact Hanging Blue Tag Action Button (Hanging from Top Edge)
+   ========================================================================== */
+.hanging-tag-container {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 54px;
+  margin-top: 4px;
+  margin-right: 14px;
+  transform-origin: 22px -16px;
+  transform: rotate(-2.5deg);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 5px 12px rgba(15, 23, 42, 0.18));
+}
+
+/* Hanging Dark Navy Cord SVG - Starts precisely at top card edge */
+.tag-string-svg {
+  position: absolute;
+  top: -37px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 50px;
+  pointer-events: none;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Compact Blue Tag Button */
+.hanging-tag-btn {
+  position: relative;
+  z-index: 2;
+  width: 42px;
+  height: 52px;
+  padding: 9px 3px 5px 3px !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 100%);
+  border: 1.2px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  cursor: pointer;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  margin: 0;
+  outline: none;
+  box-shadow:
+    0 4px 14px rgba(37, 99, 235, 0.35),
+    0 1px 4px rgba(15, 23, 42, 0.12);
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+/* Top Silver Metallic Clamp Band */
+.tag-metal-clamp {
+  position: absolute;
+  top: -3.5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 7px;
+  border-radius: 2px 2px 1px 1px;
+  background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+  border: 0.8px solid #64748b;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+}
+
+.tag-action-icon {
+  font-size: 20px;
+  line-height: 1;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+.tag-badge-text {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1;
+  font-family: 'Prompt', sans-serif;
+  white-space: nowrap;
+}
+
+/* Hover state: gentle micro swing */
+.hanging-tag-container:hover {
+  transform: rotate(-0.5deg) scale(1.03);
+}
+
+.hanging-tag-container:hover .hanging-tag-btn {
+  background: linear-gradient(145deg, #1d4ed8 0%, #1e40af 100%);
+}
+
+.hanging-tag-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.hanging-tag-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Search Bar Inputs */
 .search-bar-container {
   display: flex;
   flex-direction: column;
@@ -13,8 +144,15 @@
 }
 
 @keyframes fadeInSearch {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .search-inputs-wrapper {
@@ -37,6 +175,7 @@
     opacity: 0.6;
     transform: translateY(3px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -62,10 +201,9 @@
 }
 
 .search-label {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  color: var(--text-secondary, #475569);
-  letter-spacing: -0.01em;
+  color: var(--text-primary, #0f172a);
 }
 
 .search-input-box-wrapper {
@@ -75,7 +213,7 @@
   width: 100%;
 }
 
-.search-input-icon {
+.search-input-box-wrapper .search-input-icon {
   position: absolute;
   left: 14px;
   top: 50%;
@@ -157,11 +295,61 @@
   white-space: nowrap;
 }
 
+/* Bottom Actions Row: Left = Show All, Right = Search */
 .search-actions-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 6px;
+}
+
+.search-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.search-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .search-top-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .search-top-spacer {
+    display: none;
+  }
+
+  .search-top-right {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .search-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .search-actions-left,
+  .search-actions-right {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .search-actions-left button,
+  .search-actions-right button {
+    width: 100%;
+    justify-content: center;
+  }
 }

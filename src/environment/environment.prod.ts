@@ -1,4 +1,4 @@
-const baseUrl = 'http://uat3.ru.ac.th/personnel-api/api/service/frontend';
+const baseUrl = 'https://uat3.ru.ac.th/personnel-api/api/service/frontend';
 
 export const environment = {
   production: true,

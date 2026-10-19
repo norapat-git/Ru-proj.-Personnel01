@@ -10,6 +10,7 @@ import { OnboardTourComponent } from './components/common/onboard-tour/onboard-t
 import { SettingsDialogComponent } from './components/common/settings-dialog/settings-dialog.component';
 import { TourService } from './services/tour.service';
 import { SettingsService } from './services/settings.service';
+import { extractTokenFromAnywhere } from './guards/auth.guard';
 
 @Component({
   selector: 'app-root',
@@ -31,7 +32,7 @@ export class App implements OnInit {
   private personnelService = inject(PersonnelService);
   private tourService = inject(TourService);
   private settingsService = inject(SettingsService);
-  
+
   currentMode = this.personnelService.currentModeSignal;
   hasSearched = this.personnelService.hasSearchedSignal;
   notification = this.personnelService.notificationSignal;
@@ -42,6 +43,12 @@ export class App implements OnInit {
   showNationalityPicker = signal<boolean>(false);
 
   ngOnInit(): void {
+    // query parameter (?token=...)
+    const urlToken = extractTokenFromAnywhere();
+    if (urlToken) {
+      localStorage.setItem('token', urlToken);
+    }
+
     // ตั้งค่าสัญชาติเริ่มต้นตามความถนัดของผู้ใช้จาก Cookie
     const defaultNat = this.settingsService.settings().defaultNationality;
     if (defaultNat) {

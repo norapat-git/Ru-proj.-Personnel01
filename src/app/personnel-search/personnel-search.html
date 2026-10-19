@@ -99,10 +99,14 @@
           <input
             type="text"
             [(ngModel)]="singleKeyword"
+            (input)="onKeywordInput($event)"
+            (keypress)="onKeyPress($event)"
+            [attr.inputmode]="isNumericFilter() ? 'numeric' : 'text'"
+            [attr.maxlength]="filterType === 'idCard' || filterType === 'ssoId' ? 13 : (filterType === 'passport' ? 15 : null)"
             [placeholder]="
-              filterType === 'idCard' ? 'กรอกเลขบัตรประชาชน 13 หลัก...' :
-              (filterType === 'passport' ? 'กรอกเลขพาสปอร์ต...' :
-              (filterType === 'ssoId' ? 'กรอกเลขประกันสังคม 13 หลัก...' :
+              filterType === 'idCard' ? 'กรอกเลขบัตรประชาชน 13 หลัก (ตัวเลขเท่านั้น)...' :
+              (filterType === 'passport' ? 'กรอกเลขพาสปอร์ต (ตัวเลขเท่านั้น)...' :
+              (filterType === 'ssoId' ? 'กรอกเลขประกันสังคม 13 หลัก (ตัวเลขเท่านั้น)...' :
               (filterType === 'nameTh' ? 'พิมพ์ชื่อ หรือ นามสกุล เพื่อค้นหา...' :
               'Type full name or partial name in English to search...')))
             "

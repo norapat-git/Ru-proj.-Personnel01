@@ -75,6 +75,32 @@ export class PersonnelSearch implements OnInit {
     });
   }
 
+  isNumericFilter = computed<boolean>(() => {
+    return ['idCard', 'passport', 'ssoId'].includes(this.filterType);
+  });
+
+  onKeywordInput(event: Event): void {
+    if (this.isNumericFilter()) {
+      const input = event.target as HTMLInputElement;
+      let cleaned = input.value.replace(/\D/g, '');
+      if (this.filterType === 'idCard' || this.filterType === 'ssoId') {
+        cleaned = cleaned.slice(0, 13);
+      } else if (this.filterType === 'passport') {
+        cleaned = cleaned.slice(0, 15);
+      }
+      this.singleKeyword = cleaned;
+      input.value = cleaned;
+    }
+  }
+
+  onKeyPress(event: KeyboardEvent): void {
+    if (this.isNumericFilter()) {
+      if (!/^\d$/.test(event.key)) {
+        event.preventDefault();
+      }
+    }
+  }
+
   onFilterTypeChange(type: string): void {
     this.filterType = type;
     this.singleKeyword = '';
@@ -140,6 +166,20 @@ export class PersonnelSearch implements OnInit {
     if (!finalKeyword) {
       if (isManual) {
         this.personnelService.showNotification('error', 'กรุณากรอกข้อมูลคำค้นหาก่อนทำรายการ', 3000);
+      }
+      return;
+    }
+
+    if (this.filterType === 'idCard' && finalKeyword.length !== 13) {
+      if (isManual) {
+        this.personnelService.showNotification('error', 'กรุณาระบุเลขบัตรประชาชนให้ครบ 13 หลัก', 3000);
+      }
+      return;
+    }
+
+    if (this.filterType === 'ssoId' && finalKeyword.length !== 13) {
+      if (isManual) {
+        this.personnelService.showNotification('error', 'กรุณาระบุเลขประกันสังคมให้ครบ 13 หลัก', 3000);
       }
       return;
     }

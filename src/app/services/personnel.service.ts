@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { firstValueFrom } from 'rxjs'; // fix import firstValueFrom
+import { firstValueFrom } from 'rxjs';
 import {
   JwtPayload,
   PersonnelDataResult,
@@ -71,13 +71,12 @@ export class PersonnelService {
     );
   }
 
-  // fixx
   // ดึงรายชื่อคณะทั้งหมด
   getFaculties(): Promise<any> {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/faculties`));
   }
 
-  //  เรียกดูรายชื่อคำนำหน้า
+  // เรียกดูรายชื่อคำนำหน้า
   getPrenames(): Promise<any> {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/prenames`));
   }
@@ -100,24 +99,6 @@ export class PersonnelService {
   // ดึงประเภทแหล่งเงิน
   getSourceMoneyTypes(): Promise<any> {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/sourcemoney`));
-  }
-
-  // ขอ Token จากเลขบัตรประชาชน บันทึกไว้ใน Local Storage
-  async acquireToken(citizenId: string): Promise<any> {
-    try {
-      const signUrl = this.apiUrl.replace('/personnel', '/sign');
-      const response = await firstValueFrom(
-        this.http.post<any>(signUrl, { PER_CITIZEN_ID: citizenId })
-      );
-      if (response && response.success && response.token) {
-        localStorage.setItem('token', response.token);
-        return response.token;
-      }
-      return null;
-    } catch (err: any) {
-      console.warn('Acquire token background notice:', err);
-      return null;
-    }
   }
 
   // แกะค่า
@@ -157,5 +138,4 @@ export class PersonnelService {
     if (!payload || !payload.exp) return true;
     return Date.now() >= payload.exp * 1000;
   }
-
 }

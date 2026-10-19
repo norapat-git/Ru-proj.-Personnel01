@@ -1,7 +1,8 @@
-const url = 'http://localhost:4000/api/service/frontend';
+//const url = 'http://localhost:4000/api/service/frontend';
+const baseUrl = 'http://uat3.ru.ac.th/personnel-api/api/service/frontend';
 
 export const environment = {
   production: false,
-  apiUrl: `${url}/personnel`,
-  portalLoginUrl: 'https://', // แก้ URL
+  apiUrl: `${baseUrl}/personnel`,
+  portalLoginUrl: 'https://',
 };

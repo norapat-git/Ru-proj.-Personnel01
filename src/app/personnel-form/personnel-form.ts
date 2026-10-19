@@ -17,7 +17,6 @@ import {
 } from '../models';
 import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
 import { CustomDatePickerComponent } from '../components/common/custom-datepicker/custom-datepicker.component';
-import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-form',
@@ -916,11 +915,6 @@ export class PersonnelForm implements OnInit, OnDestroy {
       return;
     }
 
-    // ดักตรวจสอบความปลอดภัย: หากยังไม่มี Token ในเครื่อง และไม่ใช่ระบบจริง ให้ดำเนินการขอ Token ก่อนเริ่มเซฟข้อมูล
-    if (!localStorage.getItem('token') && !environment.production) {
-      const testCitizenId = '1234567890123';
-      await this.personnelService.acquireToken(testCitizenId);
-    }
 
     if (!this.validateForm()) {
       if (!this.isSinglePageMode()) {

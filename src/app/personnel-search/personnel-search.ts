@@ -6,7 +6,6 @@ import { PersonnelService } from '../services/personnel.service';
 import { NationalityToggle } from '../nationality-toggle/nationality-toggle';
 import { CustomSelectOption } from '../models';
 import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
-import { environment } from '../../environment/environment';
 
 @Component({
   selector: 'app-personnel-search',
@@ -108,10 +107,7 @@ export class PersonnelSearch implements OnInit {
     try {
       this.personnelService.isFilteredSearchSignal.set(false);
 
-      if (!environment.production) {
-        const testCitizenId = '1234567890123';
-        await this.personnelService.acquireToken(testCitizenId);
-      }
+
 
       const response = await this.personnelService.searchPersonnel({ type: 'all', keyword: 'all' });
 
@@ -137,10 +133,7 @@ export class PersonnelSearch implements OnInit {
       return;
     }
 
-    if (!localStorage.getItem('token') && !environment.production) {
-      const testCitizenId = '1234567890123';
-      await this.personnelService.acquireToken(testCitizenId);
-    }
+
 
     const finalKeyword = this.singleKeyword.trim();
 

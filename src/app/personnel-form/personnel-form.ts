@@ -505,17 +505,28 @@ export class PersonnelForm implements OnInit, OnDestroy {
   /** สลับสถานะกดปุ่มระหว่าง เป็นสมาชิกกองทุน (สีเขียว) และ ออกจากกองทุน (สีแดง) */
   toggleQuitPvd() {
     if (this.isFundActiveMember()) {
-      // ปัจจุบันเป็นสมาชิก -> กดปุ่มสีแดง "🚪 ออกจากกองทุน" -> สลับเป็นไม่ได้เป็นสมาชิก/ออกจากกองทุน
-      this.personnelData.perPvdfQuit = 1;
-      this.personnelData.perPvdfApp = 'N';
-      this.personnelData.perPvdfAppD = null;
-      this.personnelData.perFundType = null;
-      this.personnelData.perSaveRate = null;
-      if (!this.personnelData.perPvdfQuitD) {
-        this.personnelData.perPvdfQuitD = new Date().toISOString().substring(0, 10);
+      if (!this.isEditMode) {
+        // โหมดเพิ่มบุคลากรใหม่: ยกเลิกการเลือกเป็นสมาชิก -> กลับสู่สถานะไม่ได้เป็นสมาชิก
+        this.personnelData.perPvdfApp = 'N';
+        this.personnelData.perPvdfAppD = null;
+        this.personnelData.perFundType = null;
+        this.personnelData.perSaveRate = null;
+        this.personnelData.perPvdfQuit = null;
+        this.personnelData.perPvdfQuitD = null;
+        this.personnelData.notePvd = null;
+      } else {
+        // โหมดแก้ไขประวัติ: ออกจากกองทุน
+        this.personnelData.perPvdfQuit = 1;
+        this.personnelData.perPvdfApp = 'N';
+        this.personnelData.perPvdfAppD = null;
+        this.personnelData.perFundType = null;
+        this.personnelData.perSaveRate = null;
+        if (!this.personnelData.perPvdfQuitD) {
+          this.personnelData.perPvdfQuitD = new Date().toISOString().substring(0, 10);
+        }
       }
     } else {
-      // ปัจจุบันไม่ได้เป็นสมาชิก/ออกจากกองทุน -> กดปุ่มสีเขียว "➕ เป็นสมาชิกกองทุน" -> สลับเป็นสมาชิก
+      // สลับเป็นสมาชิกกองทุน
       this.personnelData.perPvdfQuit = null;
       this.personnelData.perPvdfQuitD = null;
       this.personnelData.notePvd = null;
@@ -669,8 +680,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
         delete this.invalidFields['perHoldSalary'];
       }
     } else if (step === 4) {
-      // Step 4 (PVD) Validation
-      if (!this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
+      // Step 4 (PVD) Validation - ตรวจสอบเฉพาะในโหมดแก้ไขประวัติ
+      if (this.isEditMode && !this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
         this.invalidFields['perPvdfQuitD'] = true;
         isValid = false;
       } else {
@@ -833,8 +844,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
       isValid = false;
     }
 
-    // ขั้นตอนที่ 4: กองทุน PVD (กรณีระบุว่าออกจากกองทุน ต้องมีวันที่ออก)
-    if (!this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
+    // ขั้นตอนที่ 4: กองทุน PVD (กรณีในโหมดแก้ไขแล้วระบุว่าออกจากกองทุน ต้องมีวันที่ออก)
+    if (this.isEditMode && !this.isFundActiveMember() && this.personnelData.perPvdfQuit === 1 && !this.personnelData.perPvdfQuitD) {
       this.invalidFields['perPvdfQuitD'] = true;
       isValid = false;
     }

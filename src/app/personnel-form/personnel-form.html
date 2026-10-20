@@ -566,7 +566,7 @@
                 <span class="material-symbols-rounded" style="font-size: 16px;">check_circle</span>
                 <span>เป็นสมาชิกกองทุนสำรองเลี้ยงชีพ</span>
               </span>
-            } @else if (personnelData.perPvdfQuit === 1) {
+            } @else if (isEditMode && personnelData.perPvdfQuit === 1) {
               <span class="pvd-badge-red">
                 <span class="material-symbols-rounded" style="font-size: 16px;">cancel</span>
                 <span>ออกจากกองทุนสำรองเลี้ยงชีพแล้ว</span>
@@ -582,7 +582,7 @@
           @if (isFundActiveMember()) {
             <button type="button" (click)="toggleQuitPvd()" class="btn-quit-pvd">
               <span class="material-symbols-rounded">logout</span>
-              <span>ออกจากกองทุน</span>
+              <span>{{ isEditMode ? 'ออกจากกองทุน' : 'ยกเลิกการเป็นสมาชิก' }}</span>
             </button>
           } @else {
             <button type="button" (click)="toggleQuitPvd()" class="btn-join-pvd">
@@ -629,7 +629,7 @@
               />
             </div>
           </div>
-        } @else {
+        } @else if (isEditMode) {
           <div class="form-grid-33" style="margin-top: 18px;">
             <div class="pvd-quit-date-box">
               <label class="field-label" style="color: #dc2626; font-weight: 700;">วันที่ออกจากกองทุนสำรองเลี้ยงชีพ</label>
@@ -649,6 +649,7 @@
                 [(ngModel)]="personnelData.notePvd"
                 class="field-input field-input-danger"
                 placeholder="ระบุเหตุผลหรือหมายเหตุการออกจากกองทุน"
+                maxlength="200"
               />
             </div>
           </div>
@@ -828,8 +829,8 @@
      SUMMARY REVIEW POPUP MODAL (สรุปภาพรวมข้อมูลก่อนบันทึกเข้าระบบ)
      ========================================================================= -->
 @if (showSummaryModal()) {
-  <div class="summary-modal-overlay" (click)="closeSummaryModal()">
-    <div class="summary-modal-container" (click)="$event.stopPropagation()" role="dialog" aria-modal="true">
+  <div class="summary-modal-overlay">
+    <div class="summary-modal-container" role="dialog" aria-modal="true">
       
       <!-- Modal Header -->
       <div class="summary-modal-header">

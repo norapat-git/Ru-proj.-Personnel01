@@ -103,7 +103,7 @@ export class PersonnelService {
 
   // แกะค่า
   decodeToken(token?: string | null): JwtPayload | null {
-    const rawToken = token || localStorage.getItem('token');
+    const rawToken = token || sessionStorage.getItem('token');
     if (!rawToken) return null;
 
     try {

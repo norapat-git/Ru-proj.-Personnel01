@@ -9,11 +9,11 @@ import { extractTokenFromAnywhere } from './guards/auth.guard';
 
 // HTTP Interceptor 
 function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
-  let token = localStorage.getItem('token');
+  let token = sessionStorage.getItem('token');
   if (!token) {
     token = extractTokenFromAnywhere();
     if (token) {
-      localStorage.setItem('token', token);
+      sessionStorage.setItem('token', token);
     }
   }
 
@@ -22,9 +22,12 @@ function authInterceptor(req: HttpRequest<unknown>, next: HttpHandlerFn) {
   return next(authReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        localStorage.removeItem('token');
-        if (environment.production && environment.portalLoginUrl && environment.portalLoginUrl.length > 8) {
-          window.location.href = environment.portalLoginUrl;
+        sessionStorage.removeItem('token');
+        const loginUrl = environment.portalLoginUrl && environment.portalLoginUrl.length > 8
+          ? environment.portalLoginUrl
+          : 'https://uat3.ru.ac.th';
+        if (environment.production) {
+          window.location.href = loginUrl;
         }
       }
       return throwError(() => error);

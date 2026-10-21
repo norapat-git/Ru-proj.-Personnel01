@@ -17,6 +17,7 @@ import {
 } from '../models';
 import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
 import { CustomDatePickerComponent } from '../components/common/custom-datepicker/custom-datepicker.component';
+import { validateIDCard } from '../utils/thai-id-validator';
 
 @Component({
   selector: 'app-personnel-form',
@@ -208,6 +209,25 @@ export class PersonnelForm implements OnInit, OnDestroy {
     if (editPayload) {
       this.isEditMode = true;
       this.personnelData = { ...editPayload };
+
+      // แปลงข้อมูลการเงินเป็นทศนิยม 2 ตำแหน่ง (.00) สำหรับแสดงในฟอร์ม
+      const moneyFields = [
+        'perSalary',
+        'perHoldSalary',
+        'perPositionMoney',
+        'perPositionPay',
+        'perPositionMoneyEx',
+        'perPositionPayEx'
+      ];
+      moneyFields.forEach(field => {
+        const val = (this.personnelData as any)[field];
+        if (val !== null && val !== undefined && String(val).trim() !== '') {
+          const num = parseFloat(String(val));
+          if (!isNaN(num)) {
+            (this.personnelData as any)[field] = num.toFixed(2);
+          }
+        }
+      });
 
       // ตรวจสอบและสลับสัญชาติอัตโนมัติตามข้อมูลที่โหลดมาแก้ไข
       if (editPayload.perPassportNo && !editPayload.perCitizenId) {
@@ -458,14 +478,52 @@ export class PersonnelForm implements OnInit, OnDestroy {
       (this.personnelData as any)[fieldName] = val ? Number(val) : null;
     }
     input.value = val;
-    // ล้าง error เมื่อผู้ใช้เริ่มแก้ไข
-    if (this.invalidFields[fieldName]) {
+
+    // ตรวจความถูกต้องของเลขประจำตัวประชาชนทันทีเมื่อกรอกครบ 13 หลัก
+    if (fieldName === 'perCitizenId' && this.nationality() === 'thai') {
+      if (val.length === 13) {
+        if (!validateIDCard(val)) {
+          this.invalidFields['perCitizenId'] = true;
+        } else {
+          delete this.invalidFields['perCitizenId'];
+        }
+      } else {
+        delete this.invalidFields['perCitizenId'];
+      }
+    } else if (this.invalidFields[fieldName]) {
       this.invalidFields[fieldName] = false;
     }
   }
 
+  /** ตรวจสอบเลขประจำตัวประชาชนเมื่อออกจากช่องกรอก (onBlur) */
+  onCitizenIdBlur(): void {
+    if (this.nationality() === 'thai') {
+      const id = this.personnelData.perCitizenId ? String(this.personnelData.perCitizenId).trim() : '';
+      if (!id || id.length !== 13 || !validateIDCard(id)) {
+        this.invalidFields['perCitizenId'] = true;
+      } else {
+        delete this.invalidFields['perCitizenId'];
+      }
+    }
+  }
+
+  /** คืนค่าข้อความแจ้งเตือนข้อผิดพลาดสำหรับเลขประจำตัวประชาชน */
+  getCitizenIdErrorText(): string {
+    const id = this.personnelData.perCitizenId ? String(this.personnelData.perCitizenId).trim() : '';
+    if (!id) {
+      return 'กรุณากรอกเลขบัตรประชาชน';
+    }
+    if (id.length !== 13) {
+      return 'กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก';
+    }
+    if (!validateIDCard(id)) {
+      return 'เลขบัตรประชาชนไม่ถูกต้องตามหลักเกณฑ์';
+    }
+    return '';
+  }
+
   // กรอกทศนิยม
-  onDecimalInput(event: any, fieldName: string, maxLength: number) {
+  onDecimalInput(event: any, fieldName: string, maxLength: number = 14) {
     const input = event.target as HTMLInputElement;
     let val = input.value;
     val = val.replace(/[^0-9.]/g, '');
@@ -481,10 +539,21 @@ export class PersonnelForm implements OnInit, OnDestroy {
     if (val.length > maxLength) {
       val = val.slice(0, maxLength);
     }
-    (this.personnelData as any)[fieldName] = val ? Number(val) : null;
+    (this.personnelData as any)[fieldName] = val;
     input.value = val;
     if (this.invalidFields[fieldName]) {
       this.invalidFields[fieldName] = false;
+    }
+  }
+
+  /** จัดรูปแบบตัวเลขทางการเงินให้ลงท้ายทศนิยม .00 เมื่อกรอกเสร็จสิ้น (onBlur) */
+  onDecimalBlur(fieldName: string): void {
+    const rawVal = (this.personnelData as any)[fieldName];
+    if (rawVal !== null && rawVal !== undefined && String(rawVal).trim() !== '') {
+      const num = parseFloat(String(rawVal));
+      if (!isNaN(num)) {
+        (this.personnelData as any)[fieldName] = num.toFixed(2);
+      }
     }
   }
 
@@ -615,7 +684,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
     if (step === 1) {
       if (isThai) {
-        if (!this.personnelData.perCitizenId || this.personnelData.perCitizenId.trim().length !== 13) {
+        const id = this.personnelData.perCitizenId ? String(this.personnelData.perCitizenId).trim() : '';
+        if (!id || id.length !== 13 || !validateIDCard(id)) {
           this.invalidFields['perCitizenId'] = true;
           isValid = false;
         } else {
@@ -667,13 +737,25 @@ export class PersonnelForm implements OnInit, OnDestroy {
         delete this.invalidFields['facName'];
       }
     } else if (step === 3) {
-      if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || (this.personnelData.perSalary as any) === '' || Number(this.personnelData.perSalary) < 0) {
+      if (
+        this.personnelData.perSalary === null ||
+        this.personnelData.perSalary === undefined ||
+        String(this.personnelData.perSalary).trim() === '' ||
+        Number(this.personnelData.perSalary) < 0 ||
+        isNaN(Number(this.personnelData.perSalary))
+      ) {
         this.invalidFields['perSalary'] = true;
         isValid = false;
       } else {
         delete this.invalidFields['perSalary'];
       }
-      if (this.personnelData.perHoldSalary === null || this.personnelData.perHoldSalary === undefined || (this.personnelData.perHoldSalary as any) === '' || Number(this.personnelData.perHoldSalary) < 0) {
+      if (
+        this.personnelData.perHoldSalary === null ||
+        this.personnelData.perHoldSalary === undefined ||
+        String(this.personnelData.perHoldSalary).trim() === '' ||
+        Number(this.personnelData.perHoldSalary) < 0 ||
+        isNaN(Number(this.personnelData.perHoldSalary))
+      ) {
         this.invalidFields['perHoldSalary'] = true;
         isValid = false;
       } else {
@@ -797,7 +879,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
     // ขั้นตอนที่ 1: ข้อมูลส่วนบุคคล
     if (isThai) {
-      if (!this.personnelData.perCitizenId || this.personnelData.perCitizenId.trim().length !== 13) {
+      const id = this.personnelData.perCitizenId ? String(this.personnelData.perCitizenId).trim() : '';
+      if (!id || id.length !== 13 || !validateIDCard(id)) {
         this.invalidFields['perCitizenId'] = true;
         isValid = false;
       }
@@ -835,11 +918,23 @@ export class PersonnelForm implements OnInit, OnDestroy {
     }
 
     // ขั้นตอนที่ 3: การเงินและรายได้
-    if (this.personnelData.perSalary === null || this.personnelData.perSalary === undefined || (this.personnelData.perSalary as any) === '' || Number(this.personnelData.perSalary) < 0) {
+    if (
+      this.personnelData.perSalary === null ||
+      this.personnelData.perSalary === undefined ||
+      String(this.personnelData.perSalary).trim() === '' ||
+      Number(this.personnelData.perSalary) < 0 ||
+      isNaN(Number(this.personnelData.perSalary))
+    ) {
       this.invalidFields['perSalary'] = true;
       isValid = false;
     }
-    if (this.personnelData.perHoldSalary === null || this.personnelData.perHoldSalary === undefined || (this.personnelData.perHoldSalary as any) === '' || Number(this.personnelData.perHoldSalary) < 0) {
+    if (
+      this.personnelData.perHoldSalary === null ||
+      this.personnelData.perHoldSalary === undefined ||
+      String(this.personnelData.perHoldSalary).trim() === '' ||
+      Number(this.personnelData.perHoldSalary) < 0 ||
+      isNaN(Number(this.personnelData.perHoldSalary))
+    ) {
       this.invalidFields['perHoldSalary'] = true;
       isValid = false;
     }
@@ -942,6 +1037,24 @@ export class PersonnelForm implements OnInit, OnDestroy {
 
     payload.perNameTh = (this.personnelData.perNameTh || '').trim();
     payload.perNameEn = (this.personnelData.perNameEn || '').trim();
+
+    // แปลงช่องตัวเลขทางการเงินให้อยู่ในรูปตัวเลข Number ก่อนส่งเข้า API
+    const moneyFields = [
+      'perSalary',
+      'perHoldSalary',
+      'perPositionMoney',
+      'perPositionPay',
+      'perPositionMoneyEx',
+      'perPositionPayEx'
+    ];
+    for (const f of moneyFields) {
+      if (payload[f] !== null && payload[f] !== undefined && String(payload[f]).trim() !== '') {
+        const n = parseFloat(String(payload[f]));
+        payload[f] = isNaN(n) ? null : n;
+      } else {
+        payload[f] = null;
+      }
+    }
 
     this.personnelService.loadingMessageSignal.set(
       this.isEditMode ? 'กำลังบันทึกการแก้ไขข้อมูล...' : 'กำลังบันทึกข้อมูลเข้าระบบ...'

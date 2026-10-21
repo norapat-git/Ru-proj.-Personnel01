@@ -10,6 +10,7 @@ import { OnboardTourComponent } from './components/common/onboard-tour/onboard-t
 import { SettingsDialogComponent } from './components/common/settings-dialog/settings-dialog.component';
 import { TourService } from './services/tour.service';
 import { SettingsService } from './services/settings.service';
+import { environment } from '../environment/environment';
 
 @Component({
   selector: 'app-root',
@@ -42,6 +43,12 @@ export class App implements OnInit {
   showNationalityPicker = signal<boolean>(false);
 
   ngOnInit(): void {
+    // ขอ JWT Token อัตโนมัติหากยังไม่มีใน Session (เฉพาะ DEV Mode)
+    if (!environment.production && !sessionStorage.getItem('token')) {
+      const testCitizenId = '1234567890123';
+      this.personnelService.sign(testCitizenId);
+    }
+
     // ตั้งค่าสัญชาติเริ่มต้นตามความถนัดของผู้ใช้จาก Cookie
     const defaultNat = this.settingsService.settings().defaultNationality;
     if (defaultNat) {

@@ -94,7 +94,7 @@
             ระบุชื่อ หรือ นามสกุล (English Name)
           }
         </label>
-        <div class="search-input-box-wrapper">
+        <div class="search-input-box-wrapper" [class.has-error]="isIdCardInvalid()">
           <span class="material-symbols-rounded search-input-icon">search</span>
           <input
             type="text"
@@ -129,6 +129,12 @@
             <span class="search-shortcut-hint">↵ Enter</span>
           </div>
         </div>
+        @if (isIdCardInvalid()) {
+          <small class="search-field-error-text">
+            <span class="material-symbols-rounded" style="font-size: 14px;">error</span>
+            <span>เลขบัตรประชาชนไม่ถูกต้องตามหลักเกณฑ์ (Checksum ไม่ถูกต้อง)</span>
+          </small>
+        }
       </div>
     </div>
   </div>

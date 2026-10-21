@@ -6,6 +6,7 @@ import { PersonnelService } from '../services/personnel.service';
 import { NationalityToggle } from '../nationality-toggle/nationality-toggle';
 import { CustomSelectOption } from '../models';
 import { CustomSelectComponent } from '../components/common/custom-select/custom-select.component';
+import { validateIDCard } from '../utils/thai-id-validator';
 
 @Component({
   selector: 'app-personnel-search',
@@ -75,13 +76,21 @@ export class PersonnelSearch implements OnInit {
     });
   }
 
-  isNumericFilter = computed<boolean>(() => {
+  isNumericFilter(): boolean {
     return ['idCard', 'passport', 'ssoId'].includes(this.filterType);
-  });
+  }
+
+  /** ตรวจสอบว่าเลขบัตรประชาชนไม่ถูกต้องตามสูตรคำนวณ Checksum หรือไม่ (เมื่อกรอกครบ 13 หลัก) */
+  isIdCardInvalid(): boolean {
+    if (this.filterType === 'idCard' && this.singleKeyword && this.singleKeyword.trim().length === 13) {
+      return !validateIDCard(this.singleKeyword.trim());
+    }
+    return false;
+  }
 
   onKeywordInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
     if (this.isNumericFilter()) {
-      const input = event.target as HTMLInputElement;
       let cleaned = input.value.replace(/\D/g, '');
       if (this.filterType === 'idCard' || this.filterType === 'ssoId') {
         cleaned = cleaned.slice(0, 13);
@@ -90,6 +99,8 @@ export class PersonnelSearch implements OnInit {
       }
       this.singleKeyword = cleaned;
       input.value = cleaned;
+    } else {
+      this.singleKeyword = input.value;
     }
   }
 
@@ -170,11 +181,19 @@ export class PersonnelSearch implements OnInit {
       return;
     }
 
-    if (this.filterType === 'idCard' && finalKeyword.length !== 13) {
-      if (isManual) {
-        this.personnelService.showNotification('error', 'กรุณาระบุเลขบัตรประชาชนให้ครบ 13 หลัก', 3000);
+    if (this.filterType === 'idCard') {
+      if (finalKeyword.length !== 13) {
+        if (isManual) {
+          this.personnelService.showNotification('error', 'กรุณาระบุเลขบัตรประชาชนให้ครบ 13 หลัก', 3000);
+        }
+        return;
       }
-      return;
+      if (!validateIDCard(finalKeyword)) {
+        if (isManual) {
+          this.personnelService.showNotification('error', 'เลขประจำตัวประชาชนไม่ถูกต้องตามหลักเกณฑ์ (Checksum ไม่ถูกต้อง)', 3500);
+        }
+        return;
+      }
     }
 
     if (this.filterType === 'ssoId' && finalKeyword.length !== 13) {

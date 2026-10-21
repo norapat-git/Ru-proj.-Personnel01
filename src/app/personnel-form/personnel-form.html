@@ -83,6 +83,7 @@
               type="text"
               [(ngModel)]="personnelData.perCitizenId"
               (input)="onNumberInput($event, 'perCitizenId', 13)"
+              (blur)="onCitizenIdBlur()"
               [readonly]="isEditMode"
               [class.field-input-error]="invalidFields['perCitizenId']"
               class="field-input"
@@ -90,7 +91,7 @@
               maxlength="13"
             />
             @if (invalidFields['perCitizenId']) {
-              <small class="field-error-text">กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก</small>
+              <small class="field-error-text">{{ getCitizenIdErrorText() }}</small>
             }
           </div>
 
@@ -324,7 +325,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perSalary"
-            (input)="onDecimalInput($event, 'perSalary', 10)"
+            (input)="onDecimalInput($event, 'perSalary', 12)"
+            (blur)="onDecimalBlur('perSalary')"
             [class.field-input-error]="invalidFields['perSalary']"
             class="field-input"
             placeholder="0.00"
@@ -339,7 +341,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perHoldSalary"
-            (input)="onDecimalInput($event, 'perHoldSalary', 10)"
+            (input)="onDecimalInput($event, 'perHoldSalary', 12)"
+            (blur)="onDecimalBlur('perHoldSalary')"
             [class.field-input-error]="invalidFields['perHoldSalary']"
             class="field-input"
             placeholder="0.00"
@@ -354,7 +357,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perPositionMoney"
-            (input)="onDecimalInput($event, 'perPositionMoney', 10)"
+            (input)="onDecimalInput($event, 'perPositionMoney', 12)"
+            (blur)="onDecimalBlur('perPositionMoney')"
             class="field-input"
             placeholder="0.00"
           />
@@ -365,7 +369,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perPositionPay"
-            (input)="onDecimalInput($event, 'perPositionPay', 10)"
+            (input)="onDecimalInput($event, 'perPositionPay', 12)"
+            (blur)="onDecimalBlur('perPositionPay')"
             class="field-input"
             placeholder="0.00"
           />
@@ -376,7 +381,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perPositionMoneyEx"
-            (input)="onDecimalInput($event, 'perPositionMoneyEx', 10)"
+            (input)="onDecimalInput($event, 'perPositionMoneyEx', 12)"
+            (blur)="onDecimalBlur('perPositionMoneyEx')"
             class="field-input"
             placeholder="0.00"
           />
@@ -387,7 +393,8 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perPositionPayEx"
-            (input)="onDecimalInput($event, 'perPositionPayEx', 10)"
+            (input)="onDecimalInput($event, 'perPositionPayEx', 12)"
+            (blur)="onDecimalBlur('perPositionPayEx')"
             class="field-input"
             placeholder="0.00"
           />

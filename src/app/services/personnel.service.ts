@@ -101,6 +101,40 @@ export class PersonnelService {
     return firstValueFrom(this.http.get<any>(`${this.apiUrl}/sourcemoney`));
   }
 
+  // ขอ JWT Token จาก User ID หรือรหัสใดๆ (รองรับเลขบัตร, username, employee ID)
+  async sign(userId: string = '1234567890123'): Promise<any> {
+    try {
+      const signUrl = (environment as any).signUrl || this.apiUrl.replace(/\/personnel$/, '/sign');
+      const payload: any = {
+        client_id: userId,
+        PER_CITIZEN_ID: userId,
+        uid: userId,
+        userId: userId,
+      };
+      if ((environment as any).secret_key) {
+        payload.secret_key = (environment as any).secret_key;
+        payload.secrete_id = (environment as any).secret_key;
+      }
+
+      const response = await firstValueFrom(
+        this.http.post<any>(signUrl, payload)
+      );
+      if (response && response.success && response.token) {
+        sessionStorage.setItem('token', response.token);
+        return response.token;
+      }
+      return null;
+    } catch (err: any) {
+      console.warn('Sign token background notice:', err);
+      return null;
+    }
+  }
+
+  // รองรับชื่อเดิม acquireToken
+  async acquireToken(userId: string = '1234567890123'): Promise<any> {
+    return this.sign(userId);
+  }
+
   // แกะค่า
   decodeToken(token?: string | null): JwtPayload | null {
     const rawToken = token || sessionStorage.getItem('token');

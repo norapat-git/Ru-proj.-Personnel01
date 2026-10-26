@@ -86,7 +86,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (person of paginatedPersonnelList(); track (person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || $index)) {
+            @for (person of paginatedPersonnelList(); track (person.REQ_PER_NO || person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || $index)) {
               <tr (contextmenu)="onRowContextMenu($event, person)" title="คลิกขวาเพื่อเปิดเมนูด่วน">
                 <td class="text-center bold-num">{{ (currentPage() - 1) * pageSize + $index + 1 }}</td>
                 <td>
@@ -99,6 +99,12 @@
                     {{ person['FULL_NAME_TH'] || (person.PER_NAME_TH ? ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH).trim() : '') || person.PER_NAME_EN || '-' }}
                   } @else {
                     {{ person.PER_NAME_EN || person['FULL_NAME_TH'] || (person.PER_NAME_TH ? ((person.PRE_NAME || '') + ' ' + person.PER_NAME_TH).trim() : '') || '-' }}
+                  }
+                  @if (person.PER_PVDF_QUIT == 1) {
+                    <div class="quit-reason-badge" [title]="'สาเหตุที่ออกจากกองทุน: ' + (person.NOTE_PVD || 'ไม่ได้ระบุสาเหตุ')">
+                      <span class="material-symbols-rounded">logout</span>
+                      <span>ออกกองทุน: {{ person.NOTE_PVD || 'ไม่ได้ระบุสาเหตุ' }}</span>
+                    </div>
                   }
                 </td>
                 <td>
@@ -119,7 +125,7 @@
                     <button type="button" (click)="triggerEditMode(person)" class="btn-action-edit-sm" title="แก้ไขประวัติ" aria-label="แก้ไขประวัติ">
                       <span class="material-symbols-rounded">edit</span>
                     </button>
-                    <button type="button" (click)="triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-action-delete-sm" title="ลบข้อมูล" aria-label="ลบข้อมูล">
+                    <button type="button" (click)="triggerDelete(person)" class="btn-action-delete-sm" title="ลบข้อมูล" aria-label="ลบข้อมูล">
                       <span class="material-symbols-rounded">delete</span>
                     </button>
                   }
@@ -338,6 +344,7 @@
                 }
                 @if (person.PER_PVDF_QUIT == 1) {
                   <div class="info-row"><span class="info-label">วันที่ออกจากกองทุน:</span> <span class="info-val">{{ formatDate(person.PER_PVDF_QUIT_D) }}</span></div>
+                  <div class="info-row"><span class="info-label">สาเหตุการออกจากกองทุน:</span> <span class="info-val bold text-danger">{{ person.NOTE_PVD || 'ไม่ได้ระบุสาเหตุ' }}</span></div>
                 }
                 <div class="info-row">
                   <span class="info-label">การชำระประกันสังคม:</span> 
@@ -361,9 +368,9 @@
                 <span class="box-title">ข้อมูลบันทึกระบบ</span>
               </div>
               <div class="box-body">
-                <div class="info-row"><span class="info-label">วันที่สร้าง:</span> <span class="info-val">{{ formatDate(person.CREATED_DATE) }}</span></div>
+                <div class="info-row"><span class="info-label">วันที่สร้าง:</span> <span class="info-val">{{ formatDateTime(person.CREATED_DATE) }}</span></div>
                 <div class="info-row"><span class="info-label">ผู้สร้าง:</span> <span class="info-val">{{ person.CREATED_BY || '-' }}</span></div>
-                <div class="info-row"><span class="info-label">วันที่แก้ไขล่าสุด:</span> <span class="info-val">{{ formatDate(person.UPDATED_DATE) }}</span></div>
+                <div class="info-row"><span class="info-label">วันที่แก้ไขล่าสุด:</span> <span class="info-val">{{ formatDateTime(person.UPDATED_DATE) }}</span></div>
                 <div class="info-row"><span class="info-label">ผู้แก้ไขล่าสุด:</span> <span class="info-val">{{ person.UPDATED_BY || '-' }}</span></div>
               </div>
             </div>
@@ -378,7 +385,7 @@
               <span class="material-symbols-rounded">edit_square</span>
               <span>แก้ไขประวัติข้อมูล</span>
             </button>
-            <button type="button" (click)="closeDetailModal(); triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO)" class="btn-action-delete">
+            <button type="button" (click)="closeDetailModal(); triggerDelete(person)" class="btn-action-delete">
               <span class="material-symbols-rounded">delete</span>
               <span>ลบข้อมูลบุคลากร</span>
             </button>

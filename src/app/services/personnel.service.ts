@@ -61,12 +61,13 @@ export class PersonnelService {
     return firstValueFrom(this.http.put(`${this.apiUrl}/update`, personData));
   }
 
-  // ลบข้อมูลพร้อมส่งหมายเหตุการลบ (noteDel)
-  deletePersonnel(id: string, noteDel?: string): Promise<any> {
+  // ลบข้อมูลพร้อมส่งหมายเหตุการลบ (noteDel) และ reqPerNo (ถ้ามี)
+  deletePersonnel(id: string | number, noteDel?: string, reqPerNo?: number | null): Promise<any> {
     const encodedNote = noteDel ? encodeURIComponent(noteDel) : '';
+    const queryReqPerNo = reqPerNo ? `&reqPerNo=${reqPerNo}` : '';
     return firstValueFrom(
-      this.http.delete(`${this.apiUrl}/delete/${id}?noteDel=${encodedNote}`, {
-        body: { noteDel: noteDel || '', NOTE_DEL: noteDel || '' },
+      this.http.delete(`${this.apiUrl}/delete/${id}?noteDel=${encodedNote}${queryReqPerNo}`, {
+        body: { noteDel: noteDel || '', NOTE_DEL: noteDel || '', reqPerNo: reqPerNo || (typeof id === 'number' ? id : undefined) },
       })
     );
   }

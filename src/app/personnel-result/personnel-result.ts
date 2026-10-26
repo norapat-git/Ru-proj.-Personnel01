@@ -184,10 +184,52 @@ export class PersonnelResult implements OnDestroy {
     return isoDate || str;
   }
 
+  // แปลงรูปแบบวันที่และเวลา เป็น วัน/เดือน/ปี เวลา (เช่น 26/10/2026 14:30:15 น.) โดยปรับเป็นเวลาไทย (Asia/Bangkok)
+  formatDateTime(dateVal: any): string {
+    if (!dateVal) return '-';
+    const str = String(dateVal).trim();
+    if (!str) return '-';
+
+    // ถ้าแปลงเป็น Date ได้ ให้ใช้ Intl.DateTimeFormat ระบุ timezone Asia/Bangkok
+    // จะช่วยแปลงเวลาสากล UTC (เช่น 02:51Z) ให้กลายเป็นเวลาไทย (09:51) ได้ทันที
+    const d = new Date(str);
+    if (!isNaN(d.getTime())) {
+      const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).formatToParts(d);
+
+      const day = parts.find(p => p.type === 'day')?.value || '';
+      const month = parts.find(p => p.type === 'month')?.value || '';
+      const year = parts.find(p => p.type === 'year')?.value || '';
+      const hour = parts.find(p => p.type === 'hour')?.value || '00';
+      const minute = parts.find(p => p.type === 'minute')?.value || '00';
+      const second = parts.find(p => p.type === 'second')?.value || '00';
+
+      return `${day}/${month}/${year} ${hour}:${minute}:${second} น.`;
+    }
+
+    const match = str.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2}):?(\d{2})?/);
+    if (match) {
+      const [, year, month, day, hour, minute, second] = match;
+      const secStr = second ? `:${second}` : ':00';
+      return `${day}/${month}/${year} ${hour}:${minute}${secStr} น.`;
+    }
+    return this.formatDate(dateVal);
+  }
+
   // ฟังก์ชันรองรับการกดปุ่มดึงข้อมูลไปแก้ไขจากในตาราง
   triggerEditMode(rawSelection: any): void {
     // แปลงตัวพิมพ์ใหญ่เป็นพิมพ์เล็ก
     this.personnelService.editingPersonnel.set({
+      reqPerNo: rawSelection.REQ_PER_NO !== undefined && rawSelection.REQ_PER_NO !== null ? Number(rawSelection.REQ_PER_NO) : null,
+      originalReqPerNo: rawSelection.REQ_PER_NO !== undefined && rawSelection.REQ_PER_NO !== null ? Number(rawSelection.REQ_PER_NO) : null,
       perCitizenId: rawSelection.PER_CITIZEN_ID,
       typeCode: rawSelection.TYPE_CODE,
       typeName: rawSelection.TYPE_NAME,
@@ -283,17 +325,17 @@ export class PersonnelResult implements OnDestroy {
         this.triggerEditMode(person);
         break;
       case 'delete':
-        this.triggerDelete(person.PER_CITIZEN_ID || person.PER_PASSPORT_NO);
+        this.triggerDelete(person);
         break;
     }
   }
 
   copyPersonnelId(person: any): void {
-    const id = person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || '';
+    const id = person.REQ_PER_NO || person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || '';
     if (!id) return;
 
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(id).then(() => {
+      navigator.clipboard.writeText(String(id)).then(() => {
         this.toastService.success(`คัดลอกรหัส "${id}" เรียบร้อยแล้ว`, 'คัดลอกสำเร็จ');
       });
     } else {
@@ -302,12 +344,28 @@ export class PersonnelResult implements OnDestroy {
   }
 
   // ฟังก์ชันลบข้อมูลโดยใช้ ConfirmDialogService (พร้อมบันทึกหมายเหตุการลบ)
-  async triggerDelete(targetCitizenId: string): Promise<void> {
+  async triggerDelete(personOrId: any): Promise<void> {
     if (this.isLoading()) return;
 
-    const person = this.personnelList().find(
-      p => (p.PER_CITIZEN_ID || p.PER_PASSPORT_NO) === targetCitizenId
-    );
+    let person: any = null;
+    let targetReqPerNo: number | null = null;
+    let targetCitizenId = '';
+
+    if (typeof personOrId === 'object' && personOrId !== null) {
+      person = personOrId;
+      targetReqPerNo = person.REQ_PER_NO !== undefined && person.REQ_PER_NO !== null ? Number(person.REQ_PER_NO) : null;
+      targetCitizenId = person.PER_CITIZEN_ID || person.PER_PASSPORT_NO || '';
+    } else {
+      const idStr = String(personOrId || '').trim();
+      person = this.personnelList().find(
+        p => (p.REQ_PER_NO && String(p.REQ_PER_NO) === idStr) || (p.PER_CITIZEN_ID || p.PER_PASSPORT_NO) === idStr
+      );
+      targetReqPerNo = person?.REQ_PER_NO !== undefined && person?.REQ_PER_NO !== null
+        ? Number(person.REQ_PER_NO)
+        : (/^\d{1,9}$/.test(idStr) ? Number(idStr) : null);
+      targetCitizenId = person?.PER_CITIZEN_ID || person?.PER_PASSPORT_NO || idStr;
+    }
+
     const personName = person
       ? (person['FULL_NAME_TH'] || person.PER_NAME_TH || person.PER_NAME_EN || targetCitizenId)
       : targetCitizenId;
@@ -332,7 +390,8 @@ export class PersonnelResult implements OnDestroy {
     this.personnelService.isLoadingSignal.set(true);
 
     try {
-      const res = await this.personnelService.deletePersonnel(targetCitizenId, result.note || '');
+      const deleteId = targetReqPerNo ? targetReqPerNo : targetCitizenId;
+      const res = await this.personnelService.deletePersonnel(deleteId, result.note || '', targetReqPerNo);
       if (res && res.success) {
         this.toastService.success(res.message || 'ลบข้อมูลบุคลากรออกจากระบบฐานข้อมูลเรียบร้อยแล้ว');
         // ลบแถวข้อมูลออกจากหน้าจอแสดงผล
@@ -340,6 +399,9 @@ export class PersonnelResult implements OnDestroy {
         const targetClean = String(targetCitizenId || '').trim().toUpperCase();
         this.personnelService.personnelListSignal.set(
           currentList.filter(item => {
+            if (targetReqPerNo && item.REQ_PER_NO) {
+              return Number(item.REQ_PER_NO) !== targetReqPerNo;
+            }
             const citizen = String(item.PER_CITIZEN_ID || '').trim().toUpperCase();
             const passport = String(item.PER_PASSPORT_NO || '').trim().toUpperCase();
             return citizen !== targetClean && passport !== targetClean;

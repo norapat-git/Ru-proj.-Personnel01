@@ -1,4 +1,5 @@
 export interface PersonnelDataResult {
+  REQ_PER_NO?: number | null;
   PER_CITIZEN_ID: string;
   TYPE_CODE: number;
   TYPE_NAME: string;
@@ -52,6 +53,8 @@ export interface PersonnelDataResult {
 }
 
 export interface PersonnelInsertInput {
+  reqPerNo?: number | null;
+  originalReqPerNo?: number | null;
   perCitizenId: string;
   typeCode: number | null;
   typeName: string;

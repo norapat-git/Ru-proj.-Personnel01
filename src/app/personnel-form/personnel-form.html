@@ -442,9 +442,9 @@
           <input
             type="text"
             [(ngModel)]="personnelData.perSlipId"
-            (input)="onNumberInput($event, 'perSlipId', 10)"
             class="field-input"
-            placeholder="ระบุตัวเลข Slip"
+            placeholder="ระบุหมายเลข Slip (พิมพ์ตัวเลขหรือตัวอักษรได้)"
+            maxlength="20"
           />
         </div>
       </div>

@@ -591,7 +591,9 @@ export class PersonnelForm implements OnInit, OnDestroy {
         this.personnelData.perFundType = null;
         this.personnelData.perSaveRate = null;
         if (!this.personnelData.perPvdfQuitD) {
-          this.personnelData.perPvdfQuitD = new Date().toISOString().substring(0, 10);
+          const d = new Date();
+          const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+          this.personnelData.perPvdfQuitD = formatter.format(d);
         }
       }
     } else {
@@ -601,7 +603,9 @@ export class PersonnelForm implements OnInit, OnDestroy {
       this.personnelData.notePvd = null;
       this.personnelData.perPvdfApp = 'Y';
       if (!this.personnelData.perPvdfAppD) {
-        this.personnelData.perPvdfAppD = new Date().toISOString().substring(0, 10);
+        const d = new Date();
+        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' });
+        this.personnelData.perPvdfAppD = formatter.format(d);
       }
     }
   }
@@ -1064,6 +1068,8 @@ export class PersonnelForm implements OnInit, OnDestroy {
     try {
       if (this.isEditMode) {
         const original = this.personnelService.editingPersonnel();
+        payload.reqPerNo = original?.reqPerNo || null;
+        payload.originalReqPerNo = original?.originalReqPerNo || original?.reqPerNo || null;
         payload.originalCitizenId = original?.perCitizenId || null;
         payload.originalPassportNo = original?.perPassportNo || null;
 
@@ -1071,15 +1077,19 @@ export class PersonnelForm implements OnInit, OnDestroy {
         if (response && response.success) {
           // อัปเดตข้อมูลใน personnelListSignal ทันที เพื่อให้หน้าจอแสดงผลข้อมูลใหม่ทันที
           const currentList = this.personnelService.personnelListSignal();
+          const targetReqPerNo = payload.reqPerNo || payload.originalReqPerNo;
           const targetCitizenId = payload.originalCitizenId || payload.perCitizenId;
           const targetPassportNo = payload.originalPassportNo || payload.perPassportNo;
 
           const updatedList = currentList.map(item => {
-            const isMatch = (targetCitizenId && item.PER_CITIZEN_ID && String(item.PER_CITIZEN_ID).trim() === String(targetCitizenId).trim()) ||
-                            (targetPassportNo && item.PER_PASSPORT_NO && String(item.PER_PASSPORT_NO).trim().toUpperCase() === String(targetPassportNo).trim().toUpperCase());
+            const isMatch = targetReqPerNo && item.REQ_PER_NO
+              ? Number(item.REQ_PER_NO) === Number(targetReqPerNo)
+              : ((targetCitizenId && item.PER_CITIZEN_ID && String(item.PER_CITIZEN_ID).trim() === String(targetCitizenId).trim()) ||
+                 (targetPassportNo && item.PER_PASSPORT_NO && String(item.PER_PASSPORT_NO).trim().toUpperCase() === String(targetPassportNo).trim().toUpperCase()));
             if (isMatch) {
               return {
                 ...item,
+                REQ_PER_NO: payload.reqPerNo || item.REQ_PER_NO,
                 PER_CITIZEN_ID: payload.perCitizenId || item.PER_CITIZEN_ID,
                 PER_PASSPORT_NO: payload.perPassportNo || item.PER_PASSPORT_NO,
                 TYPE_CODE: payload.typeCode !== null && payload.typeCode !== undefined ? payload.typeCode : item.TYPE_CODE,
